@@ -6,6 +6,8 @@ source myenv/bin/activate
 
 source ~/.bashrc
 
+mysql.server start
+
 python manage.py runserver
 
 ```
