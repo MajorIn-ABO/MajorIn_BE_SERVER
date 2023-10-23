@@ -1,3 +1,5 @@
 # misc
 .DS_Store
 myenv/
+
+my_settings.py
