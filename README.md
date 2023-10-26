@@ -10,4 +10,13 @@ mysql.server start
 
 python manage.py runserver
 
+mysql.server stop # 종료
+
+```
+
+## DB 접속
+```
+mysql -u root -p 
+
+USE majorin
 ```

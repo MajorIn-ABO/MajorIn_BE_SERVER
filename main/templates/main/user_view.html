@@ -1,0 +1,18 @@
+<table class="table-contents" style="padding:10px">
+    <tr>
+        <tr>유저 이름</tr>
+        <tr>학교 이름</tr>
+        <tr>학과 이름</tr>
+        <tr>학번</tr>
+        <tr>상태</tr>
+    </tr>
+    {% for user in users %}
+        <tr>
+            <td>{{ user.user_name }}</td>
+            <td>{{ user.school_name }}</td>
+            <td>{{ user.major_name }}</td>
+            <td>{{ user.student_id }}</td>
+            <td>{{ user.user_status }}</td>
+                </tr>
+    {%endfor %}
+</table>
