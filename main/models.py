@@ -34,7 +34,7 @@ class User(models.Model):
     student_id = models.BigIntegerField()
     home_id = models.CharField(max_length=15)
     home_password = models.CharField(max_length=20)
-    email = models.CharField(max_length=30)
+    email = models.EmailField(unique=True)
     phonenumber = models.CharField(max_length=15)
     admission_date = models.DateField()
     registration_date = models.DateField(auto_now_add=True)
@@ -89,10 +89,32 @@ class Post_Comment(models.Model):
     post_id = models.ForeignKey(Post, on_delete=models.CASCADE, db_column="post_id")
     parent_comment = models.BigIntegerField(default=id, db_column="parent_comment")
     contents = models.TextField(blank=False, null=False)
-    post_date = models.DateTimeField(auto_now_add=True)
+    comment_date = models.DateTimeField(auto_now_add=True)
     update_date = models.DateTimeField(auto_now=True)
     delete_date = models.DateTimeField()
     like = models.IntegerField(default=0)
+
+    def __str__(self):
+        return self.id
+    
+
+class Post_Like(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    user_id = models.ForeignKey(User, on_delete=models.CASCADE, db_column="user_id")
+    post_id = models.ForeignKey(Post, on_delete=models.CASCADE, db_column="post_id")
+    like_date = models.DateTimeField(auto_now_add=True)
+    delete_date = models.DateTimeField()
+
+    def __str__(self):
+        return self.id
+    
+
+class Post_bookmark(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    user_id = models.ForeignKey(User, on_delete=models.CASCADE, db_column="user_id")
+    post_id = models.ForeignKey(Post, on_delete=models.CASCADE, db_column="post_id")
+    bookmark_date = models.DateTimeField(auto_now_add=True)
+    delete_date = models.DateTimeField()
 
     def __str__(self):
         return self.id
