@@ -73,7 +73,7 @@ class Post(models.Model):
     contents = models.TextField(blank=False, null=False)
     post_date = models.DateTimeField(auto_now_add=True)
     update_date = models.DateTimeField(auto_now=True)
-    delete_date = models.DateTimeField()
+    delete_date = models.DateTimeField(null=True)
     like = models.IntegerField(default=0)
     keep = models.IntegerField(default=0)
 
@@ -91,7 +91,7 @@ class Post_Comment(models.Model):
     contents = models.TextField(blank=False, null=False)
     comment_date = models.DateTimeField(auto_now_add=True)
     update_date = models.DateTimeField(auto_now=True)
-    delete_date = models.DateTimeField()
+    delete_date = models.DateTimeField(null=True)
     like = models.IntegerField(default=0)
 
     def __str__(self):
@@ -103,7 +103,7 @@ class Post_Like(models.Model):
     user_id = models.ForeignKey(User, on_delete=models.CASCADE, db_column="user_id")
     post_id = models.ForeignKey(Post, on_delete=models.CASCADE, db_column="post_id")
     like_date = models.DateTimeField(auto_now_add=True)
-    delete_date = models.DateTimeField()
+    delete_date = models.DateTimeField(null=True)
 
     def __str__(self):
         return self.id
@@ -114,7 +114,7 @@ class Post_bookmark(models.Model):
     user_id = models.ForeignKey(User, on_delete=models.CASCADE, db_column="user_id")
     post_id = models.ForeignKey(Post, on_delete=models.CASCADE, db_column="post_id")
     bookmark_date = models.DateTimeField(auto_now_add=True)
-    delete_date = models.DateTimeField()
+    delete_date = models.DateTimeField(null=True)
 
     def __str__(self):
         return self.id
