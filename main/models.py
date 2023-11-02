@@ -65,7 +65,7 @@ class Category(models.Model):
         return self.id
 
 
-class Post(models.Model):
+class Board(models.Model):
     id = models.BigAutoField(primary_key=True)
     user_id = models.ForeignKey(User, on_delete=models.CASCADE, db_column="user_id")
     category_id = models.ForeignKey(Category, on_delete=models.CASCADE, db_column="category_id")
@@ -83,10 +83,10 @@ class Post(models.Model):
 
 # 게시글, 스터디 댓글을 테이블을 나눠서 저장할지 -> 현재 상태
 # 함께 저장 : 카테고리 str 을 id 에 붙여서 저장하는 방법 or 카테고리 컬럼을 넣고 따로 id 값은 같아도 상관없도록 (고려)
-class Post_Comment(models.Model):
+class Board_Comment(models.Model):
     id = models.BigAutoField(primary_key=True)
     user_id = models.ForeignKey(User, on_delete=models.CASCADE, db_column="user_id")
-    post_id = models.ForeignKey(Post, on_delete=models.CASCADE, db_column="post_id")
+    post_id = models.ForeignKey(Board, on_delete=models.CASCADE, db_column="post_id")
     parent_comment = models.BigIntegerField(default=id, db_column="parent_comment")
     contents = models.TextField(blank=False, null=False)
     comment_date = models.DateTimeField(auto_now_add=True)
@@ -98,10 +98,10 @@ class Post_Comment(models.Model):
         return self.id
     
 
-class Post_Like(models.Model):
+class Board_Like(models.Model):
     id = models.BigAutoField(primary_key=True)
     user_id = models.ForeignKey(User, on_delete=models.CASCADE, db_column="user_id")
-    post_id = models.ForeignKey(Post, on_delete=models.CASCADE, db_column="post_id")
+    post_id = models.ForeignKey(Board, on_delete=models.CASCADE, db_column="post_id")
     like_date = models.DateTimeField(auto_now_add=True)
     delete_date = models.DateTimeField(null=True)
 
@@ -109,10 +109,10 @@ class Post_Like(models.Model):
         return self.id
     
 
-class Post_bookmark(models.Model):
+class Board_bookmark(models.Model):
     id = models.BigAutoField(primary_key=True)
     user_id = models.ForeignKey(User, on_delete=models.CASCADE, db_column="user_id")
-    post_id = models.ForeignKey(Post, on_delete=models.CASCADE, db_column="post_id")
+    post_id = models.ForeignKey(Board, on_delete=models.CASCADE, db_column="post_id")
     bookmark_date = models.DateTimeField(auto_now_add=True)
     delete_date = models.DateTimeField(null=True)
 

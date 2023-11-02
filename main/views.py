@@ -2,8 +2,8 @@ from rest_framework import generics
 from rest_framework import status
 from rest_framework.response import Response
 from django.shortcuts import render
-from .models import User, Post # 모델 불러오기
-from .serializers import UserSerializer, PostSerializer
+from .models import User, Board # 모델 불러오기
+from .serializers import UserSerializer, BoardSerializer
 
 # 유저 관련 API 모음
 class UserList(generics.ListAPIView):
@@ -33,17 +33,21 @@ class UserUpdate(generics.UpdateAPIView):
 
 # 게시글 관련 API 모음
 
-class PostList(generics.ListAPIView):
-    queryset = Post.objects.all()
-    serializer_class = PostSerializer
+class BoardList(generics.ListAPIView):
+    queryset = Board.objects.all()
+    serializer_class = BoardSerializer
 
-class PostDetail(generics.RetrieveAPIView):
-    queryset = Post.objects.all()
-    serializer_class = PostSerializer
+class BoardCategoryList(generics.ListAPIView):
+    queryset = Board.objects.all()
+    serializer_class = BoardSerializer
 
-class PostCreate(generics.CreateAPIView):
-    queryset = Post.objects.all()
-    serializer_class = PostSerializer
+class BoardDetail(generics.RetrieveAPIView):
+    queryset = Board.objects.all()
+    serializer_class = BoardSerializer
+
+class BoardCreate(generics.CreateAPIView):
+    queryset = Board.objects.all()
+    serializer_class = BoardSerializer
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -53,13 +57,13 @@ class PostCreate(generics.CreateAPIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-class PostUpdate(generics.UpdateAPIView):
-    queryset = Post.objects.all()
-    serializer_class = PostSerializer
+class BoardUpdate(generics.UpdateAPIView):
+    queryset = Board.objects.all()
+    serializer_class = BoardSerializer
 
-class PostDelete(generics.DestroyAPIView):
-    queryset = Post.objects.all()
-    serializer_class = PostSerializer
+class BoardDelete(generics.DestroyAPIView):
+    queryset = Board.objects.all()
+    serializer_class = BoardSerializer
 
 
 # Create your views here.
