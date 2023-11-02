@@ -2,8 +2,8 @@ from rest_framework import generics
 from rest_framework import status
 from rest_framework.response import Response
 from django.shortcuts import render
-from .models import User, Board # 모델 불러오기
-from .serializers import UserSerializer, BoardSerializer
+from .models import User, Board, Board_Comment # 모델 불러오기
+from .serializers import UserSerializer, BoardSerializer, BoardCommentSerializer
 
 # 유저 관련 API 모음
 class UserList(generics.ListAPIView):
@@ -67,6 +67,45 @@ class BoardUpdate(generics.UpdateAPIView):
 class BoardDelete(generics.DestroyAPIView):
     queryset = Board.objects.all()
     serializer_class = BoardSerializer
+
+
+# 게시글 댓글 관련 API 모음
+
+class BoardCommentList(generics.ListAPIView):
+    queryset = Board_Comment.objects.all()
+    serializer_class = BoardCommentSerializer
+
+class BoardCommentListByParent(generics.ListAPIView):
+    serializer_class = BoardCommentSerializer
+
+    def get_queryset(self):
+        parent_comment = self.kwargs['parent_comment']
+        return Board_Comment.objects.filter(parent_comment=parent_comment)
+
+class BoardCommentDetail(generics.RetrieveAPIView):
+    queryset = Board_Comment.objects.all()
+    serializer_class = BoardCommentSerializer
+
+class BoardCommentCreate(generics.CreateAPIView):
+    queryset = Board_Comment.objects.all()
+    serializer_class = BoardCommentSerializer
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            self.perform_create(serializer)
+            headers = self.get_success_headers(serializer.data)
+            return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class BoardCommentUpdate(generics.UpdateAPIView):
+    queryset = Board_Comment.objects.all()
+    serializer_class = BoardCommentSerializer
+
+class BoardCommentDelete(generics.DestroyAPIView):
+    queryset = Board_Comment.objects.all()
+    serializer_class = BoardCommentSerializer
+
 
 
 # Create your views here.
