@@ -37,9 +37,12 @@ class BoardList(generics.ListAPIView):
     queryset = Board.objects.all()
     serializer_class = BoardSerializer
 
-class BoardCategoryList(generics.ListAPIView):
-    queryset = Board.objects.all()
+class BoardListByCategory(generics.ListAPIView):
     serializer_class = BoardSerializer
+
+    def get_queryset(self):
+        category_id = self.kwargs['category_id']
+        return Board.objects.filter(category_id=category_id)
 
 class BoardDetail(generics.RetrieveAPIView):
     queryset = Board.objects.all()

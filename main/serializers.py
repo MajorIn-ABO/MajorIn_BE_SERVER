@@ -9,4 +9,4 @@ class UserSerializer(serializers.ModelSerializer):
 class BoardSerializer(serializers.ModelSerializer):
     class Meta:
         model = Board
-        fields = '__all__'
+        fields = ['id', 'user_id', 'category_id', 'title', 'contents']
