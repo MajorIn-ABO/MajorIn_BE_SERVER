@@ -3,7 +3,7 @@ from rest_framework import status
 from rest_framework.response import Response
 from django.shortcuts import render
 from .models import User, Board, Board_Comment, Board_Like, Board_bookmark# 모델 불러오기
-from .serializers import UserSerializer, BoardSerializer, BoardCommentSerializer, BoardLikeSerializer, BoardbookmarkSerializer
+from .serializers import UserSerializer, BoardSerializer, BoardCommentSerializer, BoardLikeSerializer, BoardBookmarkSerializer
 
 # 유저 관련 API 모음
 class UserList(generics.ListAPIView):
@@ -157,6 +157,41 @@ class BoardLikeCreate(generics.CreateAPIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 # 게시글 북마크 관련 API
+
+class BoardBookmarkList(generics.ListAPIView):
+    queryset = Board_bookmark.objects.all()
+    serializer_class = BoardBookmarkSerializer
+
+class BoardBookmarkListByUserId(generics.ListAPIView):
+    serializer_class = BoardBookmarkSerializer
+
+    def get_queryset(self):
+        user_id = self.kwargs['user_id']
+        return Board_bookmark.objects.filter(user_id=user_id)
+    
+class BoardBookmarkListByPostId(generics.ListAPIView):
+    serializer_class = BoardBookmarkSerializer
+
+    def get_queryset(self):
+        post_id = self.kwargs['post_id']
+        return Board_bookmark.objects.filter(post_id=post_id)
+
+class BoardBookmarkDetail(generics.RetrieveAPIView):
+    queryset = Board_bookmark.objects.all()
+    serializer_class = BoardBookmarkSerializer
+
+class BoardBookmarkCreate(generics.CreateAPIView):
+    queryset = Board_bookmark.objects.all()
+    serializer_class = BoardBookmarkSerializer
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            self.perform_create(serializer)
+            headers = self.get_success_headers(serializer.data)
+            return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
 
 # Create your views here.
 def index(request):

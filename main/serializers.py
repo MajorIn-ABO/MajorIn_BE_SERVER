@@ -21,7 +21,7 @@ class BoardLikeSerializer(serializers.ModelSerializer):
         model = Board_Like
         fields = ['id', 'user_id', 'post_id']
 
-class BoardbookmarkSerializer(serializers.ModelSerializer):
+class BoardBookmarkSerializer(serializers.ModelSerializer):
     class Meta:
         model = Board_bookmark
         fields = ['id', 'user_id', 'post_id']

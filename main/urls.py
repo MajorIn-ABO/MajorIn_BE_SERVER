@@ -5,6 +5,7 @@ from . import views
 urlpatterns = [
     path('', views.index, name='index'),
     path('user/', views.user_view, name='user'),
+    
     path('api/users/', views.UserList.as_view(), name='user-list'),
     path('api/users/<int:pk>/', views.UserDetail.as_view(), name='user-detail'),
     path('api/users/create/', views.UserCreate.as_view(), name='user-create'),
@@ -31,4 +32,10 @@ urlpatterns = [
     path('api/boards/posts/likes-by-userid/<int:user_id>/', views.BoardLikeListByUserId.as_view(), name='board-like-list-by-userid'),
     path('api/boards/posts/likes-by-postid/<int:post_id>/', views.BoardLikeListByPostId.as_view(), name='board-like-list-by-postid'),
     path('api/boards/posts/likes/create/', views.BoardLikeCreate.as_view(), name='board-like-create'),
+
+    path('api/boards/posts/bookmarks/', views.BoardBookmarkList.as_view(), name='board-bookmark-list'),
+    path('api/boards/posts/bookmarks/<int:pk>/', views.BoardBookmarkDetail.as_view(), name='board-bookmark-detail'),
+    path('api/boards/posts/bookmarks-by-userid/<int:user_id>/', views.BoardBookmarkListByUserId.as_view(), name='board-bookmark-list-by-userid'),
+    path('api/boards/posts/bookmarks-by-postid/<int:post_id>/', views.BoardBookmarkListByPostId.as_view(), name='board-bookmark-list-by-postid'),
+    path('api/boards/posts/bookmarks/create/', views.BoardBookmarkCreate.as_view(), name='board-bookmark-create'),
 ]
