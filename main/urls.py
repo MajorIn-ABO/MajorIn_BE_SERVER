@@ -19,8 +19,16 @@ urlpatterns = [
     
     path('api/boards/posts/comments/', views.BoardCommentList.as_view(), name='board-comment-list'),
     path('api/boards/posts/comments/<int:pk>/', views.BoardCommentDetail.as_view(), name='board-comment-detail'),
-    path('api/boards/posts/comments-by-parent/<str:parent_comment>/', views.BoardCommentListByParent.as_view(), name='board-comment-list-by-parent'),
+    path('api/boards/posts/comments-by-userid/<int:user_id>/', views.BoardCommentListByUserId.as_view(), name='board-comment-list-by-userid'),
+    path('api/boards/posts/comments-by-postid/<int:post_id>/', views.BoardCommentListByPostId.as_view(), name='board-comment-list-by-postid'),
+    path('api/boards/posts/comments-by-parent/<int:parent_comment>/', views.BoardCommentListByParent.as_view(), name='board-comment-list-by-parent'),
     path('api/boards/posts/comments/create/', views.BoardCommentCreate.as_view(), name='board-comment-create'),
     path('api/boards/posts/comments/<int:pk>/update/', views.BoardCommentUpdate.as_view(), name='board-comment-update'),
     path('api/boards/posts/comments/<int:pk>/delete/', views.BoardCommentDelete.as_view(), name='board-comment-delete'),
+
+    path('api/boards/posts/likes/', views.BoardLikeList.as_view(), name='board-like-list'),
+    path('api/boards/posts/likes/<int:pk>/', views.BoardLikeDetail.as_view(), name='board-like-detail'),
+    path('api/boards/posts/likes-by-userid/<int:user_id>/', views.BoardLikeListByUserId.as_view(), name='board-like-list-by-userid'),
+    path('api/boards/posts/likes-by-postid/<int:post_id>/', views.BoardLikeListByPostId.as_view(), name='board-like-list-by-postid'),
+    path('api/boards/posts/likes/create/', views.BoardLikeCreate.as_view(), name='board-like-create'),
 ]
