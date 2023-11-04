@@ -46,4 +46,13 @@ urlpatterns = [
     path('api/studys/posts/create/', views.StudyCreate.as_view(), name='study-create'),
     path('api/studys/posts/<int:pk>/update/', views.StudyUpdate.as_view(), name='study-update'),
     path('api/studys/posts/<int:pk>/delete/', views.StudyDelete.as_view(), name='study-delete'),
+
+    path('api/studys/posts/comments/', views.StudyCommentList.as_view(), name='study-comment-list'),
+    path('api/studys/posts/comments/<int:pk>/', views.StudyCommentDetail.as_view(), name='study-comment-detail'),
+    path('api/studys/posts/comments-by-userid/<int:user_id>/', views.StudyCommentListByUserId.as_view(), name='study-comment-list-by-userid'),
+    path('api/studys/posts/comments-by-postid/<int:studypost_id>/', views.StudyCommentListByPostId.as_view(), name='study-comment-list-by-postid'),
+    path('api/studys/posts/comments-by-parent/<int:parent_comment>/', views.StudyCommentListByParent.as_view(), name='study-comment-list-by-parent'),
+    path('api/studys/posts/comments/create/', views.StudyCommentCreate.as_view(), name='study-comment-create'),
+    path('api/studys/posts/comments/<int:pk>/update/', views.StudyCommentUpdate.as_view(), name='study-comment-update'),
+    path('api/studys/posts/comments/<int:pk>/delete/', views.StudyCommentDelete.as_view(), name='study-comment-delete'),
 ]
