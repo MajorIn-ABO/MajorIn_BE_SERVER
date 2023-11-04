@@ -3,6 +3,7 @@ from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.shortcuts import render
+from django.utils import timezone  # 필요한 경우 추가
 from .models import User, Board, Board_Comment, Board_Like, Board_bookmark, Study, Study_Comment, Study_Like
 from .serializers import UserSerializer, BoardSerializer, BoardCommentSerializer, BoardLikeSerializer, BoardBookmarkSerializer, StudySerializer, StudyCommentSerializer, StudyLikeSerializer
 
@@ -332,6 +333,8 @@ class StudyLikeCreate(APIView):
             # 이미 좋아요를 누른 경우 좋아요를 취소
             like = Study_Like.objects.get(user_id=user, studypost_id=study_post)
             like.delete()
+            # like.delete_date = timezone.now()  # delete_date 필드에 현재 시간 설정
+            # like.save()
             study_post.like -= 1
             study_post.save()
             return Response({"message": "Like removed.", "likes": study_post.like}, status=status.HTTP_200_OK)
