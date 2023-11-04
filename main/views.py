@@ -2,8 +2,8 @@ from rest_framework import generics
 from rest_framework import status
 from rest_framework.response import Response
 from django.shortcuts import render
-from .models import User, Board, Board_Comment, Board_Like, Board_bookmark# 모델 불러오기
-from .serializers import UserSerializer, BoardSerializer, BoardCommentSerializer, BoardLikeSerializer, BoardBookmarkSerializer
+from .models import User, Board, Board_Comment, Board_Like, Board_bookmark, Study
+from .serializers import UserSerializer, BoardSerializer, BoardCommentSerializer, BoardLikeSerializer, BoardBookmarkSerializer, StudySerializer
 
 # 유저 관련 API 모음
 class UserList(generics.ListAPIView):
@@ -37,6 +37,13 @@ class BoardList(generics.ListAPIView):
     queryset = Board.objects.all()
     serializer_class = BoardSerializer
 
+class BoardListByUserId(generics.ListAPIView):
+    serializer_class = BoardSerializer
+
+    def get_queryset(self):
+        user_id = self.kwargs['user_id']
+        return Board.objects.filter(user_id=user_id)
+    
 class BoardListByCategory(generics.ListAPIView):
     serializer_class = BoardSerializer
 
@@ -192,6 +199,43 @@ class BoardBookmarkCreate(generics.CreateAPIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
+# 스터디 관련 API 모음
+
+class StudyList(generics.ListAPIView):
+    queryset = Study.objects.all()
+    serializer_class = StudySerializer
+
+class StudyListByUserId(generics.ListAPIView):
+    serializer_class = StudySerializer
+
+    def get_queryset(self):
+        user_id = self.kwargs['user_id']
+        return Study.objects.filter(user_id=user_id)
+
+class StudyDetail(generics.RetrieveAPIView):
+    queryset = Study.objects.all()
+    serializer_class = StudySerializer
+
+class StudyCreate(generics.CreateAPIView):
+    queryset = Study.objects.all()
+    serializer_class = StudySerializer
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            self.perform_create(serializer)
+            headers = self.get_success_headers(serializer.data)
+            return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class StudyUpdate(generics.UpdateAPIView):
+    queryset = Study.objects.all()
+    serializer_class = StudySerializer
+
+class StudyDelete(generics.DestroyAPIView):
+    queryset = Study.objects.all()
+    serializer_class = StudySerializer
+
 
 # Create your views here.
 def index(request):
