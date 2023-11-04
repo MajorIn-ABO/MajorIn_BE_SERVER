@@ -13,6 +13,7 @@ urlpatterns = [
     
     path('api/boards/posts/', views.BoardList.as_view(), name='board-list'),
     path('api/boards/posts/<int:pk>/', views.BoardDetail.as_view(), name='board-detail'),
+    path('api/boards/posts-by-userid/<int:user_id>/', views.BoardListByUserId.as_view(), name='board-list-by-userid'),
     path('api/boards/posts-by-category/<str:category_id>/', views.BoardListByCategory.as_view(), name='board-list-by-category'),
     path('api/boards/posts/create/', views.BoardCreate.as_view(), name='board-create'),
     path('api/boards/posts/<int:pk>/update/', views.BoardUpdate.as_view(), name='board-update'),
@@ -38,4 +39,11 @@ urlpatterns = [
     path('api/boards/posts/bookmarks-by-userid/<int:user_id>/', views.BoardBookmarkListByUserId.as_view(), name='board-bookmark-list-by-userid'),
     path('api/boards/posts/bookmarks-by-postid/<int:post_id>/', views.BoardBookmarkListByPostId.as_view(), name='board-bookmark-list-by-postid'),
     path('api/boards/posts/bookmarks/create/', views.BoardBookmarkCreate.as_view(), name='board-bookmark-create'),
+
+    path('api/studys/posts/', views.StudyList.as_view(), name='study-list'),
+    path('api/studys/posts/<int:pk>/', views.StudyDetail.as_view(), name='study-detail'),
+    path('api/studys/posts-by-userid/<int:user_id>/', views.StudyListByUserId.as_view(), name='study-list-by-userid'),
+    path('api/studys/posts/create/', views.StudyCreate.as_view(), name='study-create'),
+    path('api/studys/posts/<int:pk>/update/', views.StudyUpdate.as_view(), name='study-update'),
+    path('api/studys/posts/<int:pk>/delete/', views.StudyDelete.as_view(), name='study-delete'),
 ]
