@@ -74,6 +74,7 @@ class Board(models.Model):
     post_date = models.DateTimeField(auto_now_add=True)
     update_date = models.DateTimeField(auto_now=True)
     delete_date = models.DateTimeField(null=True)
+    comment = models.IntegerField(default=0)
     like = models.IntegerField(default=0)
     keep = models.IntegerField(default=0)
 
@@ -115,6 +116,23 @@ class Board_bookmark(models.Model):
     post_id = models.ForeignKey(Board, on_delete=models.CASCADE, db_column="post_id")
     bookmark_date = models.DateTimeField(auto_now_add=True)
     delete_date = models.DateTimeField(null=True)
+
+    def __str__(self):
+        return self.id
+    
+
+class Study(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    user_id = models.ForeignKey(User, on_delete=models.CASCADE, db_column="user_id")
+    title = models.CharField(max_length=100, blank=False, null=False)
+    contents = models.TextField(blank=False, null=False)
+    hashtags = models.TextField(blank=False, null=False)
+    is_recruited = models.BooleanField(default=False, null=False)
+    post_date = models.DateTimeField(auto_now_add=True)
+    update_date = models.DateTimeField(auto_now=True)
+    delete_date = models.DateTimeField(null=True)
+    comment = models.IntegerField(default=0)
+    like = models.IntegerField(default=0)
 
     def __str__(self):
         return self.id
