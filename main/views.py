@@ -310,21 +310,38 @@ class StudyLikeListByPostId(generics.ListAPIView):
         studypost_id = self.kwargs['studypost_id']
         return Study_Like.objects.filter(studypost_id=studypost_id)
 
-class StudyLikeDetail(generics.RetrieveAPIView):
-    queryset = Study_Like.objects.all()
-    serializer_class = StudyLikeSerializer
+class StudyLikeCreate(APIView):
+    
+    def post(self, request, post_id, user_id):
+        # 우선은 누른 사람의 user_id를 파라미터로 주는 것으로 설정
+        # user = request.user
+        try:
+            study_post = Study.objects.get(pk=post_id)
+        except Study.DoesNotExist:
+            return Response({"error": "Study post not found."}, status=status.HTTP_404_NOT_FOUND)
 
-class StudyLikeCreate(generics.CreateAPIView):
-    queryset = Study_Like.objects.all()
-    serializer_class = StudyLikeSerializer
+        try:
+            user = User.objects.get(pk=user_id)
+        except User.DoesNotExist:
+            return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+        
+        # 좋아요를 이미 눌렀는지 확인
+        is_liked = Study_Like.objects.filter(user_id=user, studypost_id=study_post).exists()
 
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        if serializer.is_valid():
-            self.perform_create(serializer)
-            headers = self.get_success_headers(serializer.data)
-            return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        if is_liked:
+            # 이미 좋아요를 누른 경우 좋아요를 취소
+            like = Study_Like.objects.get(user_id=user, studypost_id=study_post)
+            like.delete()
+            study_post.like -= 1
+            study_post.save()
+            return Response({"message": "Like removed.", "likes": study_post.like}, status=status.HTTP_200_OK)
+        else:
+            # 좋아요를 누르지 않은 경우 좋아요 추가
+            like = Study_Like(user_id=user, studypost_id=study_post)
+            like.save()
+            study_post.like += 1
+            study_post.save()
+            return Response({"message": "Liked.", "likes": study_post.like}, status=status.HTTP_201_CREATED)
 
 
 # Create your views here.

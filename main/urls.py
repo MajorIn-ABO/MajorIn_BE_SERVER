@@ -55,4 +55,9 @@ urlpatterns = [
     path('api/studys/posts/comments/create/', views.StudyCommentCreate.as_view(), name='study-comment-create'),
     path('api/studys/posts/comments/<int:pk>/update/', views.StudyCommentUpdate.as_view(), name='study-comment-update'),
     path('api/studys/posts/comments/<int:pk>/delete/', views.StudyCommentDelete.as_view(), name='study-comment-delete'),
+
+    path('api/studys/posts/likes/', views.StudyLikeList.as_view(), name='study-like-list'),
+    path('api/studys/posts/likes-by-userid/<int:user_id>/', views.StudyLikeListByUserId.as_view(), name='study-like-list-by-userid'),
+    path('api/studys/posts/likes-by-postid/<int:studypost_id>/', views.StudyLikeListByPostId.as_view(), name='study-like-list-by-postid'),
+    path('api/studys/posts/likes/<int:post_id>/<int:user_id>/create/', views.StudyLikeCreate.as_view(), name='study-like-create'),
 ]

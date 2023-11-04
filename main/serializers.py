@@ -39,4 +39,4 @@ class StudyCommentSerializer(serializers.ModelSerializer):
 class StudyLikeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Study_Like
-        fields = ['id', 'user_id', 'post_id']     
+        fields = ['id', 'user_id', 'studypost_id']     
