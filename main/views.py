@@ -3,8 +3,8 @@ from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.shortcuts import render
-from .models import User, Board, Board_Comment, Board_Like, Board_bookmark, Study, Study_Comment
-from .serializers import UserSerializer, BoardSerializer, BoardCommentSerializer, BoardLikeSerializer, BoardBookmarkSerializer, StudySerializer, StudyCommentSerializer
+from .models import User, Board, Board_Comment, Board_Like, Board_bookmark, Study, Study_Comment, Study_Like
+from .serializers import UserSerializer, BoardSerializer, BoardCommentSerializer, BoardLikeSerializer, BoardBookmarkSerializer, StudySerializer, StudyCommentSerializer, StudyLikeSerializer
 
 # 유저 관련 API 모음
 class UserList(generics.ListAPIView):
@@ -288,6 +288,43 @@ class StudyCommentUpdate(generics.UpdateAPIView):
 class StudyCommentDelete(generics.DestroyAPIView):
     queryset = Study_Comment.objects.all()
     serializer_class = StudyCommentSerializer
+
+
+# 스터디 좋아요 관련 API
+
+class StudyLikeList(generics.ListAPIView):
+    queryset = Study_Comment.objects.all()
+    serializer_class = StudyLikeSerializer
+
+class StudyLikeListByUserId(generics.ListAPIView):
+    serializer_class = StudyLikeSerializer
+
+    def get_queryset(self):
+        user_id = self.kwargs['user_id']
+        return Study_Like.objects.filter(user_id=user_id)
+    
+class StudyLikeListByPostId(generics.ListAPIView):
+    serializer_class = StudyLikeSerializer
+
+    def get_queryset(self):
+        studypost_id = self.kwargs['studypost_id']
+        return Study_Like.objects.filter(studypost_id=studypost_id)
+
+class StudyLikeDetail(generics.RetrieveAPIView):
+    queryset = Study_Like.objects.all()
+    serializer_class = StudyLikeSerializer
+
+class StudyLikeCreate(generics.CreateAPIView):
+    queryset = Study_Like.objects.all()
+    serializer_class = StudyLikeSerializer
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            self.perform_create(serializer)
+            headers = self.get_success_headers(serializer.data)
+            return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 # Create your views here.
