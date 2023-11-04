@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User, Board, Board_Comment, Board_Like, Board_bookmark, Study
+from .models import User, Board, Board_Comment, Board_Like, Board_bookmark, Study, Study_Comment
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -30,3 +30,8 @@ class StudySerializer(serializers.ModelSerializer):
     class Meta:
         model = Study
         fields = ['id', 'user_id', 'title', 'contents', 'hashtags', 'is_recruited']
+
+class StudyCommentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Study_Comment
+        fields = ['id', 'user_id', 'studypost_id', 'parent_comment', 'contents']        

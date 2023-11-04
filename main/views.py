@@ -2,8 +2,8 @@ from rest_framework import generics
 from rest_framework import status
 from rest_framework.response import Response
 from django.shortcuts import render
-from .models import User, Board, Board_Comment, Board_Like, Board_bookmark, Study
-from .serializers import UserSerializer, BoardSerializer, BoardCommentSerializer, BoardLikeSerializer, BoardBookmarkSerializer, StudySerializer
+from .models import User, Board, Board_Comment, Board_Like, Board_bookmark, Study, Study_Comment
+from .serializers import UserSerializer, BoardSerializer, BoardCommentSerializer, BoardLikeSerializer, BoardBookmarkSerializer, StudySerializer, StudyCommentSerializer
 
 # 유저 관련 API 모음
 class UserList(generics.ListAPIView):
@@ -235,6 +235,58 @@ class StudyUpdate(generics.UpdateAPIView):
 class StudyDelete(generics.DestroyAPIView):
     queryset = Study.objects.all()
     serializer_class = StudySerializer
+
+
+# 스터디 댓글 관련 API 모음
+
+class StudyCommentList(generics.ListAPIView):
+    queryset = Study_Comment.objects.all()
+    serializer_class = StudyCommentSerializer
+
+class StudyCommentListByUserId(generics.ListAPIView):
+    serializer_class = StudyCommentSerializer
+
+    def get_queryset(self):
+        user_id = self.kwargs['user_id']
+        return Study_Comment.objects.filter(user_id=user_id)
+    
+class StudyCommentListByPostId(generics.ListAPIView):
+    serializer_class = StudyCommentSerializer
+
+    def get_queryset(self):
+        studypost_id = self.kwargs['studypost_id']
+        return Study_Comment.objects.filter(studypost_id=studypost_id)
+
+class StudyCommentListByParent(generics.ListAPIView):
+    serializer_class = StudyCommentSerializer
+
+    def get_queryset(self):
+        parent_comment = self.kwargs['parent_comment']
+        return Study_Comment.objects.filter(parent_comment=parent_comment)
+
+class StudyCommentDetail(generics.RetrieveAPIView):
+    queryset = Study_Comment.objects.all()
+    serializer_class = StudyCommentSerializer
+
+class StudyCommentCreate(generics.CreateAPIView):
+    queryset = Study_Comment.objects.all()
+    serializer_class = StudyCommentSerializer
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            self.perform_create(serializer)
+            headers = self.get_success_headers(serializer.data)
+            return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class StudyCommentUpdate(generics.UpdateAPIView):
+    queryset = Study_Comment.objects.all()
+    serializer_class = StudyCommentSerializer
+
+class StudyCommentDelete(generics.DestroyAPIView):
+    queryset = Study_Comment.objects.all()
+    serializer_class = StudyCommentSerializer
 
 
 # Create your views here.

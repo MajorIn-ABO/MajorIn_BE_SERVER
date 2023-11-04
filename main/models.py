@@ -136,3 +136,18 @@ class Study(models.Model):
 
     def __str__(self):
         return self.id
+    
+
+class Study_Comment(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    user_id = models.ForeignKey(User, on_delete=models.CASCADE, db_column="user_id")
+    studypost_id = models.ForeignKey(Study, on_delete=models.CASCADE, db_column="studypost_id")
+    parent_comment = models.BigIntegerField(default=id, db_column="parent_comment")
+    contents = models.TextField(blank=False, null=False)
+    comment_date = models.DateTimeField(auto_now_add=True)
+    update_date = models.DateTimeField(auto_now=True)
+    delete_date = models.DateTimeField(null=True)
+    like = models.IntegerField(default=0)
+
+    def __str__(self):
+        return self.id
