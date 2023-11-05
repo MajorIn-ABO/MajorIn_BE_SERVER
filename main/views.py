@@ -1,9 +1,11 @@
 from rest_framework import generics
 from rest_framework import status
+from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.shortcuts import render
-from .models import User, Board, Board_Comment, Board_Like, Board_bookmark, Study, Study_Comment
-from .serializers import UserSerializer, BoardSerializer, BoardCommentSerializer, BoardLikeSerializer, BoardBookmarkSerializer, StudySerializer, StudyCommentSerializer
+from django.utils import timezone  # 필요한 경우 추가
+from .models import User, Board, Board_Comment, Board_Like, Board_bookmark, Study, Study_Comment, Study_Like
+from .serializers import UserSerializer, BoardSerializer, BoardCommentSerializer, BoardLikeSerializer, BoardBookmarkSerializer, StudySerializer, StudyCommentSerializer, StudyLikeSerializer
 
 # 유저 관련 API 모음
 class UserList(generics.ListAPIView):
@@ -287,6 +289,62 @@ class StudyCommentUpdate(generics.UpdateAPIView):
 class StudyCommentDelete(generics.DestroyAPIView):
     queryset = Study_Comment.objects.all()
     serializer_class = StudyCommentSerializer
+
+
+# 스터디 좋아요 관련 API
+
+class StudyLikeList(generics.ListAPIView):
+    queryset = Study_Comment.objects.all()
+    serializer_class = StudyLikeSerializer
+
+class StudyLikeListByUserId(generics.ListAPIView):
+    serializer_class = StudyLikeSerializer
+
+    def get_queryset(self):
+        user_id = self.kwargs['user_id']
+        return Study_Like.objects.filter(user_id=user_id)
+    
+class StudyLikeListByPostId(generics.ListAPIView):
+    serializer_class = StudyLikeSerializer
+
+    def get_queryset(self):
+        studypost_id = self.kwargs['studypost_id']
+        return Study_Like.objects.filter(studypost_id=studypost_id)
+
+class StudyLikeCreate(APIView):
+    
+    def post(self, request, post_id, user_id):
+        # 우선은 누른 사람의 user_id를 파라미터로 주는 것으로 설정
+        # user = request.user
+        try:
+            study_post = Study.objects.get(pk=post_id)
+        except Study.DoesNotExist:
+            return Response({"error": "Study post not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        try:
+            user = User.objects.get(pk=user_id)
+        except User.DoesNotExist:
+            return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+        
+        # 좋아요를 이미 눌렀는지 확인
+        is_liked = Study_Like.objects.filter(user_id=user, studypost_id=study_post).exists()
+
+        if is_liked:
+            # 이미 좋아요를 누른 경우 좋아요를 취소
+            like = Study_Like.objects.get(user_id=user, studypost_id=study_post)
+            like.delete()
+            # like.delete_date = timezone.now()  # delete_date 필드에 현재 시간 설정
+            # like.save()
+            study_post.like -= 1
+            study_post.save()
+            return Response({"message": "Like removed.", "likes": study_post.like}, status=status.HTTP_200_OK)
+        else:
+            # 좋아요를 누르지 않은 경우 좋아요 추가
+            like = Study_Like(user_id=user, studypost_id=study_post)
+            like.save()
+            study_post.like += 1
+            study_post.save()
+            return Response({"message": "Liked.", "likes": study_post.like}, status=status.HTTP_201_CREATED)
 
 
 # Create your views here.

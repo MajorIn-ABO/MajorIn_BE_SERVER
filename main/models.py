@@ -151,3 +151,14 @@ class Study_Comment(models.Model):
 
     def __str__(self):
         return self.id
+    
+
+class Study_Like(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    user_id = models.ForeignKey(User, on_delete=models.CASCADE, db_column="user_id")
+    studypost_id = models.ForeignKey(Study, on_delete=models.CASCADE, db_column="studypost_id")
+    like_date = models.DateTimeField(auto_now_add=True)
+    delete_date = models.DateTimeField(null=True)
+
+    def __str__(self):
+        return self.id
