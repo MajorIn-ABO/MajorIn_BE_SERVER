@@ -149,21 +149,40 @@ class BoardLikeListByPostId(generics.ListAPIView):
         post_id = self.kwargs['post_id']
         return Board_Like.objects.filter(post_id=post_id)
 
-class BoardLikeDetail(generics.RetrieveAPIView):
-    queryset = Board_Like.objects.all()
-    serializer_class = BoardLikeSerializer
+class BoardLikeCreate(APIView):
+    
+    def post(self, request, post_id, user_id):
+        # 우선은 누른 사람의 user_id를 파라미터로 주는 것으로 설정
+        # user = request.user
+        try:
+            board_post = Board.objects.get(pk=post_id)
+        except Board.DoesNotExist:
+            return Response({"error": "Board post not found."}, status=status.HTTP_404_NOT_FOUND)
 
-class BoardLikeCreate(generics.CreateAPIView):
-    queryset = Board_Like.objects.all()
-    serializer_class = BoardLikeSerializer
+        try:
+            user = User.objects.get(pk=user_id)
+        except User.DoesNotExist:
+            return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+        
+        # 좋아요를 이미 눌렀는지 확인
+        is_liked = Board_Like.objects.filter(user_id=user, post_id=board_post).exists()
 
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        if serializer.is_valid():
-            self.perform_create(serializer)
-            headers = self.get_success_headers(serializer.data)
-            return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        if is_liked:
+            # 이미 좋아요를 누른 경우 좋아요를 취소
+            like = Board_Like.objects.get(user_id=user, post_id=board_post)
+            like.delete()
+            # like.delete_date = timezone.now()  # delete_date 필드에 현재 시간 설정
+            # like.save()
+            board_post.like -= 1
+            board_post.save(update_fields=['like'])
+            return Response({"message": "Like removed.", "likes": board_post.like}, status=status.HTTP_200_OK)
+        else:
+            # 좋아요를 누르지 않은 경우 좋아요 추가
+            like = Board_Like(user_id=user, post_id=board_post)
+            like.save()
+            board_post.like += 1
+            board_post.save(update_fields=['like'])
+            return Response({"message": "Liked.", "likes": board_post.like}, status=status.HTTP_201_CREATED)
 
 # 게시글 북마크 관련 API
 
@@ -336,14 +355,14 @@ class StudyLikeCreate(APIView):
             # like.delete_date = timezone.now()  # delete_date 필드에 현재 시간 설정
             # like.save()
             study_post.like -= 1
-            study_post.save()
+            study_post.save(update_fields=['like'])
             return Response({"message": "Like removed.", "likes": study_post.like}, status=status.HTTP_200_OK)
         else:
             # 좋아요를 누르지 않은 경우 좋아요 추가
             like = Study_Like(user_id=user, studypost_id=study_post)
             like.save()
             study_post.like += 1
-            study_post.save()
+            study_post.save(update_fields=['like'])
             return Response({"message": "Liked.", "likes": study_post.like}, status=status.HTTP_201_CREATED)
 
 
