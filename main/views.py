@@ -174,14 +174,14 @@ class BoardLikeCreate(APIView):
             # like.delete_date = timezone.now()  # delete_date 필드에 현재 시간 설정
             # like.save()
             board_post.like -= 1
-            board_post.save()
+            board_post.save(update_fields=['like'])
             return Response({"message": "Like removed.", "likes": board_post.like}, status=status.HTTP_200_OK)
         else:
             # 좋아요를 누르지 않은 경우 좋아요 추가
             like = Board_Like(user_id=user, post_id=board_post)
             like.save()
             board_post.like += 1
-            board_post.save()
+            board_post.save(update_fields=['like'])
             return Response({"message": "Liked.", "likes": board_post.like}, status=status.HTTP_201_CREATED)
 
 # 게시글 북마크 관련 API
@@ -355,14 +355,14 @@ class StudyLikeCreate(APIView):
             # like.delete_date = timezone.now()  # delete_date 필드에 현재 시간 설정
             # like.save()
             study_post.like -= 1
-            study_post.save()
+            study_post.save(update_fields=['like'])
             return Response({"message": "Like removed.", "likes": study_post.like}, status=status.HTTP_200_OK)
         else:
             # 좋아요를 누르지 않은 경우 좋아요 추가
             like = Study_Like(user_id=user, studypost_id=study_post)
             like.save()
             study_post.like += 1
-            study_post.save()
+            study_post.save(update_fields=['like'])
             return Response({"message": "Liked.", "likes": study_post.like}, status=status.HTTP_201_CREATED)
 
 
