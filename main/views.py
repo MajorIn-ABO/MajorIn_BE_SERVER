@@ -109,6 +109,27 @@ class BoardCommentDetail(generics.RetrieveAPIView):
     queryset = Board_Comment.objects.all()
     serializer_class = BoardCommentSerializer
 
+class BoardCommentCreate(APIView):
+    
+    def post(self, request, post_id, user_id):
+        # 우선은 누른 사람의 user_id를 파라미터로 주는 것으로 설정
+        # user = request.user
+        try:
+            board_post = Board.objects.get(pk=post_id)
+        except Board.DoesNotExist:
+            return Response({"error": "Board post not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        try:
+            user = User.objects.get(pk=user_id)
+        except User.DoesNotExist:
+            return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+        
+        comment = Board_Comment(user_id=user, post_id=board_post)
+        comment.save()
+        board_post.comment += 1
+        board_post.save(update_fields=['comment'])
+        return Response({"message": "Commented.", "comments": board_post.comment}, status=status.HTTP_201_CREATED)
+        
 class BoardCommentCreate(generics.CreateAPIView):
     queryset = Board_Comment.objects.all()
     serializer_class = BoardCommentSerializer
