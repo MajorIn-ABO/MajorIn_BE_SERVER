@@ -41,7 +41,7 @@ class User(models.Model):
     user_status = models.CharField(max_length=10, choices=USER_STATUS)
 
     def __str__(self):
-        return self.id
+        return str(self.id)
 
 
 class Category(models.Model):
@@ -79,11 +79,9 @@ class Board(models.Model):
     keep = models.IntegerField(default=0)
 
     def __str__(self):
-        return f"{self.id}"
+        return str(self.id)
 
 
-# 게시글, 스터디 댓글을 테이블을 나눠서 저장할지 -> 현재 상태
-# 함께 저장 : 카테고리 str 을 id 에 붙여서 저장하는 방법 or 카테고리 컬럼을 넣고 따로 id 값은 같아도 상관없도록 (고려)
 class Board_Comment(models.Model):
     id = models.BigAutoField(primary_key=True)
     user_id = models.ForeignKey(User, on_delete=models.CASCADE, db_column="user_id")
@@ -96,7 +94,7 @@ class Board_Comment(models.Model):
     like = models.IntegerField(default=0)
 
     def __str__(self):
-        return f"{self.id}"
+        return str(self.id)
     
 
 class Board_Like(models.Model):

@@ -121,8 +121,8 @@ class BoardCommentCreate(generics.CreateAPIView):
             # 우선은 누른 사람의 user_id를 파라미터로 주는 것으로 설정
             # user = request.user
 
-            user_id = serializer.validated_data["user_id"]
-            post_id = serializer.validated_data["post_id"]
+            user_id = serializer.validated_data["user_id"].id
+            post_id = serializer.validated_data["post_id"].id
             contents = serializer.validated_data["contents"]
             
             try:
@@ -136,8 +136,6 @@ class BoardCommentCreate(generics.CreateAPIView):
                 return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
             
             # serializer.save()  # 댓글을 저장하고
-
-            # 저장하기 전에, parent_comment 이거의 id 값을 숫자로 바꾼다. 그래서 할당하기.
         
             comment = Board_Comment(user_id=user, post_id=board_post, contents=contents)
             comment.save()
