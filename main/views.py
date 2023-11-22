@@ -139,27 +139,12 @@ class BoardCommentCreate(generics.CreateAPIView):
         
             comment = Board_Comment(user_id=user, post_id=board_post, contents=contents)
             comment.save()
-            #serializer.save()
-
-            # self.perform_create(serializer)
 
             board_post.comment += 1
             board_post.save(update_fields=['comment'])
             return Response({"message": "Commented.", "comments": board_post.comment}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-'''       
-class BoardCommentCreate(generics.CreateAPIView):
-    queryset = Board_Comment.objects.all()
-    serializer_class = BoardCommentSerializer
 
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        if serializer.is_valid():
-            self.perform_create(serializer)
-            headers = self.get_success_headers(serializer.data)
-            return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-''' 
 
 class BoardCommentUpdate(generics.UpdateAPIView):
     queryset = Board_Comment.objects.all()
