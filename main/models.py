@@ -79,7 +79,7 @@ class Board(models.Model):
     keep = models.IntegerField(default=0)
 
     def __str__(self):
-        return self.id
+        return f"{self.id}"
 
 
 # 게시글, 스터디 댓글을 테이블을 나눠서 저장할지 -> 현재 상태
@@ -88,7 +88,7 @@ class Board_Comment(models.Model):
     id = models.BigAutoField(primary_key=True)
     user_id = models.ForeignKey(User, on_delete=models.CASCADE, db_column="user_id")
     post_id = models.ForeignKey(Board, on_delete=models.CASCADE, db_column="post_id")
-    parent_comment = models.BigIntegerField(default=id, db_column="parent_comment")
+    parent_comment = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='replies')
     contents = models.TextField(blank=False, null=False)
     comment_date = models.DateTimeField(auto_now_add=True)
     update_date = models.DateTimeField(auto_now=True)
@@ -96,7 +96,7 @@ class Board_Comment(models.Model):
     like = models.IntegerField(default=0)
 
     def __str__(self):
-        return self.id
+        return f"{self.id}"
     
 
 class Board_Like(models.Model):
@@ -142,7 +142,7 @@ class Study_Comment(models.Model):
     id = models.BigAutoField(primary_key=True)
     user_id = models.ForeignKey(User, on_delete=models.CASCADE, db_column="user_id")
     studypost_id = models.ForeignKey(Study, on_delete=models.CASCADE, db_column="studypost_id")
-    parent_comment = models.BigIntegerField(default=id, db_column="parent_comment")
+    parent_comment = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='replies')
     contents = models.TextField(blank=False, null=False)
     comment_date = models.DateTimeField(auto_now_add=True)
     update_date = models.DateTimeField(auto_now=True)

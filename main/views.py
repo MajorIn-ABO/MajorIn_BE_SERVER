@@ -109,27 +109,47 @@ class BoardCommentDetail(generics.RetrieveAPIView):
     queryset = Board_Comment.objects.all()
     serializer_class = BoardCommentSerializer
 
-class BoardCommentCreate(APIView):
+class BoardCommentCreate(generics.CreateAPIView):
+    queryset = Board_Comment.objects.all()
+    serializer_class = BoardCommentSerializer
     
-    def post(self, request, post_id, user_id):
-        # 우선은 누른 사람의 user_id를 파라미터로 주는 것으로 설정
-        # user = request.user
-        try:
-            board_post = Board.objects.get(pk=post_id)
-        except Board.DoesNotExist:
-            return Response({"error": "Board post not found."}, status=status.HTTP_404_NOT_FOUND)
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        # serializer = BoardCommentSerializer(data=request.data)
 
-        try:
-            user = User.objects.get(pk=user_id)
-        except User.DoesNotExist:
-            return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+        if serializer.is_valid():
+            # 우선은 누른 사람의 user_id를 파라미터로 주는 것으로 설정
+            # user = request.user
+
+            user_id = serializer.validated_data["user_id"]
+            post_id = serializer.validated_data["post_id"]
+            contents = serializer.validated_data["contents"]
+            
+            try:
+                board_post = Board.objects.get(pk=post_id)
+            except Board.DoesNotExist:
+                return Response({"error": "Board post not found."}, status=status.HTTP_404_NOT_FOUND)
+
+            try:
+                user = User.objects.get(pk=user_id)
+            except User.DoesNotExist:
+                return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+            
+            # serializer.save()  # 댓글을 저장하고
+
+            # 저장하기 전에, parent_comment 이거의 id 값을 숫자로 바꾼다. 그래서 할당하기.
         
-        comment = Board_Comment(user_id=user, post_id=board_post)
-        comment.save()
-        board_post.comment += 1
-        board_post.save(update_fields=['comment'])
-        return Response({"message": "Commented.", "comments": board_post.comment}, status=status.HTTP_201_CREATED)
-        
+            comment = Board_Comment(user_id=user, post_id=board_post, contents=contents)
+            comment.save()
+            #serializer.save()
+
+            # self.perform_create(serializer)
+
+            board_post.comment += 1
+            board_post.save(update_fields=['comment'])
+            return Response({"message": "Commented.", "comments": board_post.comment}, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+'''       
 class BoardCommentCreate(generics.CreateAPIView):
     queryset = Board_Comment.objects.all()
     serializer_class = BoardCommentSerializer
@@ -141,6 +161,7 @@ class BoardCommentCreate(generics.CreateAPIView):
             headers = self.get_success_headers(serializer.data)
             return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+''' 
 
 class BoardCommentUpdate(generics.UpdateAPIView):
     queryset = Board_Comment.objects.all()
@@ -334,7 +355,7 @@ class StudyCommentDelete(generics.DestroyAPIView):
 # 스터디 좋아요 관련 API
 
 class StudyLikeList(generics.ListAPIView):
-    queryset = Study_Comment.objects.all()
+    queryset = Study_Like.objects.all()
     serializer_class = StudyLikeSerializer
 
 class StudyLikeListByUserId(generics.ListAPIView):
