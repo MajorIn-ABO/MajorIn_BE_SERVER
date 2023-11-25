@@ -126,3 +126,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # REMOVE_APPEND_SLASH_WARNING
 APPEND_SLASH = False
+
+
+# 중고거래 이미지 관리 관련 추가 사항
+MEDIA_ROOT = 'majorinBE/media/'  # 미디어 파일이 저장될 로컬 경로
+MEDIA_URL = '/media/'  # 미디어 파일에 접근할 수 있는 URL
