@@ -414,7 +414,46 @@ class StudyCommentUpdate(generics.UpdateAPIView):
 
 class StudyCommentDelete(generics.DestroyAPIView):
     queryset = Study_Comment.objects.all()
-    serializer_class = StudyCommentSerializer
+
+    def destroy(self, request, *args, **kwargs):
+
+        # 우선은 누른 사람의 user_id를 파라미터로 주는 것으로 설정
+        # user = request.user
+
+        # user_id = request.data.get("user_id")
+        # studypost_id = request.data.get("studypost_id")
+        comment_id = kwargs.get("pk")  # pk는 URL에서 가져온 댓글의 기본 키 값
+        
+        try:
+            study_comment = Study_Comment.objects.get(pk=comment_id)
+        except Study_Comment.DoesNotExist:
+            return Response({"error": "Comment not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        '''
+        # 댓글을 작성한 사용자와 요청한 사용자가 일치하는지 확인
+        if user_id != study_comment.user_id.id:
+            return Response({"error": "Unauthorized. You don't have permission to delete this comment."},
+                            status=status.HTTP_403_FORBIDDEN)
+
+        # 댓글이 속한 스터디 게시물과 요청한 스터디 게시물이 일치하는지 확인
+        if studypost_id != study_comment.studypost_id.id:
+            return Response({"error": "Invalid request. The comment does not belong to the specified post."},
+                            status=status.HTTP_400_BAD_REQUEST)
+        
+        '''
+
+        study_comment.delete()
+
+        # 스터디 게시물의 댓글 수 업데이트
+        try:
+            study_post = Study.objects.get(pk=study_comment.studypost_id.id)
+        except Study.DoesNotExist:
+            return Response({"error": "Study post not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        study_post.comment -= 1
+        study_post.save(update_fields=['comment'])
+
+        return Response({"message": "Comment deleted successfully.", "comments": study_post.comment}, status=status.HTTP_204_NO_CONTENT)
 
 
 # 스터디 좋아요 관련 API
