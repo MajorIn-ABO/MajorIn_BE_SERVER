@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Post Used Book Trade</title>
+</head>
+<body>
+    <h2>Post Used Book Trade</h2>
+    <form method="post" action="{% url 'usedbooktrade-list' %}" enctype="multipart/form-data">
+        {% csrf_token %}
+        <label for="title">상품명:</label>
+        <input type="text" name="title" required>
+        <br>
+        <!-- 다른 필드들도 추가 -->
+        <label for="imgfile">상품 사진:</label>
+        <input type="file" name="imgfile" accept="image/*">
+        <br>
+        <input type="submit" value="등록하기">
+    </form>
+</body>
+</html>
