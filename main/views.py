@@ -378,10 +378,34 @@ class StudyCommentCreate(generics.CreateAPIView):
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
+        # serializer = StudyCommentSerializer(data=request.data)
+
         if serializer.is_valid():
-            self.perform_create(serializer)
-            headers = self.get_success_headers(serializer.data)
-            return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+            # 우선은 누른 사람의 user_id를 파라미터로 주는 것으로 설정
+            # user = request.user
+
+            user_id = serializer.validated_data["user_id"].id
+            studypost_id = serializer.validated_data["studypost_id"].id
+            contents = serializer.validated_data["contents"]
+            
+            try:
+                study_post = Study.objects.get(pk=studypost_id)
+            except Study.DoesNotExist:
+                return Response({"error": "Study post not found."}, status=status.HTTP_404_NOT_FOUND)
+
+            try:
+                user = User.objects.get(pk=user_id)
+            except User.DoesNotExist:
+                return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+            
+            # serializer.save()  # 댓글을 저장하고
+        
+            comment = Study_Comment(user_id=user, studypost_id=study_post, contents=contents)
+            comment.save()
+
+            study_post.comment += 1
+            study_post.save(update_fields=['comment'])
+            return Response({"message": "Commented.", "comments": study_post.comment}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class StudyCommentUpdate(generics.UpdateAPIView):
