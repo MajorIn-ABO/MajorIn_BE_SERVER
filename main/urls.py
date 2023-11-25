@@ -35,10 +35,9 @@ urlpatterns = [
     path('api/boards/posts/likes/<int:post_id>/<int:user_id>/create/', views.BoardLikeCreate.as_view(), name='board-like-create'),
 
     path('api/boards/posts/bookmarks/', views.BoardBookmarkList.as_view(), name='board-bookmark-list'),
-    path('api/boards/posts/bookmarks/<int:pk>/', views.BoardBookmarkDetail.as_view(), name='board-bookmark-detail'),
     path('api/boards/posts/bookmarks-by-userid/<int:user_id>/', views.BoardBookmarkListByUserId.as_view(), name='board-bookmark-list-by-userid'),
     path('api/boards/posts/bookmarks-by-postid/<int:post_id>/', views.BoardBookmarkListByPostId.as_view(), name='board-bookmark-list-by-postid'),
-    path('api/boards/posts/bookmarks/create/', views.BoardBookmarkCreate.as_view(), name='board-bookmark-create'),
+    path('api/boards/posts/bookmarks/<int:post_id>/<int:user_id>/create/', views.BoardBookmarkCreate.as_view(), name='board-bookmark-create'),
 
     path('api/studys/posts/', views.StudyList.as_view(), name='study-list'),
     path('api/studys/posts/<int:pk>/', views.StudyDetail.as_view(), name='study-detail'),
