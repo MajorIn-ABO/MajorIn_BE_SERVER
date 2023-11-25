@@ -79,7 +79,7 @@ class Board(models.Model):
     keep = models.IntegerField(default=0)
 
     def __str__(self):
-        return str(self.id)
+        return self.id
 
 
 class Board_Comment(models.Model):
@@ -94,7 +94,7 @@ class Board_Comment(models.Model):
     like = models.IntegerField(default=0)
 
     def __str__(self):
-        return str(self.id)
+        return self.id
     
 
 class Board_Like(models.Model):
@@ -156,6 +156,41 @@ class Study_Like(models.Model):
     user_id = models.ForeignKey(User, on_delete=models.CASCADE, db_column="user_id")
     studypost_id = models.ForeignKey(Study, on_delete=models.CASCADE, db_column="studypost_id")
     like_date = models.DateTimeField(auto_now_add=True)
+    delete_date = models.DateTimeField(null=True)
+
+    def __str__(self):
+        return self.id
+    
+
+class Usedbooktrade(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    title = models.CharField(max_length=100, blank=False, null=False, verbose_name='상품명', help_text='* 책 제목은 정확하게 기입해주세요.')
+    author = models.TextField(blank=False, null=False, verbose_name='저자')
+    seller = models.ForeignKey(User, on_delete=models.CASCADE, db_column="seller")
+    publisher = models.CharField(max_length=100, null=False, verbose_name='출판사')
+    price = models.TextField(blank=False, null=False, verbose_name='판매가')
+    imgfile = models.ImageField(null=True, upload_to="'book_covers/'", blank=True, verbose_name='상품 사진')
+    description = models.TextField(verbose_name='상품 설명')
+    is_written = models.BooleanField(null=False, verbose_name='필기 유무')
+    is_damaged = models.BooleanField(null=False, verbose_name='훼손 유무')
+    post_date = models.DateTimeField(auto_now_add=True, verbose_name='등록일')
+    update_date = models.DateTimeField(auto_now=True, verbose_name='수정일')
+    delete_date = models.DateTimeField(null=True)
+    comment = models.IntegerField(default=0)
+    is_sold = models.BooleanField(default=False, null=False)
+
+    def __str__(self):
+        return self.id
+    
+
+class Usedbooktrade_Comment(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    user_id = models.ForeignKey(User, on_delete=models.CASCADE, db_column="user_id")
+    Usedbookpost_id = models.ForeignKey(Usedbooktrade, on_delete=models.CASCADE, db_column="usedbookpost_id")
+    parent_comment = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='replies')
+    contents = models.TextField(blank=False, null=False)
+    comment_date = models.DateTimeField(auto_now_add=True)
+    update_date = models.DateTimeField(auto_now=True)
     delete_date = models.DateTimeField(null=True)
 
     def __str__(self):
