@@ -4,8 +4,8 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.shortcuts import render
 from django.utils import timezone  # 필요한 경우 추가
-from .models import User, Board, Board_Comment, Board_Like, Board_bookmark, Study, Study_Comment, Study_Like
-from .serializers import UserSerializer, BoardSerializer, BoardCommentSerializer, BoardLikeSerializer, BoardBookmarkSerializer, StudySerializer, StudyCommentSerializer, StudyLikeSerializer
+from .models import User, Board, Board_Comment, Board_Like, Board_bookmark, Study, Study_Comment, Study_Like, Usedbooktrade, Usedbooktrade_Comment
+from .serializers import UserSerializer, BoardSerializer, BoardCommentSerializer, BoardLikeSerializer, BoardBookmarkSerializer, StudySerializer, StudyCommentSerializer, StudyLikeSerializer, UsedbooktradeSerializer, UsedbooktradeCommentSerializer
 
 # 유저 관련 API 모음
 class UserList(generics.ListAPIView):
@@ -511,6 +511,43 @@ class StudyLikeCreate(APIView):
             study_post.save(update_fields=['like'])
             return Response({"message": "Liked.", "likes": study_post.like}, status=status.HTTP_201_CREATED)
 
+
+# 중고거래 관련 API 모음
+
+class UsedbooktradeList(generics.ListAPIView):
+    queryset = Usedbooktrade.objects.all()
+    serializer_class = UsedbooktradeSerializer
+
+class UsedbooktradeListByUserId(generics.ListAPIView):
+    serializer_class = UsedbooktradeSerializer
+
+    def get_queryset(self):
+        seller_id = self.kwargs['seller']
+        return Usedbooktrade.objects.filter(seller=seller_id)
+
+class UsedbooktradeDetail(generics.RetrieveAPIView):
+    queryset = Usedbooktrade.objects.all()
+    serializer_class = UsedbooktradeSerializer
+
+class UsedbooktradeCreate(generics.CreateAPIView):
+    queryset = Usedbooktrade.objects.all()
+    serializer_class = UsedbooktradeSerializer
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            self.perform_create(serializer)
+            headers = self.get_success_headers(serializer.data)
+            return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class UsedbooktradeUpdate(generics.UpdateAPIView):
+    queryset = Usedbooktrade.objects.all()
+    serializer_class = UsedbooktradeSerializer
+
+class UsedbooktradeDelete(generics.DestroyAPIView):
+    queryset = Usedbooktrade.objects.all()
+    serializer_class = UsedbooktradeSerializer
 
 # Create your views here.
 def index(request):
