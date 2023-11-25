@@ -59,4 +59,11 @@ urlpatterns = [
     path('api/studys/posts/likes-by-userid/<int:user_id>/', views.StudyLikeListByUserId.as_view(), name='study-like-list-by-userid'),
     path('api/studys/posts/likes-by-postid/<int:studypost_id>/', views.StudyLikeListByPostId.as_view(), name='study-like-list-by-postid'),
     path('api/studys/posts/likes/<int:post_id>/<int:user_id>/create/', views.StudyLikeCreate.as_view(), name='study-like-create'),
+
+    path('api/usedbooktrades/posts/', views.UsedbooktradeList.as_view(), name='usedbooktrade-list'),
+    path('api/usedbooktrades/posts/<int:pk>/', views.UsedbooktradeDetail.as_view(), name='usedbooktrade-detail'),
+    path('api/usedbooktrades/posts-by-userid/<int:user_id>/', views.UsedbooktradeListByUserId.as_view(), name='usedbooktrade-list-by-userid'),
+    path('api/usedbooktrades/posts/create/', views.UsedbooktradeCreate.as_view(), name='usedbooktrade-create'),
+    path('api/usedbooktrades/posts/<int:pk>/update/', views.UsedbooktradeUpdate.as_view(), name='usedbooktrade-update'),
+    path('api/usedbooktrades/posts/<int:pk>/delete/', views.UsedbooktradeDelete.as_view(), name='usedbooktrade-delete'),
 ]

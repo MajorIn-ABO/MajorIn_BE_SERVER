@@ -129,5 +129,5 @@ APPEND_SLASH = False
 
 
 # 중고거래 이미지 관리 관련 추가 사항
-MEDIA_ROOT = 'majorinBE/media/'  # 미디어 파일이 저장될 로컬 경로
-MEDIA_URL = '/media/'  # 미디어 파일에 접근할 수 있는 URL
+MEDIA_ROOT = '/majorinBE/media/'  # 미디어 파일이 저장될 로컬 경로
+MEDIA_URL = '/media/'  # # 클라이언트가 해당 파일에 접근할 때 사용할 URL
