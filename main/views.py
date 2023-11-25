@@ -268,21 +268,40 @@ class BoardBookmarkListByPostId(generics.ListAPIView):
         post_id = self.kwargs['post_id']
         return Board_bookmark.objects.filter(post_id=post_id)
 
-class BoardBookmarkDetail(generics.RetrieveAPIView):
-    queryset = Board_bookmark.objects.all()
-    serializer_class = BoardBookmarkSerializer
+class BoardBookmarkCreate(APIView):
+    
+    def post(self, request, post_id, user_id):
+        # 우선은 누른 사람의 user_id를 파라미터로 주는 것으로 설정
+        # user = request.user
+        try:
+            board_post = Board.objects.get(pk=post_id)
+        except Board.DoesNotExist:
+            return Response({"error": "Board post not found."}, status=status.HTTP_404_NOT_FOUND)
 
-class BoardBookmarkCreate(generics.CreateAPIView):
-    queryset = Board_bookmark.objects.all()
-    serializer_class = BoardBookmarkSerializer
+        try:
+            user = User.objects.get(pk=user_id)
+        except User.DoesNotExist:
+            return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+        
+        # 북마크를 이미 눌렀는지 확인
+        is_kept = Board_bookmark.objects.filter(user_id=user, post_id=board_post).exists()
 
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        if serializer.is_valid():
-            self.perform_create(serializer)
-            headers = self.get_success_headers(serializer.data)
-            return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        if is_kept:
+            # 이미 북마크를 누른 경우 북마크를 취소
+            keep = Board_bookmark.objects.get(user_id=user, post_id=board_post)
+            keep.delete()
+            # keep.delete_date = timezone.now()  # delete_date 필드에 현재 시간 설정
+            # keep.save()
+            board_post.keep -= 1
+            board_post.save(update_fields=['keep'])
+            return Response({"message": "keep removed.", "keeps": board_post.keep}, status=status.HTTP_200_OK)
+        else:
+            # 북마크를 누르지 않은 경우 북마크 추가
+            keep = Board_bookmark(user_id=user, post_id=board_post)
+            keep.save()
+            board_post.keep += 1
+            board_post.save(update_fields=['keep'])
+            return Response({"message": "Keep successed.", "keeps": board_post.keep}, status=status.HTTP_201_CREATED)
     
 # 스터디 관련 API 모음
 
