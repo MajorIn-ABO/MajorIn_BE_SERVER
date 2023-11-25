@@ -34,7 +34,7 @@ class StudySerializer(serializers.ModelSerializer):
 class StudyCommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Study_Comment
-        fields = ['id', 'user_id', 'studypost_id', 'parent_comment', 'contents']   
+        fields = ['id', 'user_id', 'studypost_id', 'contents']   
 
 class StudyLikeSerializer(serializers.ModelSerializer):
     class Meta:

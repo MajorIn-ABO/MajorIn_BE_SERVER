@@ -142,7 +142,7 @@ class BoardCommentCreate(generics.CreateAPIView):
 
             board_post.comment += 1
             board_post.save(update_fields=['comment'])
-            return Response({"message": "Commented.", "comments": board_post.comment}, status=status.HTTP_201_CREATED)
+            return Response({"message": "Comment created successfully.", "comments": board_post.comment}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -239,14 +239,14 @@ class BoardLikeCreate(APIView):
             # like.save()
             board_post.like -= 1
             board_post.save(update_fields=['like'])
-            return Response({"message": "Like removed.", "likes": board_post.like}, status=status.HTTP_200_OK)
+            return Response({"message": "Like removed successfully.", "likes": board_post.like}, status=status.HTTP_200_OK)
         else:
             # 좋아요를 누르지 않은 경우 좋아요 추가
             like = Board_Like(user_id=user, post_id=board_post)
             like.save()
             board_post.like += 1
             board_post.save(update_fields=['like'])
-            return Response({"message": "Liked.", "likes": board_post.like}, status=status.HTTP_201_CREATED)
+            return Response({"message": "Like created successfully.", "likes": board_post.like}, status=status.HTTP_201_CREATED)
 
 # 게시글 북마크 관련 API
 
@@ -294,14 +294,14 @@ class BoardBookmarkCreate(APIView):
             # keep.save()
             board_post.keep -= 1
             board_post.save(update_fields=['keep'])
-            return Response({"message": "keep removed.", "keeps": board_post.keep}, status=status.HTTP_200_OK)
+            return Response({"message": "keep removed successfully.", "keeps": board_post.keep}, status=status.HTTP_200_OK)
         else:
             # 북마크를 누르지 않은 경우 북마크 추가
             keep = Board_bookmark(user_id=user, post_id=board_post)
             keep.save()
             board_post.keep += 1
             board_post.save(update_fields=['keep'])
-            return Response({"message": "Keep successed.", "keeps": board_post.keep}, status=status.HTTP_201_CREATED)
+            return Response({"message": "Keep created successfully.", "keeps": board_post.keep}, status=status.HTTP_201_CREATED)
     
 # 스터디 관련 API 모음
 
@@ -378,10 +378,34 @@ class StudyCommentCreate(generics.CreateAPIView):
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
+        # serializer = StudyCommentSerializer(data=request.data)
+
         if serializer.is_valid():
-            self.perform_create(serializer)
-            headers = self.get_success_headers(serializer.data)
-            return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+            # 우선은 누른 사람의 user_id를 파라미터로 주는 것으로 설정
+            # user = request.user
+
+            user_id = serializer.validated_data["user_id"].id
+            studypost_id = serializer.validated_data["studypost_id"].id
+            contents = serializer.validated_data["contents"]
+            
+            try:
+                study_post = Study.objects.get(pk=studypost_id)
+            except Study.DoesNotExist:
+                return Response({"error": "Study post not found."}, status=status.HTTP_404_NOT_FOUND)
+
+            try:
+                user = User.objects.get(pk=user_id)
+            except User.DoesNotExist:
+                return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+            
+            # serializer.save()  # 댓글을 저장하고
+        
+            comment = Study_Comment(user_id=user, studypost_id=study_post, contents=contents)
+            comment.save()
+
+            study_post.comment += 1
+            study_post.save(update_fields=['comment'])
+            return Response({"message": "Comment created successfully.", "comments": study_post.comment}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class StudyCommentUpdate(generics.UpdateAPIView):
@@ -390,7 +414,46 @@ class StudyCommentUpdate(generics.UpdateAPIView):
 
 class StudyCommentDelete(generics.DestroyAPIView):
     queryset = Study_Comment.objects.all()
-    serializer_class = StudyCommentSerializer
+
+    def destroy(self, request, *args, **kwargs):
+
+        # 우선은 누른 사람의 user_id를 파라미터로 주는 것으로 설정
+        # user = request.user
+
+        # user_id = request.data.get("user_id")
+        # studypost_id = request.data.get("studypost_id")
+        comment_id = kwargs.get("pk")  # pk는 URL에서 가져온 댓글의 기본 키 값
+        
+        try:
+            study_comment = Study_Comment.objects.get(pk=comment_id)
+        except Study_Comment.DoesNotExist:
+            return Response({"error": "Comment not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        '''
+        # 댓글을 작성한 사용자와 요청한 사용자가 일치하는지 확인
+        if user_id != study_comment.user_id.id:
+            return Response({"error": "Unauthorized. You don't have permission to delete this comment."},
+                            status=status.HTTP_403_FORBIDDEN)
+
+        # 댓글이 속한 스터디 게시물과 요청한 스터디 게시물이 일치하는지 확인
+        if studypost_id != study_comment.studypost_id.id:
+            return Response({"error": "Invalid request. The comment does not belong to the specified post."},
+                            status=status.HTTP_400_BAD_REQUEST)
+        
+        '''
+
+        study_comment.delete()
+
+        # 스터디 게시물의 댓글 수 업데이트
+        try:
+            study_post = Study.objects.get(pk=study_comment.studypost_id.id)
+        except Study.DoesNotExist:
+            return Response({"error": "Study post not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        study_post.comment -= 1
+        study_post.save(update_fields=['comment'])
+
+        return Response({"message": "Comment deleted successfully.", "comments": study_post.comment}, status=status.HTTP_204_NO_CONTENT)
 
 
 # 스터디 좋아요 관련 API
