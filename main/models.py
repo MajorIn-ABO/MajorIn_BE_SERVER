@@ -192,7 +192,6 @@ class Usedbooktrade_Comment(models.Model):
     comment_date = models.DateTimeField(auto_now_add=True)
     update_date = models.DateTimeField(auto_now=True)
     delete_date = models.DateTimeField(null=True)
-    like = models.IntegerField(default=0)
 
     def __str__(self):
         return self.id
