@@ -3,10 +3,15 @@ from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.shortcuts import render
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
+from django.views import View
 from django.utils import timezone  # 필요한 경우 추가
+from django.http import JsonResponse
 from .models import User, Board, Board_Comment, Board_Like, Board_bookmark, Study, Study_Comment, Study_Like, Usedbooktrade, Usedbooktrade_Comment
 from .serializers import UserSerializer, BoardSerializer, BoardCommentSerializer, BoardLikeSerializer, BoardBookmarkSerializer, StudySerializer, StudyCommentSerializer, StudyLikeSerializer, UsedbooktradeSerializer, UsedbooktradeCommentSerializer
-
+import json
+import requests
 from dotenv import load_dotenv
 import os 
 
@@ -559,6 +564,83 @@ class UsedbooktradeDelete(generics.DestroyAPIView):
     queryset = Usedbooktrade.objects.all()
     serializer_class = UsedbooktradeSerializer
 
+
+# 중고거래 도서 검색 API
+# http://127.0.0.1:8000/api/book/search/?book_title=검색어
+
+@method_decorator(csrf_exempt, name='dispatch')
+class BookSearchAPIView(View):
+    
+    def get(self, request, *args, **kwargs):
+        # 우선은 누른 사람의 user_id를 파라미터로 주는 것으로 설정
+        # user = request.user
+        try:
+            # GET 요청에서 도서 이름 추출
+            book_title = request.GET.get('book_title', '')
+
+            book_data = search_books_by_title(book_title, NAVER_Client_ID, NAVER_Client_Secret)
+
+            # 결과가 있는지 확인
+            if 'items' in book_data and book_data['items']:
+                # 첫 번째 검색 결과 반환
+                return render(request, 'main/book_search_result.html', {'book_data_list': book_data['items']})
+                # return JsonResponse({'success': True, 'data': book_data['items'][0]})
+            else:
+                # 검색 결과가 없을 경우
+                return JsonResponse({'success': False, 'message': '도서를 찾을 수 없습니다.'}, status=404)
+        
+            '''
+            # 결과 확인
+            if book_data:
+                print(f"도서 제목: {book_data['title']}")
+                print(f"저자: {book_data['author']}")
+                print(f"출판사: {book_data['publisher']}")
+                # 필요한 다른 정보들을 출력하거나 활용하세요.
+            else:
+                print("도서를 찾을 수 없습니다.")
+                return Response({"error": "Book not found."}, status=status.HTTP_404_NOT_FOUND)
+            '''        
+        except Exception as e:
+            # 예외 처리
+            return JsonResponse({'success': False, 'message': str(e)}, status=500)
+        
+
+# 네이버 API 사용 외부 데이터 가져오는 코드
+
+def search_books_by_title(book_title, client_id, client_secret):
+    # 네이버 도서 검색 API 엔드포인트
+    naver_api_url = f'https://openapi.naver.com/v1/search/book.json'
+
+    # API에 전송할 파라미터 설정
+    params = {'query': book_title}
+
+    # 네이버 API 요청에 필요한 헤더 설정
+    headers = {'X-Naver-Client-Id': client_id, 'X-Naver-Client-Secret': client_secret}
+
+    # API 요청 보내기
+    response = requests.get(naver_api_url, params=params, headers=headers)
+
+    # 응답 확인
+    if response.status_code == 200:
+        # JSON 형태로 반환된 응답 데이터를 파이썬 딕셔너리로 변환
+        
+        return response.json()
+        '''
+        book_info = response.json()
+
+        # 결과가 있는지 확인
+        if 'items' in book_info and book_info['items']:
+            # 첫 번째 검색 결과 반환
+            return render(request, 'book_search_result.html', {'book_data': book_info['items'][0]})
+            # return JsonResponse({'success': True, 'data': book_info['items'][0]})
+        else:
+            # 검색 결과가 없을 경우
+            return JsonResponse({'success': False, 'message': '도서를 찾을 수 없습니다.'}, status=404)
+        '''
+    else:
+        # API 요청이 실패한 경우 에러 코드 출력
+        return JsonResponse({'success': False, 'message': f'API 요청 실패 - 상태 코드: {response.status_code}'}, status=500)
+    
 # Create your views here.
 def index(request):
     return render(request,'main/index.html')

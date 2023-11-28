@@ -1,0 +1,26 @@
+<!-- book_search_result.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>도서 정보</title>
+</head>
+<body>
+
+<h1>도서 정보</h1>
+
+{% if book_data_list %}
+    {% for book_data in book_data_list %}
+        <p>제목: {{ book_data.title }}</p>
+        <p>저자: {{ book_data.author }}</p>
+        <p>출판사: {{ book_data.publisher }}</p>
+        <p>가격: {{ book_data.price }}</p>
+        <img src="{{ book_data.image }}" alt="도서 이미지">
+        <!-- 필요한 다른 정보들을 표시하거나 활용하세요. -->
+        <hr>
+    {% endfor %}
+{% else %}
+    <p>도서를 찾을 수 없습니다.</p>
+{% endif %}
+
+</body>
+</html>
