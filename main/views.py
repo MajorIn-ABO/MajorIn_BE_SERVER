@@ -717,7 +717,125 @@ def search_books_by_title(book_title, client_id, client_secret):
     else:
         # API 요청이 실패한 경우 에러 코드 출력
         return JsonResponse({'success': False, 'message': f'API 요청 실패 - 상태 코드: {response.status_code}'}, status=500)
+
+
+
+# 중고거래 댓글 관련 API 모음
+
+class UsedbooktradeCommentList(generics.ListAPIView):
+    queryset = Usedbooktrade_Comment.objects.all()
+    serializer_class = UsedbooktradeCommentSerializer
+
+class UsedbooktradeCommentListByUserId(generics.ListAPIView):
+    serializer_class = UsedbooktradeCommentSerializer
+
+    def get_queryset(self):
+        user_id = self.kwargs['user_id']
+        return Usedbooktrade_Comment.objects.filter(user_id=user_id)
     
+class UsedbooktradeCommentListByPostId(generics.ListAPIView):
+    serializer_class = UsedbooktradeCommentSerializer
+
+    def get_queryset(self):
+        Usedbookpost_id = self.kwargs['Usedbookpost_id']
+        return Usedbooktrade_Comment.objects.filter(Usedbookpost_id=Usedbookpost_id)
+
+class UsedbooktradeCommentListByParent(generics.ListAPIView):
+    serializer_class = UsedbooktradeCommentSerializer
+
+    def get_queryset(self):
+        parent_comment = self.kwargs['parent_comment']
+        return Usedbooktrade_Comment.objects.filter(parent_comment=parent_comment)
+
+class UsedbooktradeCommentDetail(generics.RetrieveAPIView):
+    queryset = Usedbooktrade_Comment.objects.all()
+    serializer_class = UsedbooktradeCommentSerializer
+
+class UsedbooktradeCommentCreate(generics.CreateAPIView):
+    queryset = Usedbooktrade_Comment.objects.all()
+    serializer_class = UsedbooktradeCommentSerializer
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        # serializer = UsedbooktradeCommentSerializer(data=request.data)
+
+        if serializer.is_valid():
+            # 우선은 누른 사람의 user_id를 파라미터로 주는 것으로 설정
+            # user = request.user
+
+            user_id = serializer.validated_data["user_id"].id
+            Usedbookpost_id = serializer.validated_data["Usedbookpost_id"].id
+            contents = serializer.validated_data["contents"]
+            
+            try:
+                usedbook_post = Usedbooktrade.objects.get(pk=Usedbookpost_id)
+            except Usedbooktrade.DoesNotExist:
+                return Response({"error": "Usedbooktrade post not found."}, status=status.HTTP_404_NOT_FOUND)
+
+            try:
+                user = User.objects.get(pk=user_id)
+            except User.DoesNotExist:
+                return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+            
+            # serializer.save()  # 댓글을 저장하고
+        
+            comment = Usedbooktrade_Comment(user_id=user, Usedbookpost_id=usedbook_post, contents=contents)
+            comment.save()
+
+            usedbook_post.comment += 1
+            usedbook_post.save(update_fields=['comment'])
+            return Response({"message": "Comment created successfully.", "comments": usedbook_post.comment}, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class UsedbooktradeCommentUpdate(generics.UpdateAPIView):
+    queryset = Usedbooktrade_Comment.objects.all()
+    serializer_class = UsedbooktradeCommentSerializer
+
+class UsedbooktradeCommentDelete(generics.DestroyAPIView):
+    queryset = Usedbooktrade_Comment.objects.all()
+
+    def destroy(self, request, *args, **kwargs):
+
+        # 우선은 누른 사람의 user_id를 파라미터로 주는 것으로 설정
+        # user = request.user
+
+        # user_id = request.data.get("user_id")
+        # Usedbookpost_id = request.data.get("Usedbookpost_id")
+        comment_id = kwargs.get("pk")  # pk는 URL에서 가져온 댓글의 기본 키 값
+        
+        try:
+            Usedbooktrade_comment = Usedbooktrade_Comment.objects.get(pk=comment_id)
+        except Usedbooktrade_Comment.DoesNotExist:
+            return Response({"error": "Comment not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        '''
+        # 댓글을 작성한 사용자와 요청한 사용자가 일치하는지 확인
+        if user_id != study_comment.user_id.id:
+            return Response({"error": "Unauthorized. You don't have permission to delete this comment."},
+                            status=status.HTTP_403_FORBIDDEN)
+
+        # 댓글이 속한 스터디 게시물과 요청한 스터디 게시물이 일치하는지 확인
+        if studypost_id != study_comment.studypost_id.id:
+            return Response({"error": "Invalid request. The comment does not belong to the specified post."},
+                            status=status.HTTP_400_BAD_REQUEST)
+        
+        '''
+
+        Usedbooktrade.delete()
+
+        # 중고거래 게시물의 댓글 수 업데이트
+        try:
+            usedbook_post = Usedbooktrade.objects.get(pk=Usedbooktrade_comment.Usedbookpost_id.id)
+        except Usedbooktrade.DoesNotExist:
+            return Response({"error": "Usedbooktrade post not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        usedbook_post.comment -= 1
+        usedbook_post.save(update_fields=['comment'])
+
+        return Response({"message": "Comment deleted successfully.", "comments": usedbook_post.comment}, status=status.HTTP_204_NO_CONTENT)
+
+
+
 # Create your views here.
 def index(request):
     return render(request,'main/index.html')

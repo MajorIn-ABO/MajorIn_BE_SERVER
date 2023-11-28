@@ -68,4 +68,13 @@ urlpatterns = [
     path('api/usedbooktrades/posts/create/', views.UsedbooktradeCreate.as_view(), name='usedbooktrade-create'),
     path('api/usedbooktrades/posts/<int:pk>/update/', views.UsedbooktradeUpdate.as_view(), name='usedbooktrade-update'),
     path('api/usedbooktrades/posts/<int:pk>/delete/', views.UsedbooktradeDelete.as_view(), name='usedbooktrade-delete'),
+
+    path('api/usedbooktrades/posts/comments/', views.UsedbooktradeCommentList.as_view(), name='usedbooktrade-comment-list'),
+    path('api/usedbooktrades/posts/comments/<int:pk>/', views.UsedbooktradeCommentDetail.as_view(), name='usedbooktrade-comment-detail'),
+    path('api/usedbooktrades/posts/comments-by-userid/<int:user_id>/', views.UsedbooktradeCommentListByUserId.as_view(), name='usedbooktrade-comment-list-by-userid'),
+    path('api/usedbooktrades/posts/comments-by-postid/<int:Usedbookpost_id>/', views.UsedbooktradeCommentListByPostId.as_view(), name='usedbooktrade-comment-list-by-postid'),
+    path('api/usedbooktrades/posts/comments-by-parent/<int:parent_comment>/', views.UsedbooktradeCommentListByParent.as_view(), name='usedbooktrade-comment-list-by-parent'),
+    path('api/usedbooktrades/posts/comments/create/', views.UsedbooktradeCommentCreate.as_view(), name='usedbooktrade-comment-create'),
+    path('api/usedbooktrades/posts/comments/<int:pk>/update/', views.UsedbooktradeCommentUpdate.as_view(), name='usedbooktrade-comment-update'),
+    path('api/usedbooktrades/posts/comments/<int:pk>/delete/', views.UsedbooktradeCommentDelete.as_view(), name='usedbooktrade-comment-delete'),
 ]
