@@ -571,60 +571,77 @@ class UsedbooktradeSelectedBook(APIView):
             # 예외 처리
             return JsonResponse({'success': False, 'message': str(e)}, status=500)
 '''
-  
+
 # 중고거래 글 작성
 
 @method_decorator(csrf_exempt, name='dispatch')
-class UsedbooktradeCreate(APIView):
+class UsedbooktradeCreate(generics.CreateAPIView):
+    queryset = Usedbooktrade.objects.all()
+    serializer_class = UsedbooktradeSerializer
     parser_classes = [JSONParser, MultiPartParser]
 
-    def post(self, request, *args, **kwargs):
+    def create(self, request, *args, **kwargs):
         try:
             # 유저 입력 데이터 추출
             seller = request.data.get('seller')
-            sell_price = request.data.get('sell_price')
-            imgfile = request.data.get('imgfile')
+            sell_price = request.data.get('price')
+            # imgfile = request.data.get('imgfile')
             description = request.data.get('description')
             is_written = request.data.get('is_written')
             is_damaged = request.data.get('is_damaged')
 
-            # 임시로 저장된 선택된 도서 정보 가져오기
-            selected_book_info = SharedBookInfo.cached_book_info
+            book_title = "운영체제"
+            book_data = search_books_by_title(book_title, NAVER_Client_ID, NAVER_Client_Secret)
 
             # DB에 저장
             usedbooktrade_data = {
-                'title': selected_book_info.get('title', ''),
-                'author': selected_book_info.get('author', ''),
+                'title': book_data['items'][0].get('title', ''),
+                'author': book_data['items'][0].get('author', ''),
                 'seller': seller,
-                'publisher': selected_book_info.get('publisher', ''),
+                'publisher': book_data['items'][0].get('publisher', ''),
                 'price': sell_price,
-                'imgfile': selected_book_info.get('imgfile', ''),
+                'imgfile': book_data['items'][0].get('image', ''),
                 'description': description,
                 'is_written': is_written,
                 'is_damaged': is_damaged,
             }
 
+            try:
+                user = User.objects.get(pk=seller)
+            except User.DoesNotExist:
+                return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+
+            # 모델 인스턴스 생성
+            usedbooktrade_instance = Usedbooktrade(
+                title=usedbooktrade_data['title'],
+                author=usedbooktrade_data['author'],
+                seller=user,
+                publisher=usedbooktrade_data['publisher'],
+                price=usedbooktrade_data['price'],
+                imgfile=usedbooktrade_data['imgfile'],
+                description=usedbooktrade_data['description'],
+                is_written=usedbooktrade_data['is_written'],
+                is_damaged=usedbooktrade_data['is_damaged'],
+            )
+
+            # 모델 인스턴스 저장
+            usedbooktrade_instance.save()
+
+            # 저장된 인스턴스의 ID 반환 (옵션)
+            # Usedbooktrade_post = Usedbooktrade.objects.get(pk=usedbooktrade_instance.id)
+
+            return Response({"message": "Usedbooktrade post created successfully.", "results": usedbooktrade_data}, status=status.HTTP_201_CREATED)
+
+            '''
             serializer = UsedbooktradeSerializer(data=usedbooktrade_data)
             if serializer.is_valid():
                 serializer.save()
                 return JsonResponse(serializer.data, status=status.HTTP_201_CREATED)
             return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
+            '''
         except Exception as e:
             return JsonResponse({'success': False, 'message': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    '''
-    # generics.CreateAPIView
-    queryset = Usedbooktrade.objects.all()
-    serializer_class = UsedbooktradeSerializer
 
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        if serializer.is_valid():
-            self.perform_create(serializer)
-            headers = self.get_success_headers(serializer.data)
-            return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    '''
 
 class UsedbooktradeUpdate(generics.UpdateAPIView):
     queryset = Usedbooktrade.objects.all()
@@ -662,9 +679,6 @@ class BookSearchAPIView(APIView):
                     'imgfile': book_data['items'][0].get('image', ''),
                 }
 
-                print("SharedBookInfo.cached_book_info[book_title]")
-                print(SharedBookInfo.cached_book_info[book_title])
-
                 return render(request, 'main/book_search_result.html', {'book_data_list': book_data['items']})
                 
                 # return JsonResponse(SharedBookInfo.cached_book_info[book_title])
@@ -673,18 +687,7 @@ class BookSearchAPIView(APIView):
                 # 검색 결과가 없을 경우
                 return JsonResponse({'success': False, 'message': '도서를 찾을 수 없습니다.'}, status=404)
                 # return Response({"error": "Book not found."}, status=status.HTTP_404_NOT_FOUND)
-        
-            '''
-            # 결과 확인
-            if book_data:
-                print(f"도서 제목: {book_data['title']}")
-                print(f"저자: {book_data['author']}")
-                print(f"출판사: {book_data['publisher']}")
-                # 필요한 다른 정보들을 출력하거나 활용하세요.
-            else:
-                print("도서를 찾을 수 없습니다.")
-                return Response({"error": "Book not found."}, status=status.HTTP_404_NOT_FOUND)
-            '''        
+              
         except Exception as e:
             # 예외 처리
             return JsonResponse({'success': False, 'message': str(e)}, status=500)
@@ -710,18 +713,7 @@ def search_books_by_title(book_title, client_id, client_secret):
         # JSON 형태로 반환된 응답 데이터를 파이썬 딕셔너리로 변환
         
         return response.json()
-        '''
-        book_info = response.json()
 
-        # 결과가 있는지 확인
-        if 'items' in book_info and book_info['items']:
-            # 첫 번째 검색 결과 반환
-            return render(request, 'book_search_result.html', {'book_data': book_info['items'][0]})
-            # return JsonResponse({'success': True, 'data': book_info['items'][0]})
-        else:
-            # 검색 결과가 없을 경우
-            return JsonResponse({'success': False, 'message': '도서를 찾을 수 없습니다.'}, status=404)
-        '''
     else:
         # API 요청이 실패한 경우 에러 코드 출력
         return JsonResponse({'success': False, 'message': f'API 요청 실패 - 상태 코드: {response.status_code}'}, status=500)
