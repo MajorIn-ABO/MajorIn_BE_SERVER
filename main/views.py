@@ -2,10 +2,26 @@ from rest_framework import generics
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework.parsers import JSONParser, MultiPartParser
 from django.shortcuts import render
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
+from django.views import View
 from django.utils import timezone  # 필요한 경우 추가
-from .models import User, Board, Board_Comment, Board_Like, Board_bookmark, Study, Study_Comment, Study_Like
-from .serializers import UserSerializer, BoardSerializer, BoardCommentSerializer, BoardLikeSerializer, BoardBookmarkSerializer, StudySerializer, StudyCommentSerializer, StudyLikeSerializer
+from django.http import JsonResponse
+from .models import User, Board, Board_Comment, Board_Like, Board_bookmark, Study, Study_Comment, Study_Like, Usedbooktrade, Usedbooktrade_Comment
+from .serializers import UserSerializer, BoardSerializer, BoardCommentSerializer, BoardLikeSerializer, BoardBookmarkSerializer, StudySerializer, StudyCommentSerializer, StudyLikeSerializer, UsedbooktradeSerializer, UsedbooktradeCommentSerializer
+import json
+import requests
+from dotenv import load_dotenv
+import os 
+
+# load .env
+load_dotenv()
+
+NAVER_Client_ID = os.environ.get('Client_ID')
+NAVER_Client_Secret = os.environ.get('Client_Secret')
+
 
 # 유저 관련 API 모음
 class UserList(generics.ListAPIView):
@@ -512,6 +528,196 @@ class StudyLikeCreate(APIView):
             return Response({"message": "Liked.", "likes": study_post.like}, status=status.HTTP_201_CREATED)
 
 
+# 중고거래 관련 API 모음
+
+class UsedbooktradeList(generics.ListAPIView):
+    queryset = Usedbooktrade.objects.all()
+    serializer_class = UsedbooktradeSerializer
+
+class UsedbooktradeListByUserId(generics.ListAPIView):
+    serializer_class = UsedbooktradeSerializer
+
+    def get_queryset(self):
+        seller_id = self.kwargs['seller']
+        return Usedbooktrade.objects.filter(seller=seller_id)
+
+class UsedbooktradeDetail(generics.RetrieveAPIView):
+    queryset = Usedbooktrade.objects.all()
+    serializer_class = UsedbooktradeSerializer
+
+# 데이터 임시 저장을 위한 클래스 
+
+class SharedBookInfo:
+    cached_book_info = {}
+
+'''
+# 클라이언트에게서 받은 데이터 임시저장
+
+@method_decorator(csrf_exempt, name='dispatch')
+class UsedbooktradeSelectedBook(APIView):
+    parser_classes = [JSONParser, MultiPartParser]
+
+    def post(self, request, *args, **kwargs):
+        try:
+            # 프런트엔드에서 전송한 선택된 도서 정보 받기
+            selected_book_info = request.data.get('bookInfo', {})
+
+            # 임시로 선택된 도서 정보 저장
+            SharedBookInfo.selected_book_info = selected_book_info
+
+            return JsonResponse({'success': True, 'message': '도서 정보를 임시로 저장했습니다.'})
+
+        except Exception as e:
+            # 예외 처리
+            return JsonResponse({'success': False, 'message': str(e)}, status=500)
+'''
+
+# 중고거래 글 작성
+
+@method_decorator(csrf_exempt, name='dispatch')
+class UsedbooktradeCreate(generics.CreateAPIView):
+    queryset = Usedbooktrade.objects.all()
+    serializer_class = UsedbooktradeSerializer
+    parser_classes = [JSONParser, MultiPartParser]
+
+    def create(self, request, *args, **kwargs):
+        try:
+            # 유저 입력 데이터 추출
+            seller = request.data.get('seller')
+            sell_price = request.data.get('price')
+            # imgfile = request.data.get('imgfile')
+            description = request.data.get('description')
+            is_written = request.data.get('is_written')
+            is_damaged = request.data.get('is_damaged')
+
+            book_title = "운영체제"
+            book_data = search_books_by_title(book_title, NAVER_Client_ID, NAVER_Client_Secret)
+
+            # DB에 저장
+            usedbooktrade_data = {
+                'title': book_data['items'][0].get('title', ''),
+                'author': book_data['items'][0].get('author', ''),
+                'seller': seller,
+                'publisher': book_data['items'][0].get('publisher', ''),
+                'price': sell_price,
+                'imgfile': book_data['items'][0].get('image', ''),
+                'description': description,
+                'is_written': is_written,
+                'is_damaged': is_damaged,
+            }
+
+            try:
+                user = User.objects.get(pk=seller)
+            except User.DoesNotExist:
+                return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+
+            # 모델 인스턴스 생성
+            usedbooktrade_instance = Usedbooktrade(
+                title=usedbooktrade_data['title'],
+                author=usedbooktrade_data['author'],
+                seller=user,
+                publisher=usedbooktrade_data['publisher'],
+                price=usedbooktrade_data['price'],
+                imgfile=usedbooktrade_data['imgfile'],
+                description=usedbooktrade_data['description'],
+                is_written=usedbooktrade_data['is_written'],
+                is_damaged=usedbooktrade_data['is_damaged'],
+            )
+
+            # 모델 인스턴스 저장
+            usedbooktrade_instance.save()
+
+            # 저장된 인스턴스의 ID 반환 (옵션)
+            # Usedbooktrade_post = Usedbooktrade.objects.get(pk=usedbooktrade_instance.id)
+
+            return Response({"message": "Usedbooktrade post created successfully.", "results": usedbooktrade_data}, status=status.HTTP_201_CREATED)
+
+            '''
+            serializer = UsedbooktradeSerializer(data=usedbooktrade_data)
+            if serializer.is_valid():
+                serializer.save()
+                return JsonResponse(serializer.data, status=status.HTTP_201_CREATED)
+            return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            '''
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class UsedbooktradeUpdate(generics.UpdateAPIView):
+    queryset = Usedbooktrade.objects.all()
+    serializer_class = UsedbooktradeSerializer
+
+class UsedbooktradeDelete(generics.DestroyAPIView):
+    queryset = Usedbooktrade.objects.all()
+    serializer_class = UsedbooktradeSerializer
+
+
+# 중고거래 도서 검색 API
+# http://127.0.0.1:8000/api/book/search/?book_title=검색어
+
+@method_decorator(csrf_exempt, name='dispatch')
+class BookSearchAPIView(APIView):
+    
+    def get(self, request, *args, **kwargs):
+        # 우선은 누른 사람의 user_id를 파라미터로 주는 것으로 설정
+        # user = request.user
+        try:
+            # GET 요청에서 도서 이름 추출
+            book_title = request.GET.get('book_title', '')
+
+            book_data = search_books_by_title(book_title, NAVER_Client_ID, NAVER_Client_Secret)
+
+            # 결과가 있는지 확인
+            if 'items' in book_data and book_data['items']:
+                # 검색 결과 반환
+                # 전체 도서 정보를 클래스 변수에 저장
+                SharedBookInfo.cached_book_info[book_title] = {
+                    'title': book_data['items'][0].get('title', ''),
+                    'author': book_data['items'][0].get('author', ''),
+                    'publisher': book_data['items'][0].get('publisher', ''),
+                    'price': book_data['items'][0].get('discount', ''),
+                    'imgfile': book_data['items'][0].get('image', ''),
+                }
+
+                return render(request, 'main/book_search_result.html', {'book_data_list': book_data['items']})
+                
+                # return JsonResponse(SharedBookInfo.cached_book_info[book_title])
+                # return JsonResponse({'success': True, 'data': book_data['items'][0]})
+            else:
+                # 검색 결과가 없을 경우
+                return JsonResponse({'success': False, 'message': '도서를 찾을 수 없습니다.'}, status=404)
+                # return Response({"error": "Book not found."}, status=status.HTTP_404_NOT_FOUND)
+              
+        except Exception as e:
+            # 예외 처리
+            return JsonResponse({'success': False, 'message': str(e)}, status=500)
+        
+
+# 네이버 API 사용 외부 데이터 가져오는 코드
+
+def search_books_by_title(book_title, client_id, client_secret):
+    # 네이버 도서 검색 API 엔드포인트
+    naver_api_url = f'https://openapi.naver.com/v1/search/book.json'
+
+    # API에 전송할 파라미터 설정
+    params = {'query': book_title, 'display': 15}
+
+    # 네이버 API 요청에 필요한 헤더 설정
+    headers = {'X-Naver-Client-Id': client_id, 'X-Naver-Client-Secret': client_secret}
+
+    # API 요청 보내기
+    response = requests.get(naver_api_url, params=params, headers=headers)
+
+    # 응답 확인
+    if response.status_code == 200:
+        # JSON 형태로 반환된 응답 데이터를 파이썬 딕셔너리로 변환
+        
+        return response.json()
+
+    else:
+        # API 요청이 실패한 경우 에러 코드 출력
+        return JsonResponse({'success': False, 'message': f'API 요청 실패 - 상태 코드: {response.status_code}'}, status=500)
+    
 # Create your views here.
 def index(request):
     return render(request,'main/index.html')
