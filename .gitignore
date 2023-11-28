@@ -3,3 +3,5 @@
 myenv/
 
 my_settings.py
+
+.env

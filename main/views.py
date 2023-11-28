@@ -7,6 +7,16 @@ from django.utils import timezone  # 필요한 경우 추가
 from .models import User, Board, Board_Comment, Board_Like, Board_bookmark, Study, Study_Comment, Study_Like, Usedbooktrade, Usedbooktrade_Comment
 from .serializers import UserSerializer, BoardSerializer, BoardCommentSerializer, BoardLikeSerializer, BoardBookmarkSerializer, StudySerializer, StudyCommentSerializer, StudyLikeSerializer, UsedbooktradeSerializer, UsedbooktradeCommentSerializer
 
+from dotenv import load_dotenv
+import os 
+
+# load .env
+load_dotenv()
+
+NAVER_Client_ID = os.environ.get('Client_ID')
+NAVER_Client_Secret = os.environ.get('Client_Secret')
+
+
 # 유저 관련 API 모음
 class UserList(generics.ListAPIView):
     queryset = User.objects.all()
