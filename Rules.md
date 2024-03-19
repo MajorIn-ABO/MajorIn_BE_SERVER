@@ -1,73 +1,95 @@
-### Commit Rule
-```
-__Type__ __FileName__ : __Description__
-```
-- Type 리스트
-  : 모든 타입의 첫 글자는 대문자로 작성
-    - Add : 새로운 파일이나 기능을 추가
-    - Update : 기존에 있던 파일을 수정
-    - Remove : 특정 파일을 삭제
-    - Design : CSS 등 사용자 UI 디자인을 변경
-    - Init : 초기 생성
-- FileName : 추가,수정,삭제한 파일의 이름을 작성
-    - 폴더 이름을 수정하거나 추가한 경우에도 동일하게 폴더 이름을 작성
-- Description : 해당 커밋 내용을 간단하게 요약하여 작성
 
+### 📌 Commit Rule
+[Commit Tag Type]
+- Add : 새로운 파일을 추가한 경우
+- Update : 기존의 파일에서 기능을 추가한 경우 
+- Fix : 버그를 수정한 경우
+- Rename : 파일명을 수정한 경우
+- Remove : 코드 혹은 파일을 삭제한 경우 
+- Design : css 등 사용자 ui 디자인을 변경한 경우 
+- Comment : 주석을 추가하거나 수정한 경우 
+- Refactor : 리팩토링
+
+커밋메시지는 아래와 같은 규약을 지키면서 작성해주시면 됩니다.
+1. 커밋은 " 태그(tag) + 파일이름(or 기능이름) : 내용(content) " 으로 구성되며, 태그는 영어로 쓰되, 첫 문
+자는 대문자 로 합니다.
+2. "태그 파일이름 : 내용" 의 형태이며, ":" 뒤에 space 가 있음에 유의합니다.
+3. 내용(content)는 최대 20글자를 넘기지 않도록 하며 무엇을 했는지를 간단히 명시합니다.
+4. 파일 하나만 수정한게 아닌 여러 기능을 한번에 수정하며 커밋한 경우 파일이름은 생략 가능합니다.
+
+```
+ex) Add router.tsx : 라우터 경로 구현 및 관련 파일 추가
+```
 
 ---
 
-### PR Rule
-- Issue 작성 시, Assignee은 본인 프로필을 지정. 알맞은 Label을 지정. 
-- PR 작성 시, 적절한 Assignee와 Label을 지정.
+### 📌 Branch Rule
+Type/Content 형식으로 작성합니다.
+1. Type : Issue의 타입과 동일하게 선택
+[Branch Type]
+- DEV : 기능 추가 및 구현
+- FIX : 버그 수정
+- DEL : 기능 삭제
+- REF-리팩토링
+3. Content : 해당하는 Issue의 Title을 적절히 변형
   
-#### Title
 ```
-[TYPE] TITLE
-```
-- TYPE
-    - DEV : 일반적인 개발 사항
-    - FIX : 기존 개발에서 버그 내용을 해결하였을 경우
-    - REF : 리팩토링
-    - DOC : 문서에 관련된 사항
- 
-- TITLE
-  : PR 내용을 간단한 제목으로 표현. 가능하면 issue title과 동일하게 작성
-
-```
-[DEV] FE 메인 페이지 UI 구현
-```
-
-####  Content
-```markdown
-## Summary
-PR 간단하게 요약하여 작성
-ex. 메인 페이지 UI를 구현하였습니다.
-
-```
-```
-## Description
-- PR의 내용을 상세하게 작성
-- ui 구현시 스크린샷 첨부, 오류 수정시 파일명과 함께 오류 해결 내용 상세히 작성
+ex)
+  dev/login
+  fix/study
 ```
 
 ---
 
-### Branch Rule
-```
-TYPE/BRANCH_NAME
-```
-- TYPE
-  : Issue의 타입과 동일하게 선택
-    - dev : 일반적인 개발 사항
-    - fix : 기존 개발에서 버그 내용을 해결하였을 경우
-    - ref : 리팩토링
-    - doc : 문서에 관련된 사항
-- BRANCH_NAME
-  : 해당하는 Issue의 Title을 적절히 변형
+### 📌 Issue Rule
+1. 제목은 '[역할-타입] 변경 사항' 구조로 작성합니다.
 
-#### Branch Example
 ```
-dev/main-ui
+ex)
+  [FE-DEV] 로그인 기능
+  [BE-FIX] 게시글 업로드 기능 버그 수정
 ```
+
+2. 타입에 맞는 Label을 지정하고 본인의 레포에 등록합니다.
+3. Issue 작성 시, Assignee은 본인 프로필을 지정합니다.
+
+[Issue Type]
+- DEV : 기능 추가 및 구현
+- FIX : 버그 수정
+- DEL : 기능 삭제
+- REF : 리팩토링
+
+---
+
+### 📌 Pull Request Rule
+1. 제목은 '[역할-타입] 변경 사항' 구조로 작성합니다.
 ```
-docs/login-api
+ex)
+  [FE-DEV] 로그인 기능
+  [BE-FIX] 게시글 업로드 기능 버그 수정
+```
+
+[Type]
+- DEV : 기능 추가 및 구현
+- FIX : 버그 수정
+- DEL : 기능 삭제
+- REF : 리팩토링
+
+3. 모든 PR은 Issue와 연동합니다.
+4. PR에는 구현한 기능을 상세히 기술합니다.
+```
+예시:
+1. 커뮤니티 글 상세보기 컴포넌트 ui 구현
+  - 커뮤니티 글 데이터 파일 추가(커뮤니티 글, 관련 댓글 데이터 등을 가진 가상 데이터)
+  - :contentId의 라우터 추가하여 상세보기 페이지로 이동
+  - 피그마 디자인을 참고한 커뮤니티 글 상세보기 ui 구현 완료
+  - 댓글 좋아요, 싫어요 버튼에 따른 이벤트 구현
+
+2. 스크랩 아이콘, 채팅 아이콘 색상 변경
+  - globalStyle에 채팅, 스크랩 색상 값 변경
+  - 스크랩을 별 -> 책갈피 모양으로 아이콘 변경
+
+3. Navbar 메뉴 아이콘, 텍스트 중앙 정렬
+  - align-items: center 추가해 텍스트 중앙정렬로 ui 수정
+```
+
