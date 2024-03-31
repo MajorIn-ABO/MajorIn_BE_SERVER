@@ -653,7 +653,7 @@ class UsedbooktradeDelete(generics.DestroyAPIView):
 
 
 # 중고거래 도서 검색 API
-# http://127.0.0.1:8000/api/book/search/?book_title=검색어
+# http://127.0.0.1:8000/api/usedbooktrades/book/search/?book_title=검색어
 
 @method_decorator(csrf_exempt, name='dispatch')
 class BookSearchAPIView(APIView):

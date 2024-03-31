@@ -181,7 +181,17 @@ class Usedbooktrade(models.Model):
 
     def __str__(self):
         return self.id
-    
+
+
+class UsedbooktradeData(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    trade = models.ForeignKey(Usedbooktrade, on_delete=models.CASCADE, db_column="tradeid")
+    sellerid = models.ForeignKey(User, on_delete=models.CASCADE, db_column="sellerid")
+    sell_date = models.DateTimeField(auto_now_add=True, verbose_name='판매일')
+
+    def __str__(self):
+        return self.id
+
 
 class Usedbooktrade_Comment(models.Model):
     id = models.BigAutoField(primary_key=True)
