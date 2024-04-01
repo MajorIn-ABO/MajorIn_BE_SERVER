@@ -643,6 +643,49 @@ class UsedbooktradeCreate(generics.CreateAPIView):
             return JsonResponse({'success': False, 'message': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
+@method_decorator(csrf_exempt, name='dispatch')
+class SaveUsedBookAPIView(APIView):
+    
+    def post(self, request, *args, **kwargs):
+        try:
+            # POST 요청에서 중고도서 정보 추출
+            title = request.POST.get('title')
+            author = request.POST.get('author')
+            seller = request.POST.get('seller')
+            publisher = request.POST.get('publisher')
+            price = request.POST.get('sell_price')
+            imgfile = request.POST.get('imgfile')
+            description = request.POST.get('description')
+            is_written = request.POST.get('is_written')
+            is_damaged = request.POST.get('is_damaged')
+            # 이미지 파일 처리 등 추가 코드 작성 필요
+
+            try:
+                user = User.objects.get(pk=seller)
+            except User.DoesNotExist:
+                return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+            
+            # 중고도서 정보 저장
+            used_book = Usedbooktrade.objects.create(
+                title=title,
+                author=author,
+                seller=user,
+                publisher=publisher,
+                price=price,
+                imgfile=imgfile,
+                description=description,
+                is_written=is_written,
+                is_damaged=is_damaged,
+                # 필요한 다른 필드들도 추가할 수 있습니다.
+            )
+            
+            return JsonResponse({'success': True, 'message': '중고도서 정보가 성공적으로 저장되었습니다.'})
+        
+        except Exception as e:
+            # 예외 처리
+            return JsonResponse({'success': False, 'message': str(e)}, status=500)
+        
+
 class UsedbooktradeUpdate(generics.UpdateAPIView):
     queryset = Usedbooktrade.objects.all()
     serializer_class = UsedbooktradeSerializer
@@ -742,7 +785,7 @@ class BookSelectAPIView(APIView):
                 # 필요한 다른 정보들을 추가할 수 있습니다.
             }
             
-            return render(request, 'book_post.html', {'book_info': book_info})
+            return render(request, 'main/book_post.html', {'book_info': book_info})
         
         except Exception as e:
             # 예외 처리
