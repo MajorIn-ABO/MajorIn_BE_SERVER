@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>도서 정보 등록</title>
+</head>
+<body>
+
+<h1>도서 정보 등록</h1>
+
+<form action="{% url 'save_used_book' %}" method="post">
+    {% csrf_token %}
+    <label for="title">도서 제목:</label><br>
+    <input type="text" id="title" name="title" value="{{ book_info.title }}" readonly><br>
+    <label for="author">저자:</label><br>
+    <input type="text" id="author" name="author" value="{{ book_info.author }}" readonly><br>
+    <label for="publisher">출판사:</label><br>
+    <input type="text" id="publisher" name="publisher" value="{{ book_info.publisher }}" readonly><br>
+    <label for="price">판매 가격:</label><br>
+    <input type="text" id="price" name="price" value="{{ book_info.price }}" readonly><br>
+    <label for="imgfile">이미지 URL:</label><br>
+    <input type="text" id="imgfile" name="imgfile" value="{{ book_info.imgfile }}" readonly><br>
+    <!-- 추가 정보 입력란 -->
+    <label for="additional_info">추가 정보:</label><br>
+    <textarea id="additional_info" name="additional_info"></textarea><br>
+    <!-- 이미지 파일 첨부란 등 -->
+    <label for="image">이미지 파일 첨부:</label><br>
+    <input type="file" id="image" name="image"><br>
+    <button type="submit">등록</button>
+</form>
+
+</body>
+</html>

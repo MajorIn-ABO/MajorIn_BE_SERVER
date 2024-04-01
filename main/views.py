@@ -666,6 +666,7 @@ class BookSearchAPIView(APIView):
             book_title = request.GET.get('book_title', '')
 
             book_data = search_books_by_title(book_title, NAVER_Client_ID, NAVER_Client_Secret)
+            print(book_data)
 
             # 결과가 있는지 확인
             if 'items' in book_data and book_data['items']:
@@ -718,6 +719,34 @@ def search_books_by_title(book_title, client_id, client_secret):
         # API 요청이 실패한 경우 에러 코드 출력
         return JsonResponse({'success': False, 'message': f'API 요청 실패 - 상태 코드: {response.status_code}'}, status=500)
 
+
+@method_decorator(csrf_exempt, name='dispatch')
+class BookSelectAPIView(APIView):
+    
+    def post(self, request, *args, **kwargs):
+        try:
+            # POST 요청에서 선택된 도서의 정보 추출
+            title = request.POST.get('title')
+            author = request.POST.get('author')
+            publisher = request.POST.get('publisher')
+            price = request.POST.get('price')
+            imgfile = request.POST.get('imgfile')
+            
+            # 받은 정보를 JSON 형태로 응답
+            book_info = {
+                'title': title,
+                'author': author,
+                'publisher': publisher,
+                'price': price,
+                'imgfile': imgfile,
+                # 필요한 다른 정보들을 추가할 수 있습니다.
+            }
+            
+            return render(request, 'book_post.html', {'book_info': book_info})
+        
+        except Exception as e:
+            # 예외 처리
+            return JsonResponse({'success': False, 'message': str(e)}, status=500)
 
 
 # 중고거래 댓글 관련 API 모음
