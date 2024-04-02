@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User, Board, Board_Comment, Board_Like, Board_bookmark, Study, Study_Comment, Study_Like, Usedbooktrade, Usedbooktrade_Comment
+from .models import User, Board, Board_Comment, Board_Like, Board_bookmark, Study, Study_Comment, Study_Like, Usedbooktrade, UsedbooktradeData, Usedbooktrade_Comment
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -44,7 +44,12 @@ class StudyLikeSerializer(serializers.ModelSerializer):
 class UsedbooktradeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Usedbooktrade
-        fields = ['id', 'seller', 'price', 'description', 'is_written', 'is_damaged']
+        fields = ['id', 'seller', 'price', 'description', 'damage_level']
+
+class UsedbooktradeDataSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UsedbooktradeData
+        fields = ['id', 'trade', 'sellerid', 'sell_date']
 
 class UsedbooktradeCommentSerializer(serializers.ModelSerializer):
     class Meta:

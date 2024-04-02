@@ -171,8 +171,12 @@ class Usedbooktrade(models.Model):
     price = models.TextField(blank=False, null=False, verbose_name='판매가')
     imgfile = models.ImageField(null=True, upload_to="'book_covers/'", blank=True, verbose_name='상품 사진')
     description = models.TextField(verbose_name='상품 설명')
-    is_written = models.BooleanField(null=False, verbose_name='필기 유무')
-    is_damaged = models.BooleanField(null=False, verbose_name='훼손 유무')
+    damage_level_choices = [
+        ('없음', '손상도 없음'),
+        ('조금있음', '손상도 조금있음'),
+        ('많음', '손상도 많음'),
+    ]
+    damage_level = models.CharField(max_length=20, choices=damage_level_choices, default='없음', verbose_name='손상도')
     post_date = models.DateTimeField(auto_now_add=True, verbose_name='등록일')
     update_date = models.DateTimeField(auto_now=True, verbose_name='수정일')
     delete_date = models.DateTimeField(null=True)
