@@ -587,8 +587,7 @@ class UsedbooktradeCreate(generics.CreateAPIView):
             sell_price = request.data.get('price')
             # imgfile = request.data.get('imgfile')
             description = request.data.get('description')
-            is_written = request.data.get('is_written')
-            is_damaged = request.data.get('is_damaged')
+            damage_level = request.data.get('damage_level')
 
             book_title = "운영체제"
             book_data = search_books_by_title(book_title, NAVER_Client_ID, NAVER_Client_Secret)
@@ -602,8 +601,7 @@ class UsedbooktradeCreate(generics.CreateAPIView):
                 'price': sell_price,
                 'imgfile': book_data['items'][0].get('image', ''),
                 'description': description,
-                'is_written': is_written,
-                'is_damaged': is_damaged,
+                'damage_level': damage_level,
             }
 
             try:
@@ -620,8 +618,7 @@ class UsedbooktradeCreate(generics.CreateAPIView):
                 price=usedbooktrade_data['price'],
                 imgfile=usedbooktrade_data['imgfile'],
                 description=usedbooktrade_data['description'],
-                is_written=usedbooktrade_data['is_written'],
-                is_damaged=usedbooktrade_data['is_damaged'],
+                damage_level=usedbooktrade_data['damage_level'],
             )
 
             # 모델 인스턴스 저장
@@ -656,8 +653,7 @@ class SaveUsedBookAPIView(APIView):
             price = request.POST.get('sell_price')
             imgfile = request.POST.get('imgfile')
             description = request.POST.get('description')
-            is_written = request.POST.get('is_written')
-            is_damaged = request.POST.get('is_damaged')
+            damage_level = request.POST.get('damage_level')
             # 이미지 파일 처리 등 추가 코드 작성 필요
 
             try:
@@ -674,8 +670,7 @@ class SaveUsedBookAPIView(APIView):
                 price=price,
                 imgfile=imgfile,
                 description=description,
-                is_written=is_written,
-                is_damaged=is_damaged,
+                damage_level=damage_level,
                 # 필요한 다른 필드들도 추가할 수 있습니다.
             )
             

@@ -7,32 +7,34 @@
 
 <h1>도서 정보 등록</h1>
 
-<form action="{% url 'book-post-api' %}" method="post">
+<form action="{% url 'book-post-api' %}" method="post" enctype="multipart/form-data">
     {% csrf_token %}
     <label for="title">도서 제목:</label><br>
-    <input type="text" id="title" name="title" value="{{ book_info.title }}" readonly><br>
+    <input type="text" id="title" name="title" value="{{ book_info.title }}" readonly><br><br>
     <label for="author">저자:</label><br>
-    <input type="text" id="author" name="author" value="{{ book_info.author }}" readonly><br>
+    <input type="text" id="author" name="author" value="{{ book_info.author }}" readonly><br><br>
     <label for="publisher">출판사:</label><br>
-    <input type="text" id="publisher" name="publisher" value="{{ book_info.publisher }}" readonly><br>
+    <input type="text" id="publisher" name="publisher" value="{{ book_info.publisher }}" readonly><br><br>
     <label for="price">정가:</label><br>
-    <input type="text" id="price" name="price" value="{{ book_info.price }}" readonly><br>
+    <input type="text" id="price" name="price" value="{{ book_info.price }}" readonly><br><br>
     <label for="imgfile">이미지 URL:</label><br>
-    <input type="text" id="imgfile" name="imgfile" value="{{ book_info.imgfile }}" readonly><br>
+    <input type="text" id="imgfile" name="imgfile" value="{{ book_info.imgfile }}" readonly><br><br>
     <!-- 추가 정보 입력란 -->
     <label for="description">설명:</label><br>
-    <textarea id="description" name="description"></textarea><br>
+    <textarea id="description" name="description"></textarea><br><br>
     <label for="seller">판매자:</label><br>
-    <textarea id="seller" name="seller"></textarea><br>
+    <textarea id="seller" name="seller"></textarea><br><br>
     <label for="sell_price">판매가:</label><br>
-    <textarea id="sell_price" name="sell_price"></textarea><br>
-    <label for="is_written">필기 유무:</label><br>
-    <textarea id="is_written" name="is_written"></textarea><br>
-    <label for="is_damaged">훼손 유무:</label><br>
-    <textarea id="is_damaged" name="is_damaged"></textarea><br>
+    <textarea id="sell_price" name="sell_price"></textarea><br><br>
+    <label for="damage_level">손상도:</label><br>
+    <select id="damage_level" name="damage_level">
+        <option value="없음">손상도 없음</option>
+        <option value="조금있음">손상도 조금있음</option>
+        <option value="많음">손상도 많음</option>
+    </select><br><br>
     <!-- 이미지 파일 첨부란 등 -->
     <label for="image">이미지 파일 첨부:</label><br>
-    <input type="file" id="image" name="image"><br>
+    <input type="file" id="image" name="image"><br><br>
     <button type="submit">등록</button>
 </form>
 
