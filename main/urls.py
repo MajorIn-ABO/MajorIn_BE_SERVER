@@ -61,6 +61,8 @@ urlpatterns = [
     path('api/studys/posts/likes/<int:post_id>/<int:user_id>/create/', views.StudyLikeCreate.as_view(), name='study-like-create'),
 
     path('api/usedbooktrades/book/search/', views.BookSearchAPIView.as_view(), name='book-search-api'),
+    path('api/usedbooktrades/book/search/select/', views.BookSelectAPIView.as_view(), name='book-select-api'),
+    path('api/usedbooktrades/book/search/select/post/', views.SaveUsedBookAPIView.as_view(), name='book-post-api'),
 
     path('api/usedbooktrades/posts/', views.UsedbooktradeList.as_view(), name='usedbooktrade-list'),
     path('api/usedbooktrades/posts/<int:pk>/', views.UsedbooktradeDetail.as_view(), name='usedbooktrade-detail'),

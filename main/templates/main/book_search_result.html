@@ -13,9 +13,18 @@
         <p>제목: {{ book_data.title }}</p>
         <p>저자: {{ book_data.author }}</p>
         <p>출판사: {{ book_data.publisher }}</p>
-        <p>가격: {{ book_data.discount }}</p>
+        <p>정가: {{ book_data.discount }}</p>
         <img src="{{ book_data.image }}" alt="도서 이미지">
         <!-- 필요한 다른 정보들을 표시하거나 활용하세요. -->
+        <form action="{% url 'book-select-api' %}" method="post">
+            {% csrf_token %}
+            <input type="hidden" name="title" value="{{ book_data.title }}">
+            <input type="hidden" name="author" value="{{ book_data.author }}">
+            <input type="hidden" name="publisher" value="{{ book_data.publisher }}">
+            <input type="hidden" name="price" value="{{ book_data.discount }}">
+            <input type="hidden" name="imgfile" value="{{ book_data.image }}">
+            <button type="submit">선택</button>
+        </form>        
         <hr>
     {% endfor %}
 {% else %}
