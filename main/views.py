@@ -3,7 +3,7 @@ from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.parsers import JSONParser, MultiPartParser
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.views import View
@@ -768,6 +768,32 @@ class BookSelectAPIView(APIView):
 
 # 중고거래 거래내역 관련 API 모음
 
+class UsedbooktradeSold(APIView):
+    def post(self, request, usedbooktrade_id):
+        # 해당 책 모델 조회
+        usedbooktrade = get_object_or_404(Usedbooktrade, id=usedbooktrade_id)
+
+        # 판매자 확인 (현재 로그인한 사용자를 판매자로 설정)
+        # seller = request.user
+
+        seller = usedbooktrade.seller
+
+        print(seller)
+        print(usedbooktrade.is_sold)
+
+        # 책이 판매되지 않았다면
+        if usedbooktrade.is_sold:
+            # is_sold 컬럼을 True로 업데이트
+            usedbooktrade.is_sold = True
+            usedbooktrade.save()
+
+            # UsedbooktradeData에 판매된 책 데이터 등록
+            UsedbooktradeData.objects.create(trade=usedbooktrade, sellerid=seller)
+
+            return Response({"message": "책이 성공적으로 판매되었습니다."}, status=status.HTTP_200_OK)
+        else:
+            return Response({"message": "이미 판매된 책입니다."}, status=status.HTTP_400_BAD_REQUEST)
+
 class UsedbooktradedataList(generics.ListAPIView):
     queryset = UsedbooktradeData.objects.all()
     serializer_class = UsedbooktradeDataSerializer
@@ -790,6 +816,7 @@ class UsedbooktradedataDetail(generics.RetrieveAPIView):
     queryset = UsedbooktradeData.objects.all()
     serializer_class = UsedbooktradeDataSerializer
 
+'''
 class UsedbooktradedataCreate(generics.CreateAPIView):
     queryset = UsedbooktradeData.objects.all()
     serializer_class = UsedbooktradeDataSerializer
@@ -801,6 +828,7 @@ class UsedbooktradedataCreate(generics.CreateAPIView):
             headers = self.get_success_headers(serializer.data)
             return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+'''
 
 class UsedbooktradedataUpdate(generics.UpdateAPIView):
     queryset = UsedbooktradeData.objects.all()

@@ -63,6 +63,7 @@ urlpatterns = [
     path('api/usedbooktrades/book/search/', views.BookSearchAPIView.as_view(), name='book-search-api'),
     path('api/usedbooktrades/book/search/select/', views.BookSelectAPIView.as_view(), name='book-select-api'),
     path('api/usedbooktrades/book/search/select/post/', views.SaveUsedBookAPIView.as_view(), name='book-post-api'),
+    path('api/usedbooktrades/book/<int:usedbooktrade_id>/sold/', views.UsedbooktradeSold.as_view(), name='book-sold-api'),
 
     path('api/usedbooktrades/posts/', views.UsedbooktradeList.as_view(), name='usedbooktrade-list'),
     path('api/usedbooktrades/posts/<int:pk>/', views.UsedbooktradeDetail.as_view(), name='usedbooktrade-detail'),
@@ -75,7 +76,7 @@ urlpatterns = [
     path('api/usedbooktrades/datas/<int:pk>/', views.UsedbooktradedataDetail.as_view(), name='usedbooktradedata-detail'),
     path('api/usedbooktrades/datas-by-tradeid/<int:trade_id>/', views.UsedbooktradedataListByTradeId.as_view(), name='usedbooktradedata-list-by-tradeid'),
     path('api/usedbooktrades/datas-by-sellerid/<int:seller_id>/', views.UsedbooktradedataListBySellerId.as_view(), name='usedbooktradedata-list-by-sellerid'),
-    path('api/usedbooktrades/datas/create/', views.UsedbooktradedataCreate.as_view(), name='usedbooktradedata-create'),
+    # path('api/usedbooktrades/datas/create/', views.UsedbooktradedataCreate.as_view(), name='usedbooktradedata-create'),
     path('api/usedbooktrades/datas/<int:pk>/update/', views.UsedbooktradedataUpdate.as_view(), name='usedbooktradedata-update'),
     path('api/usedbooktrades/datas/<int:pk>/delete/', views.UsedbooktradedataDelete.as_view(), name='usedbooktradedata-delete'),
 
