@@ -44,7 +44,7 @@ class StudyLikeSerializer(serializers.ModelSerializer):
 class UsedbooktradeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Usedbooktrade
-        fields = ['id', 'seller', 'price', 'description', 'damage_level']
+        fields = ['id', 'title', 'author', 'seller', 'publisher', 'price', 'imgfile', 'description', 'damage_level', 'post_date', 'is_sold']
 
 class UsedbooktradeDataSerializer(serializers.ModelSerializer):
     class Meta:

@@ -9,8 +9,8 @@ from django.utils.decorators import method_decorator
 from django.views import View
 from django.utils import timezone  # 필요한 경우 추가
 from django.http import JsonResponse
-from .models import User, Board, Board_Comment, Board_Like, Board_bookmark, Study, Study_Comment, Study_Like, Usedbooktrade, Usedbooktrade_Comment
-from .serializers import UserSerializer, BoardSerializer, BoardCommentSerializer, BoardLikeSerializer, BoardBookmarkSerializer, StudySerializer, StudyCommentSerializer, StudyLikeSerializer, UsedbooktradeSerializer, UsedbooktradeCommentSerializer
+from .models import User, Board, Board_Comment, Board_Like, Board_bookmark, Study, Study_Comment, Study_Like, Usedbooktrade, UsedbooktradeData, Usedbooktrade_Comment
+from .serializers import UserSerializer, BoardSerializer, BoardCommentSerializer, BoardLikeSerializer, BoardBookmarkSerializer, StudySerializer, StudyCommentSerializer, StudyLikeSerializer, UsedbooktradeSerializer, UsedbooktradeDataSerializer, UsedbooktradeCommentSerializer
 import json
 import requests
 from dotenv import load_dotenv
@@ -545,32 +545,6 @@ class UsedbooktradeDetail(generics.RetrieveAPIView):
     queryset = Usedbooktrade.objects.all()
     serializer_class = UsedbooktradeSerializer
 
-# 데이터 임시 저장을 위한 클래스 
-
-class SharedBookInfo:
-    cached_book_info = {}
-
-'''
-# 클라이언트에게서 받은 데이터 임시저장
-
-@method_decorator(csrf_exempt, name='dispatch')
-class UsedbooktradeSelectedBook(APIView):
-    parser_classes = [JSONParser, MultiPartParser]
-
-    def post(self, request, *args, **kwargs):
-        try:
-            # 프런트엔드에서 전송한 선택된 도서 정보 받기
-            selected_book_info = request.data.get('bookInfo', {})
-
-            # 임시로 선택된 도서 정보 저장
-            SharedBookInfo.selected_book_info = selected_book_info
-
-            return JsonResponse({'success': True, 'message': '도서 정보를 임시로 저장했습니다.'})
-
-        except Exception as e:
-            # 예외 처리
-            return JsonResponse({'success': False, 'message': str(e)}, status=500)
-'''
 
 # 중고거래 글 작성
 
@@ -690,6 +664,11 @@ class UsedbooktradeDelete(generics.DestroyAPIView):
     serializer_class = UsedbooktradeSerializer
 
 
+# 데이터 임시 저장을 위한 클래스 
+
+class SharedBookInfo:
+    cached_book_info = {}
+
 # 중고거래 도서 검색 API
 # http://127.0.0.1:8000/api/usedbooktrades/book/search/?book_title=검색어
 
@@ -785,6 +764,54 @@ class BookSelectAPIView(APIView):
         except Exception as e:
             # 예외 처리
             return JsonResponse({'success': False, 'message': str(e)}, status=500)
+
+
+# 중고거래 거래내역 관련 API 모음
+
+class UsedbooktradedataList(generics.ListAPIView):
+    queryset = UsedbooktradeData.objects.all()
+    serializer_class = UsedbooktradeDataSerializer
+
+class UsedbooktradedataListByTradeId(generics.ListAPIView):
+    serializer_class = UsedbooktradeDataSerializer
+
+    def get_queryset(self):
+        trade_id = self.kwargs['trade']
+        return UsedbooktradeData.objects.filter(trade=trade_id)
+    
+class UsedbooktradedataListBySellerId(generics.ListAPIView):
+    serializer_class = UsedbooktradeDataSerializer
+
+    def get_queryset(self):
+        sellerid = self.kwargs['sellerid']
+        return UsedbooktradeData.objects.filter(sellerid=sellerid)
+
+class UsedbooktradedataDetail(generics.RetrieveAPIView):
+    queryset = UsedbooktradeData.objects.all()
+    serializer_class = UsedbooktradeDataSerializer
+
+class UsedbooktradedataCreate(generics.CreateAPIView):
+    queryset = UsedbooktradeData.objects.all()
+    serializer_class = UsedbooktradeDataSerializer
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            self.perform_create(serializer)
+            headers = self.get_success_headers(serializer.data)
+            return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class UsedbooktradedataUpdate(generics.UpdateAPIView):
+    queryset = UsedbooktradeData.objects.all()
+    serializer_class = UsedbooktradeDataSerializer
+
+class UsedbooktradedataDelete(generics.DestroyAPIView):
+    queryset = UsedbooktradeData.objects.all()
+    serializer_class = UsedbooktradeDataSerializer
+
+
+
 
 
 # 중고거래 댓글 관련 API 모음
