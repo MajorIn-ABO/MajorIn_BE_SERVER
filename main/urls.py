@@ -11,8 +11,8 @@ urlpatterns = [
 
     path('api/token/', views.MyTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-    path('api/register/', views.RegisterView.as_view(), name='auth_register'),
-    path('api/', views.getRoutes),
+    path('api/users/register/', views.RegisterView.as_view(), name='auth_register'),
+    path('api/list/', views.getRoutes),
 
     path('api/majors/', views.MajorList.as_view(), name='major-list'),
     path('api/majors/<int:pk>/', views.MajorDetail.as_view(), name='major-detail'),
@@ -28,9 +28,9 @@ urlpatterns = [
     path('api/boards/posts/<int:pk>/', views.BoardDetail.as_view(), name='board-detail'),
     path('api/boards/posts-by-userid/<int:user_id>/', views.BoardListByUserId.as_view(), name='board-list-by-userid'),
     path('api/boards/posts-by-category/<str:category_id>/', views.BoardListByCategory.as_view(), name='board-list-by-category'),
-    path('api/boards/posts/new/', views.BoardCreate.as_view(), name='board-create'),
-    path('api/boards/posts/<int:pk>/', views.BoardUpdate.as_view(), name='board-update'),
-    path('api/boards/posts/<int:pk>/', views.BoardDelete.as_view(), name='board-delete'),
+    path('api/boards/posts/create/', views.BoardCreate.as_view(), name='board-create'),
+    path('api/boards/posts/<int:pk>/update/', views.BoardUpdate.as_view(), name='board-update'),
+    path('api/boards/posts/<int:pk>/delete/', views.BoardDelete.as_view(), name='board-delete'),
     
     path('api/boards/posts/comments/', views.BoardCommentList.as_view(), name='board-comment-list'),
     path('api/boards/posts/comments/<int:pk>/', views.BoardCommentDetail.as_view(), name='board-comment-detail'),
@@ -38,9 +38,9 @@ urlpatterns = [
     path('api/boards/posts/comments-by-postid/<int:post_id>/', views.BoardCommentListByPostId.as_view(), name='board-comment-list-by-postid'),
     path('api/boards/posts/comments-by-parent/<int:parent_comment>/', views.BoardCommentListByParent.as_view(), name='board-comment-list-by-parent'),
     #path('api/boards/posts/comments/<int:post_id>/<int:user_id>/create/', views.BoardCommentCreate.as_view(), name='board-comment-create'),
-    path('api/boards/posts/comments/', views.BoardCommentCreate.as_view(), name='board-comment-create'),
-    path('api/boards/posts/comments/<int:pk>/', views.BoardCommentUpdate.as_view(), name='board-comment-update'),
-    path('api/boards/posts/comments/<int:pk>/', views.BoardCommentDelete.as_view(), name='board-comment-delete'),
+    path('api/boards/posts/comments/create/', views.BoardCommentCreate.as_view(), name='board-comment-create'),
+    path('api/boards/posts/comments/<int:pk>/update/', views.BoardCommentUpdate.as_view(), name='board-comment-update'),
+    path('api/boards/posts/comments/<int:pk>/delete/', views.BoardCommentDelete.as_view(), name='board-comment-delete'),
 
     path('api/boards/posts/likes/', views.BoardLikeList.as_view(), name='board-like-list'),
     path('api/boards/posts/likes-by-userid/<int:user_id>/', views.BoardLikeListByUserId.as_view(), name='board-like-list-by-userid'),
