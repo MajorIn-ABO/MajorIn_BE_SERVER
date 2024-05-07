@@ -9,7 +9,7 @@ class Major(models.Model):
     major = models.CharField(max_length=15, null=True)
     major_category_name = models.CharField(max_length=10, null=True)
 
-    def __str__(self):
+    def __str__(self): 
         return self.id
 
 
@@ -40,7 +40,7 @@ class User(models.Model):
     registration_date = models.DateField(auto_now_add=True)
     user_status = models.CharField(max_length=10, choices=USER_STATUS)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return str(self.id)
 
 

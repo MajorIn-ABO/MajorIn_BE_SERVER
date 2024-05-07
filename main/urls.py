@@ -1,14 +1,27 @@
 from django.contrib import admin
 from django.urls import path
 from . import views
+from rest_framework_simplejwt.views import (
+    TokenRefreshView,
+)
 
 urlpatterns = [
     path('', views.index, name='index'),
     path('user/', views.user_view, name='user'),
-    
+
+    path('api/token/', views.MyTokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('api/register/', views.RegisterView.as_view(), name='auth_register'),
+    path('api/', views.getRoutes),
+
+    path('api/majors/', views.MajorList.as_view(), name='major-list'),
+    path('api/majors/<int:pk>/', views.MajorDetail.as_view(), name='major-detail'),
+    path('api/majors/create/', views.MajorCreate.as_view(), name='major-create'),
+    path('api/majors/<int:pk>/', views.MajorUpdate.as_view(), name='major-update'),
+
     path('api/users/', views.UserList.as_view(), name='user-list'),
     path('api/users/<int:pk>/', views.UserDetail.as_view(), name='user-detail'),
-    path('api/users/', views.UserCreate.as_view(), name='user-create'),
+    path('api/users/create/', views.UserCreate.as_view(), name='user-create'),
     path('api/users/<int:pk>/', views.UserUpdate.as_view(), name='user-update'),
     
     path('api/boards/posts/', views.BoardList.as_view(), name='board-list'),

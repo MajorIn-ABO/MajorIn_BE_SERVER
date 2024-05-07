@@ -1,6 +1,7 @@
 from rest_framework import generics
 from rest_framework import status
 from rest_framework.views import APIView
+from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.parsers import JSONParser, MultiPartParser
 from django.shortcuts import render, get_object_or_404
@@ -9,8 +10,11 @@ from django.utils.decorators import method_decorator
 from django.views import View
 from django.utils import timezone  # 필요한 경우 추가
 from django.http import JsonResponse
-from .models import User, Board, Board_Comment, Board_Like, Board_bookmark, Study, Study_Comment, Study_Like, Usedbooktrade, UsedbooktradeData, Usedbooktrade_Comment
-from .serializers import UserSerializer, BoardSerializer, BoardCommentSerializer, BoardLikeSerializer, BoardBookmarkSerializer, StudySerializer, StudyCommentSerializer, StudyLikeSerializer, UsedbooktradeSerializer, UsedbooktradeDataSerializer, UsedbooktradeCommentSerializer
+from .models import Major, User, Board, Board_Comment, Board_Like, Board_bookmark, Study, Study_Comment, Study_Like, Usedbooktrade, UsedbooktradeData, Usedbooktrade_Comment
+from .serializers import MyTokenObtainPairSerializer, RegisterSerializer, MajorSerializer, UserSerializer, BoardSerializer, BoardCommentSerializer, BoardLikeSerializer, BoardBookmarkSerializer, StudySerializer, StudyCommentSerializer, StudyLikeSerializer, UsedbooktradeSerializer, UsedbooktradeDataSerializer, UsedbooktradeCommentSerializer
+from rest_framework_simplejwt.views import TokenObtainPairView
+from django.contrib.auth.models import User
+from rest_framework.permissions import AllowAny, IsAuthenticated
 import json
 import requests
 from dotenv import load_dotenv
@@ -21,6 +25,52 @@ load_dotenv()
 
 NAVER_Client_ID = os.environ.get('Client_ID')
 NAVER_Client_Secret = os.environ.get('Client_Secret')
+
+
+# 로그인 관련 API 모음
+
+class MyTokenObtainPairView(TokenObtainPairView):
+    serializer_class = MyTokenObtainPairSerializer
+
+class RegisterView(generics.CreateAPIView):
+    queryset = User.objects.all()
+    permission_classes = (AllowAny,)
+    serializer_class = RegisterSerializer
+
+
+@api_view(['GET'])
+def getRoutes(request):
+    routes = [
+        '/api/token/',
+        '/api/register/',
+        '/api/token/refresh/'
+    ]
+    return Response(routes)
+
+# 학과 관련 API 모음
+class MajorList(generics.ListAPIView):
+    queryset = Major.objects.all()
+    serializer_class = MajorSerializer
+
+class MajorDetail(generics.RetrieveAPIView):
+    queryset = Major.objects.all()
+    serializer_class = MajorSerializer
+
+class MajorCreate(generics.CreateAPIView):
+    queryset = Major.objects.all()
+    serializer_class = MajorSerializer
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            self.perform_create(serializer)
+            headers = self.get_success_headers(serializer.data)
+            return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class MajorUpdate(generics.UpdateAPIView):
+    queryset = Major.objects.all()
+    serializer_class = MajorSerializer
 
 
 # 유저 관련 API 모음

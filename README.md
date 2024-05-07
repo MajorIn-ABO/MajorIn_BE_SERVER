@@ -1,16 +1,11 @@
-# MajorIn_BE
+# MajorIn_BE_SERVER
 
 ## 시작 가이드
 ```
-source myenv/bin/activate
-
-source ~/.bashrc
-
-mysql.server start
+source majorin/bin/activate
 
 python manage.py runserver
 
-mysql.server stop # 종료
 
 ```
 
