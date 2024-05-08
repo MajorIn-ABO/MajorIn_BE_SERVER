@@ -6,7 +6,7 @@ from rest_framework.validators import UniqueValidator
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 from rest_framework import serializers
-from .models import Major, User, Board, Board_Comment, Board_Like, Board_bookmark, Study, Study_Comment, Study_Like, Usedbooktrade, UsedbooktradeData, Usedbooktrade_Comment
+from .models import Token, Major, User, Board, Board_Comment, Board_Like, Board_bookmark, Study, Study_Comment, Study_Like, Usedbooktrade, UsedbooktradeData, Usedbooktrade_Comment
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod
@@ -46,6 +46,11 @@ class MajorSerializer(serializers.ModelSerializer):
         model = Major
         fields = '__all__'
 
+class MajorCheckSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Major
+        fields = ['id', 'major', 'major_category_name']
+        
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User

@@ -10,8 +10,8 @@ from django.utils.decorators import method_decorator
 from django.views import View
 from django.utils import timezone  # 필요한 경우 추가
 from django.http import JsonResponse
-from .models import Major, User, Board, Board_Comment, Board_Like, Board_bookmark, Study, Study_Comment, Study_Like, Usedbooktrade, UsedbooktradeData, Usedbooktrade_Comment
-from .serializers import MyTokenObtainPairSerializer, RegisterSerializer, MajorSerializer, UserSerializer, BoardSerializer, BoardCommentSerializer, BoardLikeSerializer, BoardBookmarkSerializer, StudySerializer, StudyCommentSerializer, StudyLikeSerializer, UsedbooktradeSerializer, UsedbooktradeDataSerializer, UsedbooktradeCommentSerializer
+from .models import Token, Major, User, Board, Board_Comment, Board_Like, Board_bookmark, Study, Study_Comment, Study_Like, Usedbooktrade, UsedbooktradeData, Usedbooktrade_Comment
+from .serializers import MyTokenObtainPairSerializer, RegisterSerializer, MajorSerializer, MajorCheckSerializer, UserSerializer, BoardSerializer, BoardCommentSerializer, BoardLikeSerializer, BoardBookmarkSerializer, StudySerializer, StudyCommentSerializer, StudyLikeSerializer, UsedbooktradeSerializer, UsedbooktradeDataSerializer, UsedbooktradeCommentSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
 from django.contrib.auth.models import User
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -98,6 +98,32 @@ class UserUpdate(generics.UpdateAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
 
+# 사용자가 선택한 학과 카테고리가 올바른지 확인하는 API
+
+class MajorCheckAPIView(APIView):
+    queryset = Major.objects.all()
+    serializer_class = MajorCheckSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.serializer_class(data=request.data)
+        # serializer = MajorCheckSerializer(data=request.data)
+        if serializer.is_valid():
+            major_name = serializer.validated_data['major']
+            major_category_name = serializer.validated_data['major_category_name']
+
+            # 주어진 학과 카테고리에 해당하는 모든 Major 객체 가져오기
+            major_data = Major.objects.filter(major_category_name=major_category_name)
+
+            # 주어진 학과가 포함되어 있는지 확인
+            for category in major_data:
+                if major_name in category.major:
+                    major_id = category.id
+                    return Response({'message': True, 'major_id': major_id, 'major_category': major_category_name}, status=status.HTTP_201_CREATED)
+
+            # 주어진 학과가 없는 경우
+            return Response({'message': False}, status=status.HTTP_201_CREATED)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 # 게시글 관련 API 모음
 

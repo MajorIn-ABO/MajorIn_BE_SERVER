@@ -24,6 +24,8 @@ urlpatterns = [
     path('api/users/create/', views.UserCreate.as_view(), name='user-create'),
     path('api/users/<int:pk>/', views.UserUpdate.as_view(), name='user-update'),
     
+    path('api/check_major/', views.MajorCheckAPIView.as_view(), name='check_major'),
+
     path('api/boards/posts/', views.BoardList.as_view(), name='board-list'),
     path('api/boards/posts/<int:pk>/', views.BoardDetail.as_view(), name='board-detail'),
     path('api/boards/posts-by-userid/<int:user_id>/', views.BoardListByUserId.as_view(), name='board-list-by-userid'),

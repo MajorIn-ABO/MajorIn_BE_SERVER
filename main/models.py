@@ -43,7 +43,15 @@ class User(models.Model):
     def __str__(self) -> str:
         return str(self.id)
 
+class Token(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    user_id = models.ForeignKey(User, on_delete=models.CASCADE, db_column="user_id")
+    refresh = models.CharField(max_length=50, null=True)
+    access = models.CharField(max_length=50, null=True)
 
+    def __str__(self): 
+        return self.id
+        
 class Category(models.Model):
     QUESTION_MAJOR = 'QUESTION'
     TALK = 'TALK'
