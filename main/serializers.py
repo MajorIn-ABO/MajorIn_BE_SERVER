@@ -1,13 +1,14 @@
 from django.contrib.auth.models import User as AuthUser
+from rest_framework.authtoken.models import Token as AuthToken
+
+from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
 from django.contrib.auth.hashers import make_password
 
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
-from rest_framework import serializers
 from .models import Token, Major, User, Board, Board_Comment, Board_Like, Board_bookmark, Study, Study_Comment, Study_Like, Usedbooktrade, UsedbooktradeData, Usedbooktrade_Comment
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
@@ -35,6 +36,28 @@ class AuthUserRegisterSerializer(serializers.ModelSerializer):
             email=validated_data['email']
         )
         return auth_user
+
+class LoginSerializer(serializers.Serializer):
+    username = serializers.CharField(required=True)
+    password = serializers.CharField(required=True, write_only=True)
+    # write_only=True 옵션을 통해 클라이언트->서버의 역직렬화는 가능하지만, 서버->클라이언트 방향의 직렬화는 불가능하도록 해준다.
+    
+    def validate(self, data):
+        user = authenticate(**data)
+        if user:
+            try:
+                token = Token.objects.get(auth_id=user.id)
+                #token = AuthToken.objects.filter(user=user)
+                return token
+            except AuthToken.DoesNotExist:
+                raise serializers.ValidationError(
+                    {"error": "Token does not exist for this user."}
+                )
+        else:
+            raise serializers.ValidationError(
+                {"error": "Unable to log in with provided credentials."}
+            )
+
 
 class MajorSerializer(serializers.ModelSerializer):
     class Meta:

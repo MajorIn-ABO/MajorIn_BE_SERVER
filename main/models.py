@@ -1,4 +1,6 @@
 from django.db import models
+from django.contrib.auth.models import User as AuthUser
+from rest_framework.authtoken.models import Token as AuthToken
 
 from django.conf import settings
 from django.utils import timezone
@@ -36,7 +38,7 @@ class User(models.Model):
     home_password = models.CharField(max_length=20)
     email = models.EmailField(unique=True)
     phonenumber = models.CharField(max_length=15)
-    admission_date = models.DateField()
+    admission_date = models.IntegerField()
     registration_date = models.DateField(auto_now_add=True)
     user_status = models.CharField(max_length=10, choices=USER_STATUS, default=ACTIVE)
 
@@ -46,6 +48,7 @@ class User(models.Model):
 class Token(models.Model):
     id = models.BigAutoField(primary_key=True)
     user_id = models.ForeignKey(User, on_delete=models.CASCADE, db_column="user_id")
+    auth_id = models.ForeignKey(AuthUser, on_delete=models.CASCADE, db_column="auth_id")
     refresh = models.CharField(max_length=50, null=True)
     access = models.CharField(max_length=50, null=True)
 

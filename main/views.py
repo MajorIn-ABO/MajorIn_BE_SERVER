@@ -1,5 +1,5 @@
 from rest_framework import generics
-from rest_framework import status
+from rest_framework import status, generics
 from rest_framework.views import APIView
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -11,10 +11,12 @@ from django.views import View
 from django.utils import timezone  # 필요한 경우 추가
 from django.http import JsonResponse
 from .models import Token, Major, User, Board, Board_Comment, Board_Like, Board_bookmark, Study, Study_Comment, Study_Like, Usedbooktrade, UsedbooktradeData, Usedbooktrade_Comment
-from .serializers import MyTokenObtainPairSerializer, AuthUserRegisterSerializer, MajorSerializer, MajorCheckSerializer, UserSerializer, UserRegisterSerializer, BoardSerializer, BoardCommentSerializer, BoardLikeSerializer, BoardBookmarkSerializer, StudySerializer, StudyCommentSerializer, StudyLikeSerializer, UsedbooktradeSerializer, UsedbooktradeDataSerializer, UsedbooktradeCommentSerializer
+from .serializers import MyTokenObtainPairSerializer, AuthUserRegisterSerializer, LoginSerializer,MajorSerializer, MajorCheckSerializer, UserSerializer, UserRegisterSerializer, BoardSerializer, BoardCommentSerializer, BoardLikeSerializer, BoardBookmarkSerializer, StudySerializer, StudyCommentSerializer, StudyLikeSerializer, UsedbooktradeSerializer, UsedbooktradeDataSerializer, UsedbooktradeCommentSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth.models import User as AuthUser
+from rest_framework.authtoken.models import Token as AuthToken
+from django.contrib.auth import authenticate
 from rest_framework.permissions import AllowAny, IsAuthenticated
 import json
 import requests
@@ -47,6 +49,24 @@ def getRoutes(request):
         '/api/token/refresh/'
     ]
     return Response(routes)
+
+# 로그인 API
+class LoginView(generics.GenericAPIView):
+    serializer_class = LoginSerializer
+    
+    def post(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        token = serializer.validated_data # validate()의 리턴값인 token을 받아온다.
+        
+        token_data = {
+            'user_id': token.user_id.id,
+            'auth_id': token.auth_id.id,
+            'refresh': token.refresh,
+            'access': token.access
+        }
+
+        return Response({"message": "로그인에 성공했습니다.", "token": token_data}, status=status.HTTP_200_OK)
 
 # 학과 관련 API 모음
 class MajorList(generics.ListAPIView):
@@ -99,6 +119,7 @@ class UserUpdate(generics.UpdateAPIView):
     queryset = User.objects.all()
     serializer_class = UserRegisterSerializer
 
+# 유저 회원가입 + 토큰 발급 API
 class UserRegisterAPIView(APIView):
     queryset = User.objects.all()
     serializer_class = UserRegisterSerializer
@@ -122,12 +143,14 @@ class UserRegisterAPIView(APIView):
                 refresh = RefreshToken.for_user(auth_user)
                 token_data = {
                     'user_id': user,
+                    'auth_id': auth_user,
                     'refresh': str(refresh),
                     'access': str(refresh.access_token)
                 }
                 token = Token.objects.create(**token_data)
 
                 # user 와 auth_user 와 토큰 데이터를 하나의 응답 데이터로 묶어서 반환
+                '''
                 response_data = {
                     'user': serializer.data,
                     'auth_user': auth_user_serializer.data,
@@ -137,12 +160,13 @@ class UserRegisterAPIView(APIView):
                         'access': str(token.access)
                     }
                 }
+                '''
                 # headers = self.get_success_headers(serializer.data)
-                return Response(response_data, status=status.HTTP_201_CREATED)
+                return Response({'message': "회원가입에 성공했습니다."}, status=status.HTTP_201_CREATED)
             else:
                 # AuthUser 등록 실패 시 User 데이터 롤백
                 user.delete()
-                return Response(auth_user_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+                return Response({'message': "등록할 수 없는 아이디 혹은 비밀번호 입니다."}, status=status.HTTP_400_BAD_REQUEST)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 # 사용자가 선택한 학과 카테고리가 올바른지 확인하는 API

@@ -13,6 +13,7 @@ urlpatterns = [
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     # path('api/users/register/', views.RegisterView.as_view(), name='auth_register'),
     path('api/list/', views.getRoutes),
+    path('api/login/', views.LoginView.as_view(), name='major-login'),
 
     path('api/majors/', views.MajorList.as_view(), name='major-list'),
     path('api/majors/<int:pk>/', views.MajorDetail.as_view(), name='major-detail'),
