@@ -14,7 +14,7 @@ cd MajorIn_BE/
 
 gunicorn --bind 0.0.0.0:8000 majorinBE.wsgi:application
 
-http://[ip]:8000/
+http://[ip]:80/
 
 ```
 

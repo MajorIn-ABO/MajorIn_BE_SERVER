@@ -9,8 +9,8 @@ class Major(models.Model):
     major = models.CharField(max_length=15, null=True)
     major_category_name = models.CharField(max_length=10, null=True)
 
-    def __str__(self): 
-        return self.id
+    def __str__(self) -> str:
+        return str(self.id)
 
 
 class User(models.Model):
@@ -38,7 +38,7 @@ class User(models.Model):
     phonenumber = models.CharField(max_length=15)
     admission_date = models.DateField()
     registration_date = models.DateField(auto_now_add=True)
-    user_status = models.CharField(max_length=10, choices=USER_STATUS)
+    user_status = models.CharField(max_length=10, choices=USER_STATUS, default=ACTIVE)
 
     def __str__(self) -> str:
         return str(self.id)
@@ -49,8 +49,8 @@ class Token(models.Model):
     refresh = models.CharField(max_length=50, null=True)
     access = models.CharField(max_length=50, null=True)
 
-    def __str__(self): 
-        return self.id
+    def __str__(self) -> str:
+        return str(self.id)
         
 class Category(models.Model):
     QUESTION_MAJOR = 'QUESTION'

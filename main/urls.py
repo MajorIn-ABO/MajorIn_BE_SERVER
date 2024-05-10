@@ -11,7 +11,7 @@ urlpatterns = [
 
     path('api/token/', views.MyTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-    path('api/users/register/', views.RegisterView.as_view(), name='auth_register'),
+    # path('api/users/register/', views.RegisterView.as_view(), name='auth_register'),
     path('api/list/', views.getRoutes),
 
     path('api/majors/', views.MajorList.as_view(), name='major-list'),
@@ -21,9 +21,10 @@ urlpatterns = [
 
     path('api/users/', views.UserList.as_view(), name='user-list'),
     path('api/users/<int:pk>/', views.UserDetail.as_view(), name='user-detail'),
-    path('api/users/create/', views.UserCreate.as_view(), name='user-create'),
+    # path('api/users/create/', views.UserCreate.as_view(), name='user-create'),
     path('api/users/<int:pk>/', views.UserUpdate.as_view(), name='user-update'),
-    
+    path('api/users/register/', views.UserRegisterAPIView.as_view(), name='user-register'),
+
     path('api/check_major/', views.MajorCheckAPIView.as_view(), name='check_major'),
 
     path('api/boards/posts/', views.BoardList.as_view(), name='board-list'),

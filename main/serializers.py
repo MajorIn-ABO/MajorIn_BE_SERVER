@@ -1,5 +1,7 @@
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User as AuthUser
 from django.contrib.auth.password_validation import validate_password
+from django.contrib.auth.hashers import make_password
+
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
@@ -17,29 +19,33 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
         token['email'] = user.email
         return token
 
-class RegisterSerializer(serializers.ModelSerializer):
-    home_password = serializers.CharField(
+class AuthUserRegisterSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(
         write_only=True, required=True, validators=[validate_password])
-    home_password2 = serializers.CharField(write_only=True, required=True)
+    # password2 = serializers.CharField(write_only=True, required=True)
+    username = serializers.CharField(write_only=True, required=True)
 
     class Meta:
-        model = User
-        fields = ('user_name', 'home_password', 'home_password2')
+        model = AuthUser
+        fields = ('username', 'password', 'email')
+        # fields = ('username', 'password', 'password2')
 
+    '''
     def validate(self, attrs):
-        if attrs['home_password'] != attrs['home_password2']:
+        if attrs['password'] != attrs['password2']:
             raise serializers.ValidationError(
-                {"home_password": "home_password fields didn't match."})
+                {"password": "Password fields didn't match."})
 
         return attrs
-
+    '''
     def create(self, validated_data):
-        user = User.objects.create(
-            user_name=validated_data['user_name']
+        auth_user = AuthUser.objects.create(
+            username=validated_data['username'],
+            password=make_password(validated_data['password']),
+            email=validated_data['email']
         )
-
-        user.set_password(validated_data['home_password'])
-        user.save()
+        # auth_user.save()
+        return auth_user
 
 class MajorSerializer(serializers.ModelSerializer):
     class Meta:
@@ -55,6 +61,11 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = '__all__'
+
+class UserRegisterSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'major_id', 'user_name', 'school_name', 'major_name', 'student_id', 'home_id', 'home_password', 'email', 'phonenumber', 'admission_date']
 
 class BoardSerializer(serializers.ModelSerializer):
     class Meta:

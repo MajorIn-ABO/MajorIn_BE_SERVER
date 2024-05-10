@@ -11,9 +11,10 @@ from django.views import View
 from django.utils import timezone  # 필요한 경우 추가
 from django.http import JsonResponse
 from .models import Token, Major, User, Board, Board_Comment, Board_Like, Board_bookmark, Study, Study_Comment, Study_Like, Usedbooktrade, UsedbooktradeData, Usedbooktrade_Comment
-from .serializers import MyTokenObtainPairSerializer, RegisterSerializer, MajorSerializer, MajorCheckSerializer, UserSerializer, BoardSerializer, BoardCommentSerializer, BoardLikeSerializer, BoardBookmarkSerializer, StudySerializer, StudyCommentSerializer, StudyLikeSerializer, UsedbooktradeSerializer, UsedbooktradeDataSerializer, UsedbooktradeCommentSerializer
+from .serializers import MyTokenObtainPairSerializer, AuthUserRegisterSerializer, MajorSerializer, MajorCheckSerializer, UserSerializer, UserRegisterSerializer, BoardSerializer, BoardCommentSerializer, BoardLikeSerializer, BoardBookmarkSerializer, StudySerializer, StudyCommentSerializer, StudyLikeSerializer, UsedbooktradeSerializer, UsedbooktradeDataSerializer, UsedbooktradeCommentSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
-from django.contrib.auth.models import User
+from rest_framework_simplejwt.tokens import RefreshToken
+from django.contrib.auth.models import User as AuthUser
 from rest_framework.permissions import AllowAny, IsAuthenticated
 import json
 import requests
@@ -33,9 +34,9 @@ class MyTokenObtainPairView(TokenObtainPairView):
     serializer_class = MyTokenObtainPairSerializer
 
 class RegisterView(generics.CreateAPIView):
-    queryset = User.objects.all()
+    queryset = AuthUser.objects.all()
     permission_classes = (AllowAny,)
-    serializer_class = RegisterSerializer
+    serializer_class = AuthUserRegisterSerializer
 
 
 @api_view(['GET'])
@@ -96,7 +97,41 @@ class UserCreate(generics.CreateAPIView):
 
 class UserUpdate(generics.UpdateAPIView):
     queryset = User.objects.all()
-    serializer_class = UserSerializer
+    serializer_class = UserRegisterSerializer
+
+class UserRegisterAPIView(APIView):
+    queryset = User.objects.all()
+    serializer_class = UserRegisterSerializer
+    # auth user_serializer_class = AuthUserRegisterSerializer
+
+    def post(self, request, format=None):
+        serializer = self.serializer_class(data=request.data)
+        # auth_user_serializer = self.auth_user_serializer_class(data=request.data)
+        if serializer.is_valid():
+            # UserRegisterSerializer를 통해 유저 데이터 저장
+            user = serializer.save()
+            # auth_user = auth_user_serializer.save()
+
+            # AuthUserRegisterSerializer를 통해 AuthUser 생성
+            auth_user_serializer = AuthUserRegisterSerializer(data={
+                'username': serializer.validated_data['home_id'],
+                'password': serializer.validated_data['home_password'],
+                'email': serializer.validated_data['email']
+            })
+            if auth_user_serializer.is_valid():
+                auth_user = auth_user_serializer.save()
+                # user 와 auth_user 데이터를 하나의 응답 데이터로 묶어서 반환
+                response_data = {
+                    'user': serializer.data,
+                    'auth_user': auth_user_serializer.data
+                }
+                # headers = self.get_success_headers(serializer.data)
+                return Response(response_data, status=status.HTTP_201_CREATED)
+            else:
+                # AuthUser 등록 실패 시 User 데이터 롤백
+                user.delete()
+                return Response(auth_user_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 # 사용자가 선택한 학과 카테고리가 올바른지 확인하는 API
 
