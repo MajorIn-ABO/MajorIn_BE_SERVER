@@ -102,15 +102,12 @@ class UserUpdate(generics.UpdateAPIView):
 class UserRegisterAPIView(APIView):
     queryset = User.objects.all()
     serializer_class = UserRegisterSerializer
-    # auth user_serializer_class = AuthUserRegisterSerializer
 
     def post(self, request, format=None):
         serializer = self.serializer_class(data=request.data)
-        # auth_user_serializer = self.auth_user_serializer_class(data=request.data)
         if serializer.is_valid():
             # UserRegisterSerializer를 통해 유저 데이터 저장
             user = serializer.save()
-            # auth_user = auth_user_serializer.save()
 
             # AuthUserRegisterSerializer를 통해 AuthUser 생성
             auth_user_serializer = AuthUserRegisterSerializer(data={
@@ -120,10 +117,25 @@ class UserRegisterAPIView(APIView):
             })
             if auth_user_serializer.is_valid():
                 auth_user = auth_user_serializer.save()
-                # user 와 auth_user 데이터를 하나의 응답 데이터로 묶어서 반환
+
+                # 토큰 발급 및 저장
+                refresh = RefreshToken.for_user(auth_user)
+                token_data = {
+                    'user_id': user,
+                    'refresh': str(refresh),
+                    'access': str(refresh.access_token)
+                }
+                token = Token.objects.create(**token_data)
+
+                # user 와 auth_user 와 토큰 데이터를 하나의 응답 데이터로 묶어서 반환
                 response_data = {
                     'user': serializer.data,
-                    'auth_user': auth_user_serializer.data
+                    'auth_user': auth_user_serializer.data,
+                    'token': {
+                        'user_id': str(token.user_id),
+                        'refresh': str(token.refresh),
+                        'access': str(token.access)
+                    }
                 }
                 # headers = self.get_success_headers(serializer.data)
                 return Response(response_data, status=status.HTTP_201_CREATED)

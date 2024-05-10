@@ -14,7 +14,7 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod
     def get_token(cls, user):
         token = super().get_token(user)
-        # Frontend에서 더 필요한 정보가 있다면 여기에 추가적으로 작성하면 됩니다. token["is_superuser"] = user.is_superuser 이런식으로요.
+        # Frontend에서 더 필요한 정보가 있다면 여기에 추가적으로 작성
         token['username'] = user.username
         token['email'] = user.email
         return token
@@ -22,29 +22,18 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
 class AuthUserRegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(
         write_only=True, required=True, validators=[validate_password])
-    # password2 = serializers.CharField(write_only=True, required=True)
     username = serializers.CharField(write_only=True, required=True)
 
     class Meta:
         model = AuthUser
         fields = ('username', 'password', 'email')
-        # fields = ('username', 'password', 'password2')
 
-    '''
-    def validate(self, attrs):
-        if attrs['password'] != attrs['password2']:
-            raise serializers.ValidationError(
-                {"password": "Password fields didn't match."})
-
-        return attrs
-    '''
     def create(self, validated_data):
         auth_user = AuthUser.objects.create(
             username=validated_data['username'],
             password=make_password(validated_data['password']),
             email=validated_data['email']
         )
-        # auth_user.save()
         return auth_user
 
 class MajorSerializer(serializers.ModelSerializer):
