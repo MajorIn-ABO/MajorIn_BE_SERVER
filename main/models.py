@@ -49,8 +49,8 @@ class Token(models.Model):
     id = models.BigAutoField(primary_key=True)
     user_id = models.ForeignKey(User, on_delete=models.CASCADE, db_column="user_id")
     auth_id = models.ForeignKey(AuthUser, on_delete=models.CASCADE, db_column="auth_id")
-    refresh = models.CharField(max_length=50, null=True)
-    access = models.CharField(max_length=50, null=True)
+    refresh = models.CharField(max_length=500, null=True)
+    access = models.CharField(max_length=500, null=True)
 
     def __str__(self) -> str:
         return str(self.id)

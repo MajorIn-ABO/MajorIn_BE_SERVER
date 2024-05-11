@@ -12,7 +12,7 @@ from django.utils import timezone  # 필요한 경우 추가
 from django.http import JsonResponse
 from .models import Token, Major, User, Board, Board_Comment, Board_Like, Board_bookmark, Study, Study_Comment, Study_Like, Usedbooktrade, UsedbooktradeData, Usedbooktrade_Comment
 from .serializers import MyTokenObtainPairSerializer, AuthUserRegisterSerializer, LoginSerializer,MajorSerializer, MajorCheckSerializer, UserSerializer, UserRegisterSerializer, BoardSerializer, BoardCommentSerializer, BoardLikeSerializer, BoardBookmarkSerializer, StudySerializer, StudyCommentSerializer, StudyLikeSerializer, UsedbooktradeSerializer, UsedbooktradeDataSerializer, UsedbooktradeCommentSerializer
-from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth.models import User as AuthUser
 from rest_framework.authtoken.models import Token as AuthToken
@@ -139,34 +139,50 @@ class UserRegisterAPIView(APIView):
             if auth_user_serializer.is_valid():
                 auth_user = auth_user_serializer.save()
 
-                # 토큰 발급 및 저장
-                refresh = RefreshToken.for_user(auth_user)
+                # MyTokenObtainPairSerializer를 사용하여 토큰 발급
+                token_serializer = MyTokenObtainPairSerializer()
+                token = token_serializer.get_token(auth_user)
+                refresh_token = str(token)
+                access_token = str(token.access_token)
+                
+                # 토큰 저장
+                # refresh = RefreshToken.for_user(auth_user)
                 token_data = {
                     'user_id': user,
                     'auth_id': auth_user,
-                    'refresh': str(refresh),
-                    'access': str(refresh.access_token)
+                    'refresh': refresh_token,
+                    'access': access_token
                 }
+                
                 token = Token.objects.create(**token_data)
 
                 # user 와 auth_user 와 토큰 데이터를 하나의 응답 데이터로 묶어서 반환
-                '''
-                response_data = {
-                    'user': serializer.data,
-                    'auth_user': auth_user_serializer.data,
-                    'token': {
-                        'user_id': str(token.user_id),
-                        'refresh': str(token.refresh),
-                        'access': str(token.access)
-                    }
-                }
-                '''
+                
+                res = Response(
+                    {
+                        "user_id": user.id, # serializer.data
+                        "auth_id": auth_user.id,
+                        "message": "회원가입에 성공했습니다.",
+                        "token": {
+                            "access": access_token,
+                            "refresh": refresh_token,
+                        },
+                    },
+                    status=status.HTTP_200_OK,
+                )
+                
+                # jwt 토큰 => 쿠키에 저장
+                res.set_cookie("access", access_token, httponly=True)
+                res.set_cookie("refresh", refresh_token, httponly=True)
+                
                 # headers = self.get_success_headers(serializer.data)
-                return Response({'message': "회원가입에 성공했습니다."}, status=status.HTTP_201_CREATED)
+                # return Response({'message': "회원가입에 성공했습니다."}, status=status.HTTP_201_CREATED)
+                return res
             else:
                 # AuthUser 등록 실패 시 User 데이터 롤백
                 user.delete()
                 return Response({'message': "등록할 수 없는 아이디 혹은 비밀번호 입니다."}, status=status.HTTP_400_BAD_REQUEST)
+    
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 # 사용자가 선택한 학과 카테고리가 올바른지 확인하는 API
