@@ -28,6 +28,11 @@ urlpatterns = [
 
     path('api/check_major/', views.MajorCheckAPIView.as_view(), name='check_major'),
 
+    path('api/category/', views.CategoryList.as_view(), name='category-list'),
+    path('api/category/<int:pk>/', views.CategoryDetail.as_view(), name='category-detail'),
+    path('api/category/create/', views.CategoryCreate.as_view(), name='category-create'),
+    path('api/category/<int:pk>/', views.CategoryUpdate.as_view(), name='category-update'),
+
     path('api/boards/posts/', views.BoardList.as_view(), name='board-list'),
     path('api/boards/posts/<int:pk>/', views.BoardDetail.as_view(), name='board-detail'),
     path('api/boards/posts-by-userid/<int:user_id>/', views.BoardListByUserId.as_view(), name='board-list-by-userid'),

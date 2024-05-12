@@ -57,24 +57,19 @@ class Token(models.Model):
         return str(self.id)
         
 class Category(models.Model):
-    QUESTION_MAJOR = 'QUESTION'
-    TALK = 'TALK'
-    INTERN_REVIEW = 'INTERN'
-    EXTERNAL_ACTIVITY = 'EXTERNAL'
-    SCHOOL_STROY = 'SCHOOL'
+    COMMUNITY = 'COMMUNITY'
+    STUDY = 'STUDY'
 
     POST_CATEGORY = [
-        (QUESTION_MAJOR, 'question_major'),
-        (TALK, 'talk'),
-        (INTERN_REVIEW, 'intern_review'),
-        (EXTERNAL_ACTIVITY, 'external_activity'),
-        (SCHOOL_STROY, 'school_story'),
+        (COMMUNITY, 'community'),
+        (STUDY, 'study'),
     ]
     id = models.BigAutoField(primary_key=True)
-    category_name = models.CharField(max_length=10, choices=POST_CATEGORY)
+    category_of = models.CharField(max_length=10, choices=POST_CATEGORY)
+    category_name = models.CharField(max_length=10, blank=False, null=False)
 
-    def __str__(self):
-        return self.id
+    def __str__(self) -> str:
+        return str(self.id)
 
 
 class Board(models.Model):
@@ -89,6 +84,10 @@ class Board(models.Model):
     comment = models.IntegerField(default=0)
     like = models.IntegerField(default=0)
     keep = models.IntegerField(default=0)
+
+    @property
+    def category_name(self):
+        return self.category_id.category_name
 
     def __str__(self):
         return self.id

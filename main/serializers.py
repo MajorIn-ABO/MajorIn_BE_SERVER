@@ -9,7 +9,7 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 
-from .models import Token, Major, User, Board, Board_Comment, Board_Like, Board_bookmark, Study, Study_Comment, Study_Like, Usedbooktrade, UsedbooktradeData, Usedbooktrade_Comment
+from .models import Token, Major, User, Category, Board, Board_Comment, Board_Like, Board_bookmark, Study, Study_Comment, Study_Like, Usedbooktrade, UsedbooktradeData, Usedbooktrade_Comment
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod
@@ -88,13 +88,33 @@ class UserRegisterSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 {"password": "비밀번호가 일치하지 않습니다."})
 
-        return attrs
+        return Response({"message": "비밀번호가 일치하지 않습니다."}, status=status.HTTP_400_BAD_REQUEST)
+        # return attrs
 
+class CategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Category
+        fields = ['id', 'category_of', 'category_name']
 
 class BoardSerializer(serializers.ModelSerializer):
+    category_name = serializers.CharField(max_length=10)
+
     class Meta:
         model = Board
-        fields = ['id', 'user_id', 'category_id', 'title', 'contents']
+        fields = ['user_id', 'category_name', 'title', 'contents']
+
+    def create(self, validated_data):
+        category_name = validated_data.pop('category_name')
+        
+        # category_name을 사용하여 Category 인스턴스 가져오기
+        try:
+            category = Category.objects.get(category_name=category_name)
+        except Category.DoesNotExist:
+            raise serializers.ValidationError("해당 카테고리가 존재하지 않습니다.")
+
+        validated_data['category_id'] = category
+        board = Board.objects.create(**validated_data)
+        return board
 
 class BoardCommentSerializer(serializers.ModelSerializer):
     class Meta:
@@ -114,7 +134,7 @@ class BoardBookmarkSerializer(serializers.ModelSerializer):
 class StudySerializer(serializers.ModelSerializer):
     class Meta:
         model = Study
-        fields = ['id', 'user_id', 'title', 'contents', 'hashtags', 'is_recruited']
+        fields = ['id', 'user_id', 'title', 'contents', 'hashtags']
 
 class StudyCommentSerializer(serializers.ModelSerializer):
     class Meta:
