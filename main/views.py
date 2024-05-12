@@ -127,61 +127,63 @@ class UserRegisterAPIView(APIView):
     def post(self, request, format=None):
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
-            # UserRegisterSerializer를 통해 유저 데이터 저장
-            user = serializer.save()
+            try:
+                # UserRegisterSerializer를 통해 유저 데이터 저장
+                user = serializer.save()
 
-            # AuthUserRegisterSerializer를 통해 AuthUser 생성
-            auth_user_serializer = AuthUserRegisterSerializer(data={
-                'username': serializer.validated_data['home_id'],
-                'password': serializer.validated_data['home_password'],
-                'email': serializer.validated_data['email']
-            })
-            if auth_user_serializer.is_valid():
-                auth_user = auth_user_serializer.save()
+                # AuthUserRegisterSerializer를 통해 AuthUser 생성
+                auth_user_serializer = AuthUserRegisterSerializer(data={
+                    'username': serializer.validated_data['home_id'],
+                    'password': serializer.validated_data['home_password'],
+                    'email': serializer.validated_data['email']
+                })
+                if auth_user_serializer.is_valid():
+                    auth_user = auth_user_serializer.save()
 
-                # MyTokenObtainPairSerializer를 사용하여 토큰 발급
-                token_serializer = MyTokenObtainPairSerializer()
-                token = token_serializer.get_token(auth_user)
-                refresh_token = str(token)
-                access_token = str(token.access_token)
-                
-                # 토큰 저장
-                # refresh = RefreshToken.for_user(auth_user)
-                token_data = {
-                    'user_id': user,
-                    'auth_id': auth_user,
-                    'refresh': refresh_token,
-                    'access': access_token
-                }
-                
-                token = Token.objects.create(**token_data)
+                    # MyTokenObtainPairSerializer를 사용하여 토큰 발급
+                    token_serializer = MyTokenObtainPairSerializer()
+                    token = token_serializer.get_token(auth_user)
+                    refresh_token = str(token)
+                    access_token = str(token.access_token)
 
-                # user 와 auth_user 와 토큰 데이터를 하나의 응답 데이터로 묶어서 반환
-                
-                res = Response(
-                    {
-                        "user_id": user.id, # serializer.data
-                        "auth_id": auth_user.id,
-                        "message": "회원가입에 성공했습니다.",
-                        "token": {
-                            "access": access_token,
-                            "refresh": refresh_token,
+                    # 토큰 저장
+                    token_data = {
+                        'user_id': user,
+                        'auth_id': auth_user,
+                        'refresh': refresh_token,
+                        'access': access_token
+                    }
+
+                    token = Token.objects.create(**token_data)
+
+                    # user와 auth_user와 토큰 데이터를 하나의 응답 데이터로 묶어서 반환
+                    res = Response(
+                        {
+                            "user_id": user.id,  # serializer.data
+                            "auth_id": auth_user.id,
+                            "message": "회원가입에 성공했습니다.",
+                            "token": {
+                                "access": access_token,
+                                "refresh": refresh_token,
+                            },
                         },
-                    },
-                    status=status.HTTP_200_OK,
-                )
-                
-                # jwt 토큰 => 쿠키에 저장
-                res.set_cookie("access", access_token, httponly=True)
-                res.set_cookie("refresh", refresh_token, httponly=True)
-                
-                # headers = self.get_success_headers(serializer.data)
-                # return Response({'message': "회원가입에 성공했습니다."}, status=status.HTTP_201_CREATED)
-                return res
-            else:
-                # AuthUser 등록 실패 시 User 데이터 롤백
+                        status=status.HTTP_200_OK,
+                    )
+
+                    # jwt 토큰 => 쿠키에 저장
+                    res.set_cookie("access", access_token, httponly=True)
+                    res.set_cookie("refresh", refresh_token, httponly=True)
+
+                    return res
+                else:
+                    # AuthUser 등록 실패 시 User 데이터 롤백
+                    user.delete()
+                    return Response({'message': "등록할 수 없는 아이디 혹은 비밀번호 입니다."}, status=status.HTTP_400_BAD_REQUEST)
+
+            except Exception as e:
+                # 토큰 발급 및 저장 중에 오류가 발생한 경우
                 user.delete()
-                return Response({'message': "등록할 수 없는 아이디 혹은 비밀번호 입니다."}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({'message': "회원가입에 실패하였습니다."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 

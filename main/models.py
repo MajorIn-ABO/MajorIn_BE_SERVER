@@ -36,6 +36,7 @@ class User(models.Model):
     student_id = models.BigIntegerField()
     home_id = models.CharField(max_length=15)
     home_password = models.CharField(max_length=20)
+    home_password_check = models.CharField(max_length=20)
     email = models.EmailField(unique=True)
     phonenumber = models.CharField(max_length=15)
     admission_date = models.IntegerField()

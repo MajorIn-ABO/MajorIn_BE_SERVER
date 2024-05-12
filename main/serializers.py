@@ -28,7 +28,7 @@ class AuthUserRegisterSerializer(serializers.ModelSerializer):
     class Meta:
         model = AuthUser
         fields = ('username', 'password', 'email')
-
+        
     def create(self, validated_data):
         auth_user = AuthUser.objects.create(
             username=validated_data['username'],
@@ -75,9 +75,21 @@ class UserSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class UserRegisterSerializer(serializers.ModelSerializer):
+    home_password = serializers.CharField(
+        write_only=True, required=True, validators=[validate_password])
+    home_password_check = serializers.CharField(write_only=True, required=True)
+
     class Meta:
         model = User
-        fields = ['id', 'major_id', 'user_name', 'school_name', 'major_name', 'student_id', 'home_id', 'home_password', 'email', 'phonenumber', 'admission_date']
+        fields = ['id', 'major_id', 'user_name', 'school_name', 'major_name', 'student_id', 'home_id', 'home_password', 'home_password_check', 'email', 'phonenumber', 'admission_date']
+
+    def validate(self, attrs):
+        if attrs['home_password'] != attrs['home_password_check']:
+            raise serializers.ValidationError(
+                {"password": "비밀번호가 일치하지 않습니다."})
+
+        return attrs
+
 
 class BoardSerializer(serializers.ModelSerializer):
     class Meta:
