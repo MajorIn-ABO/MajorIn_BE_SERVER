@@ -67,6 +67,7 @@ urlpatterns = [
     path('api/studys/posts/create/', views.StudyCreate.as_view(), name='study-create'),
     path('api/studys/posts/<int:pk>/update/', views.StudyUpdate.as_view(), name='study-update'),
     path('api/studys/posts/<int:pk>/delete/', views.StudyDelete.as_view(), name='study-delete'),
+    path('api/studys/posts/search/', views.StudySearchAPIView.as_view(), name='study-search'),
 
     path('api/studys/posts/comments/', views.StudyCommentList.as_view(), name='study-comment-list'),
     path('api/studys/posts/comments/<int:pk>/', views.StudyCommentDetail.as_view(), name='study-comment-detail'),

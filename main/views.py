@@ -20,6 +20,7 @@ from django.contrib.auth import authenticate
 from rest_framework.permissions import AllowAny, IsAuthenticated
 import json
 import requests
+from urllib.parse import quote
 from dotenv import load_dotenv
 import os 
 
@@ -603,6 +604,41 @@ class StudyDelete(generics.DestroyAPIView):
     queryset = Study.objects.all()
     serializer_class = StudySerializer
 
+# api/studys/posts/search/?hashtag=원하는해시태그
+class StudySearchAPIView(generics.ListAPIView):
+    serializer_class = StudySerializer
+    queryset = Study.objects.all()  # 모든 스터디를 기본 queryset으로 설정
+
+    def encode_hashtags(self, hashtags):
+        encoded_hashtags = [quote(tag.strip()) for tag in hashtags]
+        return encoded_hashtags
+
+    def get_queryset(self):
+        hashtag = self.request.query_params.get('hashtag')
+        if hashtag:
+            # '#' 기호를 제거하고 쉼표(,)를 기준으로 문자열을 분리하여 리스트로 변환
+            hashtags = hashtag.strip('#').split(',')
+
+            # 검색된 해시태그를 URL 인코딩합니다.
+            encoded_hashtags = self.encode_hashtags(hashtags)
+
+            # 모든 스터디를 가져옵니다.
+            queryset = self.queryset
+
+            # 각 해시태그에 대해 필터링합니다.
+            for tag in hashtags:
+                queryset = queryset.filter(hashtags__contains=tag.strip())
+
+            return queryset
+        else:
+            return Study.objects.none()  # hashtag가 없으면 빈 queryset을 반환합니다.
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        if not queryset.exists():
+            return Response({"message": "해당하는 글이 없습니다."})
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 
 # 스터디 댓글 관련 API 모음
 
