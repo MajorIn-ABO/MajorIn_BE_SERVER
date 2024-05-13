@@ -573,6 +573,30 @@ class StudyList(generics.ListAPIView):
     queryset = Study.objects.all()
     serializer_class = StudySerializer
 
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        response_data = serializer.data
+
+        # 사용자 정보를 응답 데이터에 추가
+        for data in response_data:
+            # 해시태그 데이터를 문자열에서 리스트로 변환하여 추가합니다.
+            hashtags_str = data['hashtags']
+            data['hashtags'] = eval(hashtags_str)
+
+            user_id = data['user_id']
+            try:
+                user = User.objects.get(id=user_id)
+            except User.DoesNotExist:
+                return Response({'error': '사용자를 찾을 수 없습니다.'}, status=status.HTTP_404_NOT_FOUND)
+            
+            user_data = UserSerializer(user).data
+            data['school_name'] = user_data['school_name']
+            data['major_name'] = user_data['major_name']
+            data['admission_date'] = user_data['admission_date']
+
+        return Response(response_data, status=status.HTTP_200_OK)
+
 class StudyListByUserId(generics.ListAPIView):
     serializer_class = StudySerializer
 
@@ -583,6 +607,29 @@ class StudyListByUserId(generics.ListAPIView):
 class StudyDetail(generics.RetrieveAPIView):
     queryset = Study.objects.all()
     serializer_class = StudySerializer
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        
+        # 스터디 작성자의 정보를 가져와 응답 데이터에 추가
+        user_id = instance.user_id.id
+        try:
+            user_data = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            return Response({'error': '사용자를 찾을 수 없습니다.'}, status=status.HTTP_404_NOT_FOUND)
+        
+        response_data = serializer.data
+
+        # 해시태그 데이터를 문자열에서 리스트로 변환하여 추가합니다.
+        hashtags_str = response_data['hashtags']
+        response_data['hashtags'] = eval(hashtags_str)
+
+        response_data['school_name'] = user_data.school_name
+        response_data['major_name'] = user_data.major_name
+        response_data['admission_date'] = user_data.admission_date
+
+        return Response(response_data, status=status.HTTP_200_OK)
 
 class StudyCreate(generics.CreateAPIView):
     queryset = Study.objects.all()
@@ -637,7 +684,14 @@ class StudySearchAPIView(generics.ListAPIView):
         queryset = self.filter_queryset(self.get_queryset())
         if not queryset.exists():
             return Response({"message": "해당하는 글이 없습니다."})
+
         serializer = self.get_serializer(queryset, many=True)
+
+        # 각 스터디의 hashtags를 리스트화하여 반환합니다.
+        for data in serializer.data:
+            hashtags_str = data['hashtags']
+            data['hashtags'] = eval(hashtags_str)
+
         return Response(serializer.data)
 
 # 스터디 댓글 관련 API 모음
