@@ -247,6 +247,26 @@ class BoardList(generics.ListAPIView):
     queryset = Board.objects.all()
     serializer_class = BoardSerializer
 
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        response_data = serializer.data
+
+        # 사용자 정보를 응답 데이터에 추가
+        for data in response_data:
+            user_id = data['user_id']
+            try:
+                user = User.objects.get(id=user_id)
+            except User.DoesNotExist:
+                return Response({'error': '사용자를 찾을 수 없습니다.'}, status=status.HTTP_404_NOT_FOUND)
+            
+            user_data = UserSerializer(user).data
+            data['school_name'] = user_data['school_name']
+            data['major_name'] = user_data['major_name']
+            data['admission_date'] = user_data['admission_date']
+
+        return Response(response_data, status=status.HTTP_200_OK)
+
 class BoardListByUserId(generics.ListAPIView):
     serializer_class = BoardSerializer
 
@@ -265,6 +285,24 @@ class BoardDetail(generics.RetrieveAPIView):
     queryset = Board.objects.all()
     serializer_class = BoardSerializer
 
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        
+        # 게시글 작성자의 정보를 가져와 응답 데이터에 추가
+        user_id = instance.user_id.id
+        try:
+            user_data = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            return Response({'error': '사용자를 찾을 수 없습니다.'}, status=status.HTTP_404_NOT_FOUND)
+        
+        response_data = serializer.data
+        response_data['school_name'] = user_data.school_name
+        response_data['major_name'] = user_data.major_name
+        response_data['admission_date'] = user_data.admission_date
+
+        return Response(response_data, status=status.HTTP_200_OK)
+
 class BoardCreate(generics.CreateAPIView):
     queryset = Board.objects.all()
     serializer_class = BoardSerializer
@@ -272,9 +310,26 @@ class BoardCreate(generics.CreateAPIView):
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
+            # 게시글 생성
             self.perform_create(serializer)
+            # 응답 데이터 준비
+            response_data = serializer.data
+            
+            # 사용자 정보 가져오기
+            user_id = response_data['user_id']
+            try:
+                user = User.objects.get(id=user_id)
+            except User.DoesNotExist:
+                return Response({'error': '사용자를 찾을 수 없습니다.'}, status=status.HTTP_404_NOT_FOUND)
+            
+            # 사용자 정보를 응답 데이터에 추가
+            user_data = UserSerializer(user).data
+            response_data['school_name'] = user_data['school_name']
+            response_data['major_name'] = user_data['major_name']
+            response_data['admission_date'] = user_data['admission_date']
+
             headers = self.get_success_headers(serializer.data)
-            return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+            return Response(response_data, status=status.HTTP_201_CREATED, headers=headers)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class BoardUpdate(generics.UpdateAPIView):

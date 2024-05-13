@@ -101,7 +101,7 @@ class BoardSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Board
-        fields = ['user_id', 'category_name', 'title', 'contents']
+        fields = ['id', 'user_id', 'category_name', 'title', 'contents','comment', 'like', 'keep']
 
     def create(self, validated_data):
         category_name = validated_data.pop('category_name')
