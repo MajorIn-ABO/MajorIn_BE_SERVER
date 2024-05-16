@@ -88,8 +88,7 @@ class UserRegisterSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 {"password": "비밀번호가 일치하지 않습니다."})
 
-        return Response({"message": "비밀번호가 일치하지 않습니다."}, status=status.HTTP_400_BAD_REQUEST)
-        # return attrs
+        return attrs
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
@@ -101,7 +100,7 @@ class BoardSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Board
-        fields = ['id', 'user_id', 'category_name', 'title', 'contents', 'post_date', 'comment', 'like', 'keep']
+        fields = ['id', 'user_id', 'category_name', 'title', 'contents', 'imgfile', 'post_date', 'comment', 'like', 'keep']
 
     def create(self, validated_data):
         category_name = validated_data.pop('category_name')

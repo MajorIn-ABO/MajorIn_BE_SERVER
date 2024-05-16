@@ -78,6 +78,7 @@ class Board(models.Model):
     category_id = models.ForeignKey(Category, on_delete=models.CASCADE, db_column="category_id")
     title = models.CharField(max_length=100, blank=False, null=False)
     contents = models.TextField(blank=False, null=False)
+    imgfile = models.ImageField(null=True, upload_to="community/", blank=True, verbose_name='첨부 사진')
     post_date = models.DateTimeField(auto_now_add=True)
     update_date = models.DateTimeField(auto_now=True)
     delete_date = models.DateTimeField(null=True)
@@ -180,7 +181,7 @@ class Usedbooktrade(models.Model):
     seller = models.ForeignKey(User, on_delete=models.CASCADE, db_column="seller")
     publisher = models.CharField(max_length=100, null=False, verbose_name='출판사')
     price = models.TextField(blank=False, null=False, verbose_name='판매가')
-    imgfile = models.ImageField(null=True, upload_to="'book_covers/'", blank=True, verbose_name='상품 사진')
+    imgfile = models.ImageField(null=True, upload_to="book_covers/", blank=True, verbose_name='상품 사진')
     description = models.TextField(verbose_name='상품 설명')
     damage_level_choices = [
         ('없음', '손상도 없음'),

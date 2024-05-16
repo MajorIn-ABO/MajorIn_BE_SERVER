@@ -18,11 +18,14 @@ from django.contrib.auth.models import User as AuthUser
 from rest_framework.authtoken.models import Token as AuthToken
 from django.contrib.auth import authenticate
 from rest_framework.permissions import AllowAny, IsAuthenticated
+from django.shortcuts import get_object_or_404
 import json
 import requests
 from urllib.parse import quote
 from dotenv import load_dotenv
 import os 
+from django.core.files.storage import default_storage
+from django.conf import settings
 
 # load .env
 load_dotenv()
@@ -60,8 +63,15 @@ class LoginView(generics.GenericAPIView):
         serializer.is_valid(raise_exception=True)
         token = serializer.validated_data # validate()의 리턴값인 token을 받아온다.
         
+        # 사용자 객체 조회
+        user = get_object_or_404(User, id=token.user_id.id)
+
         token_data = {
             'user_id': token.user_id.id,
+            'user_name': user.user_name,
+            'school_name': user.school_name,
+            'major_name': user.major_name,
+            'admission_date': user.admission_date,
             'auth_id': token.auth_id.id,
             'refresh': token.refresh,
             'access': token.access
@@ -305,12 +315,22 @@ class BoardDetail(generics.RetrieveAPIView):
         return Response(response_data, status=status.HTTP_200_OK)
 
 class BoardCreate(generics.CreateAPIView):
+    permission_classes = [IsAuthenticated]
+
     queryset = Board.objects.all()
     serializer_class = BoardSerializer
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
+             # 이미지 파일 서버에 저장
+            image_file = request.FILES.get('imgfile')
+            if image_file:
+                file_path = os.path.join(settings.MEDIA_ROOT, image_file.name)
+                # file_path = default_storage.save(f"{settings.MEDIA_ROOT}/{image_file.name}", image_file)
+                # 파일 경로를 serializer data에 추가
+                request.data['imgfile'] = file_path
+                
             # 게시글 생성
             self.perform_create(serializer)
             # 응답 데이터 준비
