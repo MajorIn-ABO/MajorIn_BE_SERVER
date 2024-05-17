@@ -365,28 +365,12 @@ class BoardDelete(generics.DestroyAPIView):
 # api/boards/posts/search/?keyword=example
 class BoardSearchAPIView(generics.ListAPIView):
     serializer_class = BoardSerializer
-    queryset = Study.objects.all()  # 모든 스터디를 기본 queryset으로 설정
-
-    def encode_hashtags(self, hashtags):
-        encoded_hashtags = [quote(tag.strip()) for tag in hashtags]
-        return encoded_hashtags
+    queryset = Board.objects.all()  # 모든 커뮤니티게시판을 기본 queryset으로 설정
 
     def get_queryset(self):
         queryset = self.queryset
 
-        hashtag = self.request.query_params.get('hashtag')
         keyword = self.request.query_params.get('keyword')
-
-        if hashtag:
-            # '#' 기호를 제거하고 쉼표(,)를 기준으로 문자열을 분리하여 리스트로 변환
-            hashtags = hashtag.strip('#').split(',')
-
-            # 검색된 해시태그를 URL 인코딩합니다.
-            encoded_hashtags = self.encode_hashtags(hashtags)
-
-            # 각 해시태그에 대해 필터링합니다.
-            for tag in hashtags:
-                queryset = queryset.filter(hashtags__contains=tag.strip())
 
         if keyword:
             queryset = queryset.filter(
@@ -401,11 +385,6 @@ class BoardSearchAPIView(generics.ListAPIView):
             return Response({"message": "해당하는 글이 없습니다."})
 
         serializer = self.get_serializer(queryset, many=True)
-
-        # 각 스터디의 hashtags를 리스트화하여 반환합니다.
-        for data in serializer.data:
-            hashtags_str = data['hashtags']
-            data['hashtags'] = eval(hashtags_str)
 
         return Response(serializer.data)
 
