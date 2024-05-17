@@ -40,7 +40,8 @@ urlpatterns = [
     path('api/boards/posts/create/', views.BoardCreate.as_view(), name='board-create'),
     path('api/boards/posts/<int:pk>/update/', views.BoardUpdate.as_view(), name='board-update'),
     path('api/boards/posts/<int:pk>/delete/', views.BoardDelete.as_view(), name='board-delete'),
-    
+    path('api/boards/posts/search/', views.BoardSearchAPIView.as_view(), name='board-search'),
+
     path('api/boards/posts/comments/', views.BoardCommentList.as_view(), name='board-comment-list'),
     path('api/boards/posts/comments/<int:pk>/', views.BoardCommentDetail.as_view(), name='board-comment-detail'),
     path('api/boards/posts/comments-by-userid/<int:user_id>/', views.BoardCommentListByUserId.as_view(), name='board-comment-list-by-userid'),
