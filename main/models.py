@@ -178,10 +178,11 @@ class Usedbooktrade(models.Model):
     id = models.BigAutoField(primary_key=True)
     title = models.CharField(max_length=100, blank=False, null=False, verbose_name='상품명', help_text='* 책 제목은 정확하게 기입해주세요.')
     author = models.TextField(blank=False, null=False, verbose_name='저자')
-    seller = models.ForeignKey(User, on_delete=models.CASCADE, db_column="seller")
+    user_id = models.ForeignKey(User, on_delete=models.CASCADE, db_column="user_id", verbose_name='판매자')
     publisher = models.CharField(max_length=100, null=False, verbose_name='출판사')
     price = models.TextField(blank=False, null=False, verbose_name='판매가')
-    imgfile = models.ImageField(null=True, upload_to="book_covers/", blank=True, verbose_name='상품 사진')
+    origin_imgfile = models.CharField(max_length=150, null=True, verbose_name='상품 사진')
+    imgfile = models.ImageField(null=True, upload_to="book_covers/", blank=True, verbose_name='판매자 상품 사진')
     description = models.TextField(verbose_name='상품 설명')
     damage_level_choices = [
         ('없음', '손상도 없음'),
@@ -201,8 +202,8 @@ class Usedbooktrade(models.Model):
 
 class UsedbooktradeData(models.Model):
     id = models.BigAutoField(primary_key=True)
-    trade = models.ForeignKey(Usedbooktrade, on_delete=models.CASCADE, db_column="tradeid")
-    sellerid = models.ForeignKey(User, on_delete=models.CASCADE, db_column="sellerid")
+    trade = models.ForeignKey(Usedbooktrade, on_delete=models.CASCADE, db_column="trade_id")
+    user_id = models.ForeignKey(User, on_delete=models.CASCADE, db_column="user_id")
     sell_date = models.DateTimeField(auto_now_add=True, verbose_name='판매일')
 
     def __str__(self):
