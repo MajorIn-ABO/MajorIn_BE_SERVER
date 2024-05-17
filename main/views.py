@@ -1184,7 +1184,32 @@ class UsedbooktradedataDelete(generics.DestroyAPIView):
     queryset = UsedbooktradeData.objects.all()
     serializer_class = UsedbooktradeDataSerializer
 
+# 중고거래 글 검색
+# api/usedbooktrades/posts/search/?keyword=example
+class UsedbooktradeSearchAPIView(generics.ListAPIView):
+    serializer_class = UsedbooktradeSerializer
+    queryset = Usedbooktrade.objects.all()  # 모든 중고거래게시판을 기본 queryset으로 설정
 
+    def get_queryset(self):
+        queryset = self.queryset
+
+        keyword = self.request.query_params.get('keyword')
+
+        if keyword:
+            queryset = queryset.filter(
+                Q(title__icontains=keyword) | Q(author__icontains=keyword) | Q(publisher__icontains=keyword) | Q(description__icontains=keyword)
+            )
+
+        return queryset
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        if not queryset.exists():
+            return Response({"message": "해당하는 글이 없습니다."})
+
+        serializer = self.get_serializer(queryset, many=True)
+
+        return Response(serializer.data)
 
 
 

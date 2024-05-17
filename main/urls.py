@@ -96,6 +96,7 @@ urlpatterns = [
     # path('api/usedbooktrades/posts/create/', views.UsedbooktradeCreate.as_view(), name='usedbooktrade-create'),
     path('api/usedbooktrades/posts/<int:pk>/update/', views.UsedbooktradeUpdate.as_view(), name='usedbooktrade-update'),
     path('api/usedbooktrades/posts/<int:pk>/delete/', views.UsedbooktradeDelete.as_view(), name='usedbooktrade-delete'),
+    path('api/usedbooktrades/posts/search/', views.UsedbooktradeSearchAPIView.as_view(), name='usedbooktrade-search'),
 
     path('api/usedbooktrades/data/', views.UsedbooktradedataList.as_view(), name='usedbooktradedata-list'),
     path('api/usedbooktrades/datas/<int:pk>/', views.UsedbooktradedataDetail.as_view(), name='usedbooktradedata-detail'),
