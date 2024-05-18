@@ -23,7 +23,7 @@ urlpatterns = [
     path('api/users/', views.UserList.as_view(), name='user-list'),
     path('api/users/<int:pk>/', views.UserDetail.as_view(), name='user-detail'),
     # path('api/users/create/', views.UserCreate.as_view(), name='user-create'),
-    path('api/users/<int:pk>/', views.UserUpdate.as_view(), name='user-update'),
+    path('api/users/<int:pk>/update/', views.UserUpdate.as_view(), name='user-update'),
     path('api/users/register/', views.UserRegisterAPIView.as_view(), name='user-register'),
 
     path('api/check_major/', views.MajorCheckAPIView.as_view(), name='check_major'),
