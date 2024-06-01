@@ -786,12 +786,52 @@ class StudyCommentList(generics.ListAPIView):
     queryset = Study_Comment.objects.all()
     serializer_class = StudyCommentSerializer
 
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        response_data = serializer.data
+
+        # 사용자 정보를 응답 데이터에 추가
+        for data in response_data:
+            user_id = data['user_id']
+            try:
+                user = User.objects.get(id=user_id)
+            except User.DoesNotExist:
+                return Response({'error': '사용자를 찾을 수 없습니다.'}, status=status.HTTP_404_NOT_FOUND)
+            
+            user_data = UserSerializer(user).data
+            data['school_name'] = user_data['school_name']
+            data['major_name'] = user_data['major_name']
+            data['admission_date'] = user_data['admission_date']
+
+        return Response(response_data, status=status.HTTP_200_OK)
+
 class StudyCommentListByUserId(generics.ListAPIView):
     serializer_class = StudyCommentSerializer
 
     def get_queryset(self):
         user_id = self.kwargs['user_id']
         return Study_Comment.objects.filter(user_id=user_id)
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        response_data = serializer.data
+
+        # 사용자 정보를 응답 데이터에 추가
+        for data in response_data:
+            user_id = data['user_id']
+            try:
+                user = User.objects.get(id=user_id)
+            except User.DoesNotExist:
+                return Response({'error': '사용자를 찾을 수 없습니다.'}, status=status.HTTP_404_NOT_FOUND)
+            
+            user_data = UserSerializer(user).data
+            data['school_name'] = user_data['school_name']
+            data['major_name'] = user_data['major_name']
+            data['admission_date'] = user_data['admission_date']
+
+        return Response(response_data, status=status.HTTP_200_OK)
     
 class StudyCommentListByPostId(generics.ListAPIView):
     serializer_class = StudyCommentSerializer
@@ -800,6 +840,26 @@ class StudyCommentListByPostId(generics.ListAPIView):
         studypost_id = self.kwargs['studypost_id']
         return Study_Comment.objects.filter(studypost_id=studypost_id)
 
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        response_data = serializer.data
+
+        # 사용자 정보를 응답 데이터에 추가
+        for data in response_data:
+            user_id = data['user_id']
+            try:
+                user = User.objects.get(id=user_id)
+            except User.DoesNotExist:
+                return Response({'error': '사용자를 찾을 수 없습니다.'}, status=status.HTTP_404_NOT_FOUND)
+            
+            user_data = UserSerializer(user).data
+            data['school_name'] = user_data['school_name']
+            data['major_name'] = user_data['major_name']
+            data['admission_date'] = user_data['admission_date']
+
+        return Response(response_data, status=status.HTTP_200_OK)
+
 class StudyCommentListByParent(generics.ListAPIView):
     serializer_class = StudyCommentSerializer
 
@@ -807,9 +867,48 @@ class StudyCommentListByParent(generics.ListAPIView):
         parent_comment = self.kwargs['parent_comment']
         return Study_Comment.objects.filter(parent_comment=parent_comment)
 
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        response_data = serializer.data
+
+        # 사용자 정보를 응답 데이터에 추가
+        for data in response_data:
+            user_id = data['user_id']
+            try:
+                user = User.objects.get(id=user_id)
+            except User.DoesNotExist:
+                return Response({'error': '사용자를 찾을 수 없습니다.'}, status=status.HTTP_404_NOT_FOUND)
+            
+            user_data = UserSerializer(user).data
+            data['school_name'] = user_data['school_name']
+            data['major_name'] = user_data['major_name']
+            data['admission_date'] = user_data['admission_date']
+
+        return Response(response_data, status=status.HTTP_200_OK)
+
 class StudyCommentDetail(generics.RetrieveAPIView):
     queryset = Study_Comment.objects.all()
     serializer_class = StudyCommentSerializer
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        
+        # 스터디 작성자의 정보를 가져와 응답 데이터에 추가
+        user_id = instance.user_id.id
+        try:
+            user_data = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            return Response({'error': '사용자를 찾을 수 없습니다.'}, status=status.HTTP_404_NOT_FOUND)
+        
+        response_data = serializer.data
+
+        response_data['school_name'] = user_data.school_name
+        response_data['major_name'] = user_data.major_name
+        response_data['admission_date'] = user_data.admission_date
+
+        return Response(response_data, status=status.HTTP_200_OK)
 
 class StudyCommentCreate(generics.CreateAPIView):
     queryset = Study_Comment.objects.all()
