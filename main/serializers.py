@@ -118,7 +118,7 @@ class BoardSerializer(serializers.ModelSerializer):
 class BoardCommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Board_Comment
-        fields = ['id', 'user_id', 'post_id', 'contents']
+        fields = ['id', 'user_id', 'post_id', 'parent_comment', 'contents', 'comment_date']
 
 class BoardLikeSerializer(serializers.ModelSerializer):
     class Meta:
