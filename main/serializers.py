@@ -158,4 +158,4 @@ class UsedbooktradeDataSerializer(serializers.ModelSerializer):
 class UsedbooktradeCommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Usedbooktrade_Comment
-        fields = ['id', 'user_id', 'Usedbookpost_id', 'contents']    
+        fields = ['id', 'user_id', 'Usedbookpost_id', 'parent_comment', 'contents', 'comment_date']    

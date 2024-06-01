@@ -1435,12 +1435,52 @@ class UsedbooktradeCommentList(generics.ListAPIView):
     queryset = Usedbooktrade_Comment.objects.all()
     serializer_class = UsedbooktradeCommentSerializer
 
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        response_data = serializer.data
+
+        # 사용자 정보를 응답 데이터에 추가
+        for data in response_data:
+            user_id = data['user_id']
+            try:
+                user = User.objects.get(id=user_id)
+            except User.DoesNotExist:
+                return Response({'error': '사용자를 찾을 수 없습니다.'}, status=status.HTTP_404_NOT_FOUND)
+            
+            user_data = UserSerializer(user).data
+            data['school_name'] = user_data['school_name']
+            data['major_name'] = user_data['major_name']
+            data['admission_date'] = user_data['admission_date']
+
+        return Response(response_data, status=status.HTTP_200_OK)
+
 class UsedbooktradeCommentListByUserId(generics.ListAPIView):
     serializer_class = UsedbooktradeCommentSerializer
 
     def get_queryset(self):
         user_id = self.kwargs['user_id']
         return Usedbooktrade_Comment.objects.filter(user_id=user_id)
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        response_data = serializer.data
+
+        # 사용자 정보를 응답 데이터에 추가
+        for data in response_data:
+            user_id = data['user_id']
+            try:
+                user = User.objects.get(id=user_id)
+            except User.DoesNotExist:
+                return Response({'error': '사용자를 찾을 수 없습니다.'}, status=status.HTTP_404_NOT_FOUND)
+            
+            user_data = UserSerializer(user).data
+            data['school_name'] = user_data['school_name']
+            data['major_name'] = user_data['major_name']
+            data['admission_date'] = user_data['admission_date']
+
+        return Response(response_data, status=status.HTTP_200_OK)
     
 class UsedbooktradeCommentListByPostId(generics.ListAPIView):
     serializer_class = UsedbooktradeCommentSerializer
@@ -1449,6 +1489,26 @@ class UsedbooktradeCommentListByPostId(generics.ListAPIView):
         Usedbookpost_id = self.kwargs['Usedbookpost_id']
         return Usedbooktrade_Comment.objects.filter(Usedbookpost_id=Usedbookpost_id)
 
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        response_data = serializer.data
+
+        # 사용자 정보를 응답 데이터에 추가
+        for data in response_data:
+            user_id = data['user_id']
+            try:
+                user = User.objects.get(id=user_id)
+            except User.DoesNotExist:
+                return Response({'error': '사용자를 찾을 수 없습니다.'}, status=status.HTTP_404_NOT_FOUND)
+            
+            user_data = UserSerializer(user).data
+            data['school_name'] = user_data['school_name']
+            data['major_name'] = user_data['major_name']
+            data['admission_date'] = user_data['admission_date']
+
+        return Response(response_data, status=status.HTTP_200_OK)
+
 class UsedbooktradeCommentListByParent(generics.ListAPIView):
     serializer_class = UsedbooktradeCommentSerializer
 
@@ -1456,9 +1516,48 @@ class UsedbooktradeCommentListByParent(generics.ListAPIView):
         parent_comment = self.kwargs['parent_comment']
         return Usedbooktrade_Comment.objects.filter(parent_comment=parent_comment)
 
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        response_data = serializer.data
+
+        # 사용자 정보를 응답 데이터에 추가
+        for data in response_data:
+            user_id = data['user_id']
+            try:
+                user = User.objects.get(id=user_id)
+            except User.DoesNotExist:
+                return Response({'error': '사용자를 찾을 수 없습니다.'}, status=status.HTTP_404_NOT_FOUND)
+            
+            user_data = UserSerializer(user).data
+            data['school_name'] = user_data['school_name']
+            data['major_name'] = user_data['major_name']
+            data['admission_date'] = user_data['admission_date']
+
+        return Response(response_data, status=status.HTTP_200_OK)
+
 class UsedbooktradeCommentDetail(generics.RetrieveAPIView):
     queryset = Usedbooktrade_Comment.objects.all()
     serializer_class = UsedbooktradeCommentSerializer
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        
+        # 스터디 작성자의 정보를 가져와 응답 데이터에 추가
+        user_id = instance.user_id.id
+        try:
+            user_data = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            return Response({'error': '사용자를 찾을 수 없습니다.'}, status=status.HTTP_404_NOT_FOUND)
+        
+        response_data = serializer.data
+
+        response_data['school_name'] = user_data.school_name
+        response_data['major_name'] = user_data.major_name
+        response_data['admission_date'] = user_data.admission_date
+
+        return Response(response_data, status=status.HTTP_200_OK)
 
 class UsedbooktradeCommentCreate(generics.CreateAPIView):
     queryset = Usedbooktrade_Comment.objects.all()
