@@ -90,8 +90,8 @@ class Board(models.Model):
     def category_name(self):
         return self.category_id.category_name
 
-    def __str__(self):
-        return self.id
+    def __str__(self) -> str:
+        return str(self.id)
 
 
 class Board_Comment(models.Model):
@@ -105,8 +105,8 @@ class Board_Comment(models.Model):
     delete_date = models.DateTimeField(null=True)
     like = models.IntegerField(default=0)
 
-    def __str__(self):
-        return self.id
+    def __str__(self) -> str:
+        return str(self.id)
     
 
 class Board_Like(models.Model):
@@ -144,8 +144,8 @@ class Study(models.Model):
     comment = models.IntegerField(default=0)
     like = models.IntegerField(default=0)
 
-    def __str__(self):
-        return self.id
+    def __str__(self) -> str:
+        return str(self.id)
     
 
 class Study_Comment(models.Model):
@@ -159,8 +159,8 @@ class Study_Comment(models.Model):
     delete_date = models.DateTimeField(null=True)
     like = models.IntegerField(default=0)
 
-    def __str__(self):
-        return self.id
+    def __str__(self) -> str:
+        return str(self.id)
     
 
 class Study_Like(models.Model):
@@ -196,8 +196,8 @@ class Usedbooktrade(models.Model):
     comment = models.IntegerField(default=0)
     is_sold = models.BooleanField(default=False, null=False)
 
-    def __str__(self):
-        return self.id
+    def __str__(self) -> str:
+        return str(self.id)
 
 
 class UsedbooktradeData(models.Model):
@@ -206,8 +206,8 @@ class UsedbooktradeData(models.Model):
     user_id = models.ForeignKey(User, on_delete=models.CASCADE, db_column="user_id")
     sell_date = models.DateTimeField(auto_now_add=True, verbose_name='판매일')
 
-    def __str__(self):
-        return self.id
+    def __str__(self) -> str:
+        return str(self.id)
 
 
 class Usedbooktrade_Comment(models.Model):
@@ -220,5 +220,5 @@ class Usedbooktrade_Comment(models.Model):
     update_date = models.DateTimeField(auto_now=True)
     delete_date = models.DateTimeField(null=True)
 
-    def __str__(self):
-        return self.id
+    def __str__(self) -> str:
+        return str(self.id)

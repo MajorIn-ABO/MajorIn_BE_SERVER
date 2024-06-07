@@ -59,3 +59,7 @@ mysql -u root -p
 
 USE majorin
 ```
+
+## majorin 링크
+
+[majorin site url](http://majorin.s3-website-ap-southeast-2.amazonaws.com/)

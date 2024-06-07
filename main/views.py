@@ -1018,31 +1018,27 @@ class StudyCommentCreate(generics.CreateAPIView):
         # serializer = StudyCommentSerializer(data=request.data)
 
         if serializer.is_valid():
-            # 우선은 누른 사람의 user_id를 파라미터로 주는 것으로 설정
-            # user = request.user
-
-            user_id = serializer.validated_data["user_id"].id
-            studypost_id = serializer.validated_data["studypost_id"].id
-            contents = serializer.validated_data["contents"]
-            
+            # 저장 전 데이터 유효성 검사
             try:
-                study_post = Study.objects.get(pk=studypost_id)
+                # 이미 `validated_data`에 외래 키 객체가 포함되어 있습니다.
+                study_post = serializer.validated_data['studypost_id']
+                user = serializer.validated_data['user_id']
+                
+                # 댓글 저장
+                comment = serializer.save()
+
+                # Study 게시글의 댓글 수 증가
+                study_post.comment += 1
+                study_post.save(update_fields=['comment'])
+                
+                return Response({"message": "Comment created successfully.", "comments": study_post.comment}, status=status.HTTP_201_CREATED)
+            
             except Study.DoesNotExist:
                 return Response({"error": "Study post not found."}, status=status.HTTP_404_NOT_FOUND)
-
-            try:
-                user = User.objects.get(pk=user_id)
+            
             except User.DoesNotExist:
                 return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
-            
-            # serializer.save()  # 댓글을 저장하고
         
-            comment = Study_Comment(user_id=user, studypost_id=study_post, contents=contents)
-            comment.save()
-
-            study_post.comment += 1
-            study_post.save(update_fields=['comment'])
-            return Response({"message": "Comment created successfully.", "comments": study_post.comment}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class StudyCommentUpdate(generics.UpdateAPIView):
