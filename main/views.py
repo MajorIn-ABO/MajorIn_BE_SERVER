@@ -1617,27 +1617,72 @@ class UsedbooktradeCommentListByPostId(generics.ListAPIView):
 
     def get_queryset(self):
         Usedbookpost_id = self.kwargs['Usedbookpost_id']
-        return Usedbooktrade_Comment.objects.filter(Usedbookpost_id=Usedbookpost_id)
+        return Usedbooktrade_Comment.objects.filter(Usedbookpost_id=Usedbookpost_id).prefetch_related(
+            Prefetch('replies', queryset=Usedbooktrade_Comment.objects.all())
+        )
 
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
         serializer = self.get_serializer(queryset, many=True)
         response_data = serializer.data
 
-        # 사용자 정보를 응답 데이터에 추가
-        for data in response_data:
-            user_id = data['user_id']
-            try:
-                user = User.objects.get(id=user_id)
-            except User.DoesNotExist:
-                return Response({'error': '사용자를 찾을 수 없습니다.'}, status=status.HTTP_404_NOT_FOUND)
-            
-            user_data = UserSerializer(user).data
-            data['school_name'] = user_data['school_name']
-            data['major_name'] = user_data['major_name']
-            data['admission_date'] = user_data['admission_date']
+        # Cache for user info
+        user_info_cache = {}
 
-        return Response(response_data, status=status.HTTP_200_OK)
+        def get_user_info(user_id):
+            if user_id not in user_info_cache:
+                try:
+                    user = User.objects.get(id=user_id)
+                    user_data = UserSerializer(user).data
+                    user_info_cache[user_id] = {
+                        "school_name": user_data['school_name'],
+                        "major_name": user_data['major_name'],
+                        "admission_date": user_data['admission_date']
+                    }
+                except User.DoesNotExist:
+                    return None
+            return user_info_cache[user_id]
+
+        # Dictionary to hold parent comments and their replies
+        comments_dict = {}
+
+        for comment in response_data:
+            user_info = get_user_info(comment['user_id'])
+            if not user_info:
+                continue
+
+            comment_data = {
+                "id": comment['id'],
+                "user_id": comment['user_id'],
+                "Usedbookpost_id": comment['Usedbookpost_id'],
+                "parent_comment": comment['parent_comment'],
+                "contents": comment['contents'],
+                "comment_date": comment['comment_date'],
+                "school_name": user_info['school_name'],
+                "major_name": user_info['major_name'],
+                "admission_date": user_info['admission_date'],
+                "comments": []
+            }
+
+            if comment['parent_comment'] is None:
+                comments_dict[comment['id']] = comment_data
+            else:
+                parent_id = comment['parent_comment']
+                if parent_id in comments_dict:
+                    parent_comment = comments_dict[parent_id]
+                    parent_comment['comments'].append({
+                        "commentId": comment['id'],
+                        "user_id": comment['user_id'],
+                        "school_name": user_info['school_name'],
+                        "major_name": user_info['major_name'],
+                        "admission_date": user_info['admission_date'],
+                        "comment_date": comment['comment_date'],
+                        "contents": comment['contents']
+                    })
+
+        final_response_data = list(comments_dict.values())
+
+        return Response(final_response_data, status=status.HTTP_200_OK)
 
 class UsedbooktradeCommentListByParent(generics.ListAPIView):
     serializer_class = UsedbooktradeCommentSerializer
@@ -1695,34 +1740,32 @@ class UsedbooktradeCommentCreate(generics.CreateAPIView):
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
-        # serializer = UsedbooktradeCommentSerializer(data=request.data)
 
         if serializer.is_valid():
-            # 우선은 누른 사람의 user_id를 파라미터로 주는 것으로 설정
-            # user = request.user
-
-            user_id = serializer.validated_data["user_id"].id
-            Usedbookpost_id = serializer.validated_data["Usedbookpost_id"].id
-            contents = serializer.validated_data["contents"]
-            
+            # 저장 전 데이터 유효성 검사
             try:
-                usedbook_post = Usedbooktrade.objects.get(pk=Usedbookpost_id)
+                # 이미 `validated_data`에 외래 키 객체가 포함되어 있습니다.
+                Usedbookpost = serializer.validated_data['Usedbookpost_id']
+                user = serializer.validated_data['user_id']
+                
+                # 댓글 저장
+                # comment = serializer.save()
+                self.perform_create(serializer)
+
+                # Usedbookpost 게시글의 댓글 수 증가
+                Usedbookpost.comment += 1
+                Usedbookpost.save(update_fields=['comment'])
+                
+                # return Response({"message": "Comment created successfully.", "comments": Usedbookpost.comment}, status=status.HTTP_201_CREATED)
+                headers = self.get_success_headers(serializer.data)
+                return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
             except Usedbooktrade.DoesNotExist:
-                return Response({"error": "Usedbooktrade post not found."}, status=status.HTTP_404_NOT_FOUND)
-
-            try:
-                user = User.objects.get(pk=user_id)
+                return Response({"error": "Usedbookpost not found."}, status=status.HTTP_404_NOT_FOUND)
+            
             except User.DoesNotExist:
                 return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
-            
-            # serializer.save()  # 댓글을 저장하고
         
-            comment = Usedbooktrade_Comment(user_id=user, Usedbookpost_id=usedbook_post, contents=contents)
-            comment.save()
-
-            usedbook_post.comment += 1
-            usedbook_post.save(update_fields=['comment'])
-            return Response({"message": "Comment created successfully.", "comments": usedbook_post.comment}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class UsedbooktradeCommentUpdate(generics.UpdateAPIView):
