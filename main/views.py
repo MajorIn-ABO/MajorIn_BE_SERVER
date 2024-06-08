@@ -22,6 +22,7 @@ from django.shortcuts import get_object_or_404
 import json
 import requests
 from django.db.models import Q
+from django.db.models import Prefetch
 from urllib.parse import quote
 from dotenv import load_dotenv
 import os 
@@ -461,27 +462,72 @@ class BoardCommentListByPostId(generics.ListAPIView):
 
     def get_queryset(self):
         post_id = self.kwargs['post_id']
-        return Board_Comment.objects.filter(post_id=post_id)
+        return Board_Comment.objects.filter(post_id=post_id).prefetch_related(
+            Prefetch('replies', queryset=Board_Comment.objects.all())
+        )
 
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
         serializer = self.get_serializer(queryset, many=True)
         response_data = serializer.data
 
-        # 사용자 정보를 응답 데이터에 추가
-        for data in response_data:
-            user_id = data['user_id']
-            try:
-                user = User.objects.get(id=user_id)
-            except User.DoesNotExist:
-                return Response({'error': '사용자를 찾을 수 없습니다.'}, status=status.HTTP_404_NOT_FOUND)
-            
-            user_data = UserSerializer(user).data
-            data['school_name'] = user_data['school_name']
-            data['major_name'] = user_data['major_name']
-            data['admission_date'] = user_data['admission_date']
+        # Cache for user info
+        user_info_cache = {}
 
-        return Response(response_data, status=status.HTTP_200_OK)
+        def get_user_info(user_id):
+            if user_id not in user_info_cache:
+                try:
+                    user = User.objects.get(id=user_id)
+                    user_data = UserSerializer(user).data
+                    user_info_cache[user_id] = {
+                        "school_name": user_data['school_name'],
+                        "major_name": user_data['major_name'],
+                        "admission_date": user_data['admission_date']
+                    }
+                except User.DoesNotExist:
+                    return None
+            return user_info_cache[user_id]
+
+        # Dictionary to hold parent comments and their replies
+        comments_dict = {}
+
+        for comment in response_data:
+            user_info = get_user_info(comment['user_id'])
+            if not user_info:
+                continue
+
+            comment_data = {
+                "id": comment['id'],
+                "user_id": comment['user_id'],
+                "post_id": comment['post_id'],
+                "parent_comment": comment['parent_comment'],
+                "contents": comment['contents'],
+                "comment_date": comment['comment_date'],
+                "school_name": user_info['school_name'],
+                "major_name": user_info['major_name'],
+                "admission_date": user_info['admission_date'],
+                "comments": []
+            }
+
+            if comment['parent_comment'] is None:
+                comments_dict[comment['id']] = comment_data
+            else:
+                parent_id = comment['parent_comment']
+                if parent_id in comments_dict:
+                    parent_comment = comments_dict[parent_id]
+                    parent_comment['comments'].append({
+                        "commentId": comment['id'],
+                        "user_id": comment['user_id'],
+                        "school_name": user_info['school_name'],
+                        "major_name": user_info['major_name'],
+                        "admission_date": user_info['admission_date'],
+                        "comment_date": comment['comment_date'],
+                        "contents": comment['contents']
+                    })
+
+        final_response_data = list(comments_dict.values())
+
+        return Response(final_response_data, status=status.HTTP_200_OK)
 
 class BoardCommentListByParent(generics.ListAPIView):
     serializer_class = BoardCommentSerializer
@@ -539,34 +585,32 @@ class BoardCommentCreate(generics.CreateAPIView):
     
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
-        # serializer = BoardCommentSerializer(data=request.data)
 
         if serializer.is_valid():
-            # 우선은 누른 사람의 user_id를 파라미터로 주는 것으로 설정
-            # user = request.user
-
-            user_id = serializer.validated_data["user_id"].id
-            post_id = serializer.validated_data["post_id"].id
-            contents = serializer.validated_data["contents"]
-            
+            # 저장 전 데이터 유효성 검사
             try:
-                board_post = Board.objects.get(pk=post_id)
+                # 이미 `validated_data`에 외래 키 객체가 포함되어 있습니다.
+                board_post = serializer.validated_data['post_id']
+                user = serializer.validated_data['user_id']
+                
+                # 댓글 저장
+                # comment = serializer.save()
+                self.perform_create(serializer)
+
+                # Board 게시글의 댓글 수 증가
+                board_post.comment += 1
+                board_post.save(update_fields=['comment'])
+                
+                # return Response({"message": "Comment created successfully.", "comments": board_post.comment}, status=status.HTTP_201_CREATED)
+                headers = self.get_success_headers(serializer.data)
+                return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
             except Board.DoesNotExist:
                 return Response({"error": "Board post not found."}, status=status.HTTP_404_NOT_FOUND)
-
-            try:
-                user = User.objects.get(pk=user_id)
+            
             except User.DoesNotExist:
                 return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
-            
-            # serializer.save()  # 댓글을 저장하고
         
-            comment = Board_Comment(user_id=user, post_id=board_post, contents=contents)
-            comment.save()
-
-            board_post.comment += 1
-            board_post.save(update_fields=['comment'])
-            return Response({"message": "Comment created successfully.", "comments": board_post.comment}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -886,24 +930,67 @@ class StudyCommentList(generics.ListAPIView):
     serializer_class = StudyCommentSerializer
 
     def list(self, request, *args, **kwargs):
-        queryset = self.get_queryset()
-        serializer = self.get_serializer(queryset, many=True)
+        comments_with_replies = self.queryset.prefetch_related(
+            Prefetch('replies', queryset=Study_Comment.objects.all())
+        )
+
+        serializer = self.get_serializer(comments_with_replies, many=True)
         response_data = serializer.data
 
-        # 사용자 정보를 응답 데이터에 추가
-        for data in response_data:
-            user_id = data['user_id']
-            try:
-                user = User.objects.get(id=user_id)
-            except User.DoesNotExist:
-                return Response({'error': '사용자를 찾을 수 없습니다.'}, status=status.HTTP_404_NOT_FOUND)
-            
-            user_data = UserSerializer(user).data
-            data['school_name'] = user_data['school_name']
-            data['major_name'] = user_data['major_name']
-            data['admission_date'] = user_data['admission_date']
+        # Cache for user info
+        user_info_cache = {}
 
-        return Response(response_data, status=status.HTTP_200_OK)
+        def get_user_info(user_id):
+            if user_id not in user_info_cache:
+                try:
+                    user = User.objects.get(id=user_id)
+                    user_data = UserSerializer(user).data
+                    user_info_cache[user_id] = {
+                        "school_name": user_data['school_name'],
+                        "major_name": user_data['major_name'],
+                        "admission_date": user_data['admission_date']
+                    }
+                except User.DoesNotExist:
+                    return None
+            return user_info_cache[user_id]
+
+        # Dictionary to hold parent comments and their replies
+        comments_dict = {}
+
+        for comment in response_data:
+            user_info = get_user_info(comment['user_id'])
+            if not user_info:
+                continue
+
+            comment_data = {
+                "id": comment['id'],
+                "user_id": comment['user_id'],
+                "studypost_id": comment['studypost_id'],
+                "parent_comment": comment['parent_comment'],
+                "contents": comment['contents'],
+                "comment_date": comment['comment_date'],
+                "school_name": user_info['school_name'],
+                "major_name": user_info['major_name'],
+                "admission_date": user_info['admission_date'],
+                "comments": []
+            }
+
+            if comment['parent_comment'] is None:
+                comments_dict[comment['id']] = comment_data
+            else:
+                parent_id = comment['parent_comment']
+                if parent_id in comments_dict:
+                    parent_comment = comments_dict[parent_id]
+                    parent_comment['comments'].append({
+                        "commentId": comment['id'],
+                        "writer": f"{comment['user_id']} {user_info['school_name']} {user_info['major_name']} {user_info['admission_date']}학번",
+                        "date": comment['comment_date'],
+                        "content": comment['contents']
+                    })
+
+        final_response_data = list(comments_dict.values())
+
+        return Response(final_response_data, status=status.HTTP_200_OK)
 
 class StudyCommentListByUserId(generics.ListAPIView):
     serializer_class = StudyCommentSerializer
@@ -937,27 +1024,72 @@ class StudyCommentListByPostId(generics.ListAPIView):
 
     def get_queryset(self):
         studypost_id = self.kwargs['studypost_id']
-        return Study_Comment.objects.filter(studypost_id=studypost_id)
+        return Study_Comment.objects.filter(studypost_id=studypost_id).prefetch_related(
+            Prefetch('replies', queryset=Study_Comment.objects.all())
+        )
 
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
         serializer = self.get_serializer(queryset, many=True)
         response_data = serializer.data
 
-        # 사용자 정보를 응답 데이터에 추가
-        for data in response_data:
-            user_id = data['user_id']
-            try:
-                user = User.objects.get(id=user_id)
-            except User.DoesNotExist:
-                return Response({'error': '사용자를 찾을 수 없습니다.'}, status=status.HTTP_404_NOT_FOUND)
-            
-            user_data = UserSerializer(user).data
-            data['school_name'] = user_data['school_name']
-            data['major_name'] = user_data['major_name']
-            data['admission_date'] = user_data['admission_date']
+        # Cache for user info
+        user_info_cache = {}
 
-        return Response(response_data, status=status.HTTP_200_OK)
+        def get_user_info(user_id):
+            if user_id not in user_info_cache:
+                try:
+                    user = User.objects.get(id=user_id)
+                    user_data = UserSerializer(user).data
+                    user_info_cache[user_id] = {
+                        "school_name": user_data['school_name'],
+                        "major_name": user_data['major_name'],
+                        "admission_date": user_data['admission_date']
+                    }
+                except User.DoesNotExist:
+                    return None
+            return user_info_cache[user_id]
+
+        # Dictionary to hold parent comments and their replies
+        comments_dict = {}
+
+        for comment in response_data:
+            user_info = get_user_info(comment['user_id'])
+            if not user_info:
+                continue
+
+            comment_data = {
+                "id": comment['id'],
+                "user_id": comment['user_id'],
+                "studypost_id": comment['studypost_id'],
+                "parent_comment": comment['parent_comment'],
+                "contents": comment['contents'],
+                "comment_date": comment['comment_date'],
+                "school_name": user_info['school_name'],
+                "major_name": user_info['major_name'],
+                "admission_date": user_info['admission_date'],
+                "comments": []
+            }
+
+            if comment['parent_comment'] is None:
+                comments_dict[comment['id']] = comment_data
+            else:
+                parent_id = comment['parent_comment']
+                if parent_id in comments_dict:
+                    parent_comment = comments_dict[parent_id]
+                    parent_comment['comments'].append({
+                        "commentId": comment['id'],
+                        "user_id": comment['user_id'],
+                        "school_name": user_info['school_name'],
+                        "major_name": user_info['major_name'],
+                        "admission_date": user_info['admission_date'],
+                        "comment_date": comment['comment_date'],
+                        "contents": comment['contents']
+                    })
+
+        final_response_data = list(comments_dict.values())
+
+        return Response(final_response_data, status=status.HTTP_200_OK)
 
 class StudyCommentListByParent(generics.ListAPIView):
     serializer_class = StudyCommentSerializer
@@ -1015,7 +1147,6 @@ class StudyCommentCreate(generics.CreateAPIView):
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
-        # serializer = StudyCommentSerializer(data=request.data)
 
         if serializer.is_valid():
             # 저장 전 데이터 유효성 검사
@@ -1025,14 +1156,17 @@ class StudyCommentCreate(generics.CreateAPIView):
                 user = serializer.validated_data['user_id']
                 
                 # 댓글 저장
-                comment = serializer.save()
+                # comment = serializer.save()
+                self.perform_create(serializer)
 
                 # Study 게시글의 댓글 수 증가
                 study_post.comment += 1
                 study_post.save(update_fields=['comment'])
                 
-                return Response({"message": "Comment created successfully.", "comments": study_post.comment}, status=status.HTTP_201_CREATED)
-            
+                # return Response({"message": "Comment created successfully.", "comments": study_post.comment}, status=status.HTTP_201_CREATED)
+                headers = self.get_success_headers(serializer.data)
+                return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
             except Study.DoesNotExist:
                 return Response({"error": "Study post not found."}, status=status.HTTP_404_NOT_FOUND)
             
