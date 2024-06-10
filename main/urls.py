@@ -9,6 +9,8 @@ urlpatterns = [
     path('', views.index, name='index'),
     path('user/', views.user_view, name='user'),
 
+    path('api/request-info/', views.RequestInfoView.as_view(), name='request-info'),
+
     path('api/token/', views.MyTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     # path('api/users/register/', views.RegisterView.as_view(), name='auth_register'),
@@ -54,7 +56,7 @@ urlpatterns = [
     path('api/boards/posts/likes/', views.BoardLikeList.as_view(), name='board-like-list'),
     path('api/boards/posts/likes-by-userid/<int:user_id>/', views.BoardLikeListByUserId.as_view(), name='board-like-list-by-userid'),
     path('api/boards/posts/likes-by-postid/<int:post_id>/', views.BoardLikeListByPostId.as_view(), name='board-like-list-by-postid'),
-    path('api/boards/posts/likes/<int:post_id>/<int:user_id>/create/', views.BoardLikeCreate.as_view(), name='board-like-create'),
+    path('api/boards/posts/likes/create/', views.BoardLikeCreate.as_view(), name='board-like-create'),
 
     path('api/boards/posts/bookmarks/', views.BoardBookmarkList.as_view(), name='board-bookmark-list'),
     path('api/boards/posts/bookmarks-by-userid/<int:user_id>/', views.BoardBookmarkListByUserId.as_view(), name='board-bookmark-list-by-userid'),
