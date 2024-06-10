@@ -298,10 +298,21 @@ class BoardListByCategory(generics.ListAPIView):
 class BoardDetail(generics.RetrieveAPIView):
     queryset = Board.objects.all()
     serializer_class = BoardSerializer
+    # authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
 
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
         serializer = self.get_serializer(instance)
+
+        # request 객체의 유저 속성들
+        request_user_info = {
+            "user": {
+                "id": request.user.id,
+                "username": request.user.username,
+                "email": request.user.email
+            } if request.user.is_authenticated else None
+        }
         
         # 게시글 작성자의 정보를 가져와 응답 데이터에 추가
         user_id = instance.user_id.id
@@ -315,7 +326,24 @@ class BoardDetail(generics.RetrieveAPIView):
         response_data['major_name'] = user_data.major_name
         response_data['admission_date'] = user_data.admission_date
 
+        # 로그인된 사용자가 해당 게시글에 좋아요를 눌렀는지 확인
+        # auth_user = request.user
+        
+        auth_id = request.user.id
+        token = get_object_or_404(Token, auth_id=auth_id)
+        user_id = token.user_id.id
+        has_liked = Board_Like.objects.filter(user_id=user_id, post_id=instance.id, delete_date__isnull=True).exists()
+        response_data['has_liked'] = has_liked
+
+        # 로그인한 유저 객체의 속성들
+        login_user_info = {
+            "auth_id": auth_id,
+            "user_id": user_id,
+            "has_liked": has_liked
+        }
+        
         return Response(response_data, status=status.HTTP_200_OK)
+        # return Response(login_user_info, status=status.HTTP_200_OK)
 
 class BoardCreate(generics.CreateAPIView):
     permission_classes = [IsAuthenticated]
@@ -681,6 +709,7 @@ class BoardLikeListByPostId(generics.ListAPIView):
     def get_queryset(self):
         post_id = self.kwargs['post_id']
         return Board_Like.objects.filter(post_id=post_id)
+
 '''
 class BoardLikeCreate(APIView):
     # permission_classes = [IsAuthenticated]
@@ -738,7 +767,7 @@ class BoardLikeCreate(generics.CreateAPIView):
 class BoardLikeCreate(generics.CreateAPIView):
     queryset = Board_Like.objects.all()
     serializer_class = BoardLikeSerializer
-    # permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated]
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -876,6 +905,7 @@ class StudyListByUserId(generics.ListAPIView):
 class StudyDetail(generics.RetrieveAPIView):
     queryset = Study.objects.all()
     serializer_class = StudySerializer
+    # permission_classes = [IsAuthenticated]
 
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -1881,6 +1911,30 @@ class UsedbooktradeCommentDelete(generics.DestroyAPIView):
         return Response({"message": "Comment deleted successfully.", "comments": usedbook_post.comment}, status=status.HTTP_204_NO_CONTENT)
 
 
+# 유저 request data 받아오는 api
+
+class RequestInfoView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        # request 객체의 주요 속성들
+        request_info = {
+            "method": request.method,
+            "headers": dict(request.headers),
+            "GET_params": request.GET.dict(),
+            "POST_params": request.POST.dict(),
+            "body": request.body.decode('utf-8'),  # request body (json이나 form data 등)
+            "user": {
+                "id": request.user.id,
+                "username": request.user.username,
+                "email": request.user.email
+            } if request.user.is_authenticated else None,
+            "META": {
+                "REMOTE_ADDR": request.META.get("REMOTE_ADDR"),
+                "HTTP_USER_AGENT": request.META.get("HTTP_USER_AGENT")
+            }
+        }
+        return Response(request_info)
 
 # Create your views here.
 def index(request):
