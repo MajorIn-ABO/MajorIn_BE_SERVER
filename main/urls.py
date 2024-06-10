@@ -54,7 +54,7 @@ urlpatterns = [
     path('api/boards/posts/likes/', views.BoardLikeList.as_view(), name='board-like-list'),
     path('api/boards/posts/likes-by-userid/<int:user_id>/', views.BoardLikeListByUserId.as_view(), name='board-like-list-by-userid'),
     path('api/boards/posts/likes-by-postid/<int:post_id>/', views.BoardLikeListByPostId.as_view(), name='board-like-list-by-postid'),
-    path('api/boards/posts/likes/<int:post_id>/<int:user_id>/create/', views.BoardLikeCreate.as_view(), name='board-like-create'),
+    path('api/boards/posts/likes/create/', views.BoardLikeCreate.as_view(), name='board-like-create'),
 
     path('api/boards/posts/bookmarks/', views.BoardBookmarkList.as_view(), name='board-bookmark-list'),
     path('api/boards/posts/bookmarks-by-userid/<int:user_id>/', views.BoardBookmarkListByUserId.as_view(), name='board-bookmark-list-by-userid'),
