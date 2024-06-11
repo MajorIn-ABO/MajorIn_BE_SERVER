@@ -342,7 +342,6 @@ class BoardDetail(generics.RetrieveAPIView):
         }
         
         return Response(response_data, status=status.HTTP_200_OK)
-        # return Response(login_user_info, status=status.HTTP_200_OK)
 
 class BoardCreate(generics.CreateAPIView):
     permission_classes = [IsAuthenticated]
@@ -851,7 +850,7 @@ class StudyListByUserId(generics.ListAPIView):
 class StudyDetail(generics.RetrieveAPIView):
     queryset = Study.objects.all()
     serializer_class = StudySerializer
-    # permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated]
 
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -873,6 +872,15 @@ class StudyDetail(generics.RetrieveAPIView):
         response_data['school_name'] = user_data.school_name
         response_data['major_name'] = user_data.major_name
         response_data['admission_date'] = user_data.admission_date
+
+        # 로그인된 사용자가 해당 게시글에 좋아요를 눌렀는지 확인
+        # auth_user = request.user
+        
+        auth_id = request.user.id
+        token = get_object_or_404(Token, auth_id=auth_id)
+        login_user_id = token.user_id.id
+        has_liked = Study_Like.objects.filter(user_id=login_user_id, studypost_id=instance.id, delete_date__isnull=True).exists()
+        response_data['has_liked'] = has_liked
 
         return Response(response_data, status=status.HTTP_200_OK)
 
