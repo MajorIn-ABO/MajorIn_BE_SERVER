@@ -83,7 +83,7 @@ urlpatterns = [
     path('api/studys/posts/likes/', views.StudyLikeList.as_view(), name='study-like-list'),
     path('api/studys/posts/likes-by-userid/<int:user_id>/', views.StudyLikeListByUserId.as_view(), name='study-like-list-by-userid'),
     path('api/studys/posts/likes-by-postid/<int:studypost_id>/', views.StudyLikeListByPostId.as_view(), name='study-like-list-by-postid'),
-    path('api/studys/posts/likes/<int:post_id>/<int:user_id>/create/', views.StudyLikeCreate.as_view(), name='study-like-create'),
+    path('api/studys/posts/likes/create/', views.StudyLikeCreate.as_view(), name='study-like-create'),
 
     path('api/usedbooktrades/book/search/', views.BookSearchAPIView.as_view(), name='book-search-api'),
     # path('api/usedbooktrades/book/search/select/', views.BookSelectAPIView.as_view(), name='book-select-api'),
