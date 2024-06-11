@@ -298,7 +298,6 @@ class BoardListByCategory(generics.ListAPIView):
 class BoardDetail(generics.RetrieveAPIView):
     queryset = Board.objects.all()
     serializer_class = BoardSerializer
-    # authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
 
     def retrieve(self, request, *args, **kwargs):
@@ -331,19 +330,18 @@ class BoardDetail(generics.RetrieveAPIView):
         
         auth_id = request.user.id
         token = get_object_or_404(Token, auth_id=auth_id)
-        user_id = token.user_id.id
-        has_liked = Board_Like.objects.filter(user_id=user_id, post_id=instance.id, delete_date__isnull=True).exists()
+        login_user_id = token.user_id.id
+        has_liked = Board_Like.objects.filter(user_id=login_user_id, post_id=instance.id, delete_date__isnull=True).exists()
         response_data['has_liked'] = has_liked
 
         # 로그인한 유저 객체의 속성들
         login_user_info = {
             "auth_id": auth_id,
-            "user_id": user_id,
+            "user_id": login_user_id,
             "has_liked": has_liked
         }
         
         return Response(response_data, status=status.HTTP_200_OK)
-        # return Response(login_user_info, status=status.HTTP_200_OK)
 
 class BoardCreate(generics.CreateAPIView):
     permission_classes = [IsAuthenticated]
@@ -710,59 +708,6 @@ class BoardLikeListByPostId(generics.ListAPIView):
         post_id = self.kwargs['post_id']
         return Board_Like.objects.filter(post_id=post_id)
 
-'''
-class BoardLikeCreate(APIView):
-    # permission_classes = [IsAuthenticated]
-
-    def post(self, request, post_id):
-        user = request.user
-        post = get_object_or_404(Board, id=post_id)
-
-        # 트랜잭션 관리
-        with transaction.atomic():
-            # 이미 좋아요를 눌렀는지 확인
-            existing_like = Board_Like.objects.filter(user_id=user, post_id=post).first()
-            if existing_like:
-                # 좋아요를 취소
-                existing_like.delete()
-                post.like = max(0, post.like - 1)  # 좋아요 수는 음수가 되지 않도록 합니다.
-                post.save()
-                return Response({"detail": "좋아요가 취소되었습니다."}, status=status.HTTP_200_OK)
-            else:
-                # 좋아요 추가
-                Board_Like.objects.create(user_id=user, post_id=post)
-                post.like += 1
-                post.save()
-                return Response({"detail": "좋아요가 추가되었습니다."}, status=status.HTTP_200_OK)
-'''
-'''
-class BoardLikeCreate(generics.CreateAPIView):
-    serializer_class = BoardLikeSerializer
-    # permission_classes = [IsAuthenticated]
-
-    def perform_create(self, serializer):
-        user = self.request.user
-        post_id = self.kwargs.get('post_id')
-        post = get_object_or_404(Board, id=post_id)
-
-        with transaction.atomic():
-            existing_like = Board_Like.objects.filter(user_id=user, post_id=post).first()
-            if existing_like:
-                existing_like.delete()
-                post.like = max(0, post.like - 1)
-                post.save()
-                self._response_data = {"detail": "좋아요가 취소되었습니다."}
-            else:
-                Board_Like.objects.create(user_id=user, post_id=post)
-                post.like += 1
-                post.save()
-                self._response_data = {"detail": "좋아요가 추가되었습니다."}
-
-    def create(self, request, *args, **kwargs):
-        response = super().create(request, *args, **kwargs)
-        response.data = self._response_data
-        return response
-'''
 
 class BoardLikeCreate(generics.CreateAPIView):
     queryset = Board_Like.objects.all()
@@ -905,7 +850,7 @@ class StudyListByUserId(generics.ListAPIView):
 class StudyDetail(generics.RetrieveAPIView):
     queryset = Study.objects.all()
     serializer_class = StudySerializer
-    # permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated]
 
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -927,6 +872,15 @@ class StudyDetail(generics.RetrieveAPIView):
         response_data['school_name'] = user_data.school_name
         response_data['major_name'] = user_data.major_name
         response_data['admission_date'] = user_data.admission_date
+
+        # 로그인된 사용자가 해당 게시글에 좋아요를 눌렀는지 확인
+        # auth_user = request.user
+        
+        auth_id = request.user.id
+        token = get_object_or_404(Token, auth_id=auth_id)
+        login_user_id = token.user_id.id
+        has_liked = Study_Like.objects.filter(user_id=login_user_id, studypost_id=instance.id, delete_date__isnull=True).exists()
+        response_data['has_liked'] = has_liked
 
         return Response(response_data, status=status.HTTP_200_OK)
 
@@ -1338,40 +1292,52 @@ class StudyLikeListByPostId(generics.ListAPIView):
         studypost_id = self.kwargs['studypost_id']
         return Study_Like.objects.filter(studypost_id=studypost_id)
 
-class StudyLikeCreate(APIView):
-    
-    def post(self, request, post_id, user_id):
-        # 우선은 누른 사람의 user_id를 파라미터로 주는 것으로 설정
-        # user = request.user
-        try:
-            study_post = Study.objects.get(pk=post_id)
-        except Study.DoesNotExist:
-            return Response({"error": "Study post not found."}, status=status.HTTP_404_NOT_FOUND)
+class StudyLikeCreate(generics.CreateAPIView):
+    queryset = Study_Like.objects.all()
+    serializer_class = StudyLikeSerializer
+    permission_classes = [IsAuthenticated]
 
-        try:
-            user = User.objects.get(pk=user_id)
-        except User.DoesNotExist:
-            return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+    def create(self, request, *args, **kwargs):
+        auth_id = request.user.id
+        token = get_object_or_404(Token, auth_id=auth_id)
+        login_user_id = token.user_id.id
+
+        request_data = request.data.copy()
+        request_data['user_id'] = login_user_id
+
+        serializer = self.get_serializer(data=request_data)
+
+        if serializer.is_valid():
+            # 저장 전 데이터 유효성 검사
+            try:
+                # 이미 `validated_data`에 외래 키 객체가 포함되어 있습니다.
+                study_post = serializer.validated_data['studypost_id']
+                
+                with transaction.atomic():
+                    existing_like = Study_Like.objects.filter(user_id=login_user_id, studypost_id=study_post).first()
+                    if existing_like:
+                        # 좋아요 취소
+                        existing_like.delete()
+                        study_post.like = max(0, study_post.like - 1)
+                        study_post.save(update_fields=['like'])
+                        return Response({"detail": "좋아요가 취소되었습니다.", "likes": study_post.like}, status=status.HTTP_200_OK)
+                    else:
+                        # 좋아요 추가
+                        serializer = self.get_serializer(data={'user_id': login_user_id, 'studypost_id': study_post.id})
+                        serializer.is_valid(raise_exception=True)
+                        self.perform_create(serializer)
+                        study_post.like += 1
+                        study_post.save(update_fields=['like'])
+                        headers = self.get_success_headers(serializer.data)
+                        return Response({"detail": "좋아요가 추가되었습니다.", "likes": study_post.like}, status=status.HTTP_201_CREATED, headers=headers)
+                    
+            except Study.DoesNotExist:
+                return Response({"error": "Study post not found."}, status=status.HTTP_404_NOT_FOUND)
+            
+            #except User.DoesNotExist:
+                #return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
         
-        # 좋아요를 이미 눌렀는지 확인
-        is_liked = Study_Like.objects.filter(user_id=user, studypost_id=study_post).exists()
-
-        if is_liked:
-            # 이미 좋아요를 누른 경우 좋아요를 취소
-            like = Study_Like.objects.get(user_id=user, studypost_id=study_post)
-            like.delete()
-            # like.delete_date = timezone.now()  # delete_date 필드에 현재 시간 설정
-            # like.save()
-            study_post.like -= 1
-            study_post.save(update_fields=['like'])
-            return Response({"message": "Like removed.", "likes": study_post.like}, status=status.HTTP_200_OK)
-        else:
-            # 좋아요를 누르지 않은 경우 좋아요 추가
-            like = Study_Like(user_id=user, studypost_id=study_post)
-            like.save()
-            study_post.like += 1
-            study_post.save(update_fields=['like'])
-            return Response({"message": "Liked.", "likes": study_post.like}, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 # 중고거래 관련 API 모음
