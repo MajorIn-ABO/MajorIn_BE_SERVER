@@ -84,7 +84,7 @@ class Board(models.Model):
     delete_date = models.DateTimeField(null=True)
     comment = models.IntegerField(default=0)
     like = models.IntegerField(default=0)
-    keep = models.IntegerField(default=0)
+    bookmark = models.IntegerField(default=0)
 
     @property
     def category_name(self):

@@ -786,40 +786,62 @@ class BoardBookmarkListByPostId(generics.ListAPIView):
         post_id = self.kwargs['post_id']
         return Board_bookmark.objects.filter(post_id=post_id)
 
-class BoardBookmarkCreate(APIView):
+class BoardBookmarkCreate(generics.CreateAPIView):
     
-    def post(self, request, post_id, user_id):
-        # 우선은 누른 사람의 user_id를 파라미터로 주는 것으로 설정
-        # user = request.user
-        try:
-            board_post = Board.objects.get(pk=post_id)
-        except Board.DoesNotExist:
-            return Response({"error": "Board post not found."}, status=status.HTTP_404_NOT_FOUND)
+    queryset = Board_bookmark.objects.all()
+    serializer_class = BoardBookmarkSerializer
+    permission_classes = [IsAuthenticated]
 
-        try:
-            user = User.objects.get(pk=user_id)
-        except User.DoesNotExist:
-            return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+    def create(self, request, *args, **kwargs):
+        '''
+        auth_id = request.user.id
+        token = get_object_or_404(Token, auth_id=auth_id)
+        login_user_id = token.user_id.id
+
+        request_data = request.data.copy()
+        request_data['user_id'] = login_user_id
+
+        serializer = self.get_serializer(data=request_data)
+        '''
+        serializer = self.get_serializer(data=request.data)
+
+        '''
+        user = request.user
+        post_id = self.kwargs.get('post_id')
+        post = get_object_or_404(Board, id=post_id)
+        '''
+        if serializer.is_valid():
+            # 저장 전 데이터 유효성 검사
+            try:
+                # 이미 `validated_data`에 외래 키 객체가 포함되어 있습니다.
+                board_post = serializer.validated_data['post_id']
+                user = serializer.validated_data['user_id']
+                
+                with transaction.atomic():
+                    existing_bookmark = Board_bookmark.objects.filter(user_id=user, post_id=board_post).first()
+                    if existing_bookmark:
+                        # 북마크 취소
+                        existing_bookmark.delete()
+                        board_post.bookmark = max(0, board_post.bookmark - 1)
+                        board_post.save(update_fields=['bookmark'])
+                        return Response({"detail": "북마크가 취소되었습니다.", "bookmarks": board_post.bookmark}, status=status.HTTP_200_OK)
+                    else:
+                        # 북마크 추가
+                        serializer = self.get_serializer(data={'user_id': user.id, 'post_id': board_post.id})
+                        serializer.is_valid(raise_exception=True)
+                        self.perform_create(serializer)
+                        board_post.bookmark += 1
+                        board_post.save(update_fields=['bookmark'])
+                        headers = self.get_success_headers(serializer.data)
+                        return Response({"detail": "북마크가 추가되었습니다.", "bookmarks": board_post.bookmark}, status=status.HTTP_201_CREATED, headers=headers)
+
+            except Board.DoesNotExist:
+                return Response({"error": "Board post not found."}, status=status.HTTP_404_NOT_FOUND)
+            
+            except User.DoesNotExist:
+                return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
         
-        # 북마크를 이미 눌렀는지 확인
-        is_kept = Board_bookmark.objects.filter(user_id=user, post_id=board_post).exists()
-
-        if is_kept:
-            # 이미 북마크를 누른 경우 북마크를 취소
-            keep = Board_bookmark.objects.get(user_id=user, post_id=board_post)
-            keep.delete()
-            # keep.delete_date = timezone.now()  # delete_date 필드에 현재 시간 설정
-            # keep.save()
-            board_post.keep -= 1
-            board_post.save(update_fields=['keep'])
-            return Response({"message": "keep removed successfully.", "keeps": board_post.keep}, status=status.HTTP_200_OK)
-        else:
-            # 북마크를 누르지 않은 경우 북마크 추가
-            keep = Board_bookmark(user_id=user, post_id=board_post)
-            keep.save()
-            board_post.keep += 1
-            board_post.save(update_fields=['keep'])
-            return Response({"message": "Keep created successfully.", "keeps": board_post.keep}, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 # 스터디 관련 API 모음
 
