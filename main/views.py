@@ -303,7 +303,7 @@ class BoardDetail(generics.RetrieveAPIView):
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
         serializer = self.get_serializer(instance)
-
+        '''
         # request 객체의 유저 속성들
         request_user_info = {
             "user": {
@@ -312,6 +312,7 @@ class BoardDetail(generics.RetrieveAPIView):
                 "email": request.user.email
             } if request.user.is_authenticated else None
         }
+        '''
         
         # 게시글 작성자의 정보를 가져와 응답 데이터에 추가
         user_id = instance.user_id.id
@@ -325,21 +326,27 @@ class BoardDetail(generics.RetrieveAPIView):
         response_data['major_name'] = user_data.major_name
         response_data['admission_date'] = user_data.admission_date
 
-        # 로그인된 사용자가 해당 게시글에 좋아요를 눌렀는지 확인
+        # 로그인된 사용자가 해당 게시글에 좋아요, 북마크를 눌렀는지 확인
         # auth_user = request.user
         
         auth_id = request.user.id
         token = get_object_or_404(Token, auth_id=auth_id)
         login_user_id = token.user_id.id
+
         has_liked = Board_Like.objects.filter(user_id=login_user_id, post_id=instance.id, delete_date__isnull=True).exists()
         response_data['has_liked'] = has_liked
 
+        has_bookmarked = Board_bookmark.objects.filter(user_id=login_user_id, post_id=instance.id, delete_date__isnull=True).exists()
+        response_data['has_bookmarked'] = has_bookmarked
+
+        '''
         # 로그인한 유저 객체의 속성들
         login_user_info = {
             "auth_id": auth_id,
             "user_id": login_user_id,
             "has_liked": has_liked
         }
+        '''
         
         return Response(response_data, status=status.HTTP_200_OK)
 
@@ -787,7 +794,6 @@ class BoardBookmarkListByPostId(generics.ListAPIView):
         return Board_bookmark.objects.filter(post_id=post_id)
 
 class BoardBookmarkCreate(generics.CreateAPIView):
-    
     queryset = Board_bookmark.objects.all()
     serializer_class = BoardBookmarkSerializer
     permission_classes = [IsAuthenticated]
