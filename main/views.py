@@ -298,7 +298,6 @@ class BoardListByCategory(generics.ListAPIView):
 class BoardDetail(generics.RetrieveAPIView):
     queryset = Board.objects.all()
     serializer_class = BoardSerializer
-    # authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
 
     def retrieve(self, request, *args, **kwargs):
@@ -331,14 +330,14 @@ class BoardDetail(generics.RetrieveAPIView):
         
         auth_id = request.user.id
         token = get_object_or_404(Token, auth_id=auth_id)
-        user_id = token.user_id.id
-        has_liked = Board_Like.objects.filter(user_id=user_id, post_id=instance.id, delete_date__isnull=True).exists()
+        login_user_id = token.user_id.id
+        has_liked = Board_Like.objects.filter(user_id=login_user_id, post_id=instance.id, delete_date__isnull=True).exists()
         response_data['has_liked'] = has_liked
 
         # 로그인한 유저 객체의 속성들
         login_user_info = {
             "auth_id": auth_id,
-            "user_id": user_id,
+            "user_id": login_user_id,
             "has_liked": has_liked
         }
         
@@ -1291,21 +1290,23 @@ class StudyLikeCreate(generics.CreateAPIView):
     permission_classes = [IsAuthenticated]
 
     def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        '''
-        user = request.user
-        studypost_id = self.kwargs.get('studypost_id')
-        post = get_object_or_404(Study, id=studypost_id)
-        '''
+        auth_id = request.user.id
+        token = get_object_or_404(Token, auth_id=auth_id)
+        login_user_id = token.user_id.id
+
+        request_data = request.data.copy()
+        request_data['user_id'] = login_user_id
+
+        serializer = self.get_serializer(data=request_data)
+
         if serializer.is_valid():
             # 저장 전 데이터 유효성 검사
             try:
                 # 이미 `validated_data`에 외래 키 객체가 포함되어 있습니다.
                 study_post = serializer.validated_data['studypost_id']
-                user = serializer.validated_data['user_id']
                 
                 with transaction.atomic():
-                    existing_like = Study_Like.objects.filter(user_id=user, studypost_id=study_post).first()
+                    existing_like = Study_Like.objects.filter(user_id=login_user_id, studypost_id=study_post).first()
                     if existing_like:
                         # 좋아요 취소
                         existing_like.delete()
@@ -1314,19 +1315,19 @@ class StudyLikeCreate(generics.CreateAPIView):
                         return Response({"detail": "좋아요가 취소되었습니다.", "likes": study_post.like}, status=status.HTTP_200_OK)
                     else:
                         # 좋아요 추가
-                        serializer = self.get_serializer(data={'user_id': user.id, 'studypost_id': study_post.id})
+                        serializer = self.get_serializer(data={'user_id': login_user_id, 'studypost_id': study_post.id})
                         serializer.is_valid(raise_exception=True)
                         self.perform_create(serializer)
                         study_post.like += 1
                         study_post.save(update_fields=['like'])
                         headers = self.get_success_headers(serializer.data)
                         return Response({"detail": "좋아요가 추가되었습니다.", "likes": study_post.like}, status=status.HTTP_201_CREATED, headers=headers)
-
+                    
             except Study.DoesNotExist:
                 return Response({"error": "Study post not found."}, status=status.HTTP_404_NOT_FOUND)
             
-            except User.DoesNotExist:
-                return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+            #except User.DoesNotExist:
+                #return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
