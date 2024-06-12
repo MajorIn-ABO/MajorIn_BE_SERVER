@@ -119,7 +119,6 @@ class UserDetail(generics.RetrieveAPIView):
 
 class UserProfile(generics.RetrieveAPIView):
     permission_classes = [IsAuthenticated]
-
     queryset = User.objects.all()
     serializer_class = UserProfileSerializer
 
@@ -193,6 +192,7 @@ class UserUpdate(generics.UpdateAPIView):
 
 # 유저 회원가입 + 토큰 발급 API
 class UserRegisterAPIView(APIView):
+    permission_classes = (AllowAny,)
     queryset = User.objects.all()
     serializer_class = UserRegisterSerializer
 
@@ -990,6 +990,10 @@ class StudyListProfileByUserId(generics.ListAPIView):
 
         # 사용자 정보를 응답 데이터에 추가
         for data in response_data:
+            # 해시태그 데이터를 문자열에서 리스트로 변환하여 추가합니다.
+            hashtags_str = data['hashtags']
+            data['hashtags'] = eval(hashtags_str)
+
             user_id = data['user_id']
             try:
                 user = User.objects.get(id=user_id)
