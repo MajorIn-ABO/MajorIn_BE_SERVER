@@ -120,6 +120,16 @@ class BoardSerializer(serializers.ModelSerializer):
         board = Board.objects.create(**validated_data)
         return board
 
+class BoardProfileSerializer(serializers.ModelSerializer):
+    category_name = serializers.CharField(max_length=10)
+
+    class Meta:
+        model = Board
+        fields = [
+            'id', 'user_id', 'category_name', 'title', 'contents', 'imgfile',
+            'post_date', 'comment', 'like', 'bookmark'
+        ]
+
 class BoardCommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Board_Comment
