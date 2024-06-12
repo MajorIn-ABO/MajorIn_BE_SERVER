@@ -170,6 +170,11 @@ class UsedbooktradeSerializer(serializers.ModelSerializer):
         model = Usedbooktrade
         fields = ['id', 'title', 'author', 'user_id', 'publisher', 'price', 'origin_imgfile', 'imgfile', 'description', 'damage_level', 'post_date', 'comment', 'is_sold']
 
+class UsedbooktradeProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Usedbooktrade
+        fields = ['id', 'title', 'author', 'user_id', 'publisher', 'price', 'origin_imgfile', 'imgfile', 'description', 'damage_level', 'post_date', 'comment', 'is_sold']
+
 class UsedbooktradeDataSerializer(serializers.ModelSerializer):
     class Meta:
         model = UsedbooktradeData
