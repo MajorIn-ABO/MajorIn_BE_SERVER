@@ -11,7 +11,7 @@ from django.views import View
 from django.utils import timezone  # 필요한 경우 추가
 from django.http import JsonResponse
 from .models import Token, Major, User, Category, Board, Board_Comment, Board_Like, Board_bookmark, Study, Study_Comment, Study_Like, Usedbooktrade, UsedbooktradeData, Usedbooktrade_Comment
-from .serializers import MyTokenObtainPairSerializer, AuthUserRegisterSerializer, LoginSerializer,MajorSerializer, MajorCheckSerializer, UserSerializer, UserRegisterSerializer, CategorySerializer, BoardSerializer, BoardCommentSerializer, BoardLikeSerializer, BoardBookmarkSerializer, StudySerializer, StudyCommentSerializer, StudyLikeSerializer, UsedbooktradeSerializer, UsedbooktradeDataSerializer, UsedbooktradeCommentSerializer
+from .serializers import MyTokenObtainPairSerializer, AuthUserRegisterSerializer, LoginSerializer,MajorSerializer, MajorCheckSerializer, UserSerializer, UserProfileSerializer, UserRegisterSerializer, CategorySerializer, BoardSerializer, BoardCommentSerializer, BoardLikeSerializer, BoardBookmarkSerializer, StudySerializer, StudyCommentSerializer, StudyLikeSerializer, UsedbooktradeSerializer, UsedbooktradeDataSerializer, UsedbooktradeCommentSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth.models import User as AuthUser
@@ -117,6 +117,64 @@ class UserDetail(generics.RetrieveAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
 
+class UserProfile(generics.RetrieveAPIView):
+    permission_classes = [IsAuthenticated]
+
+    queryset = User.objects.all()
+    serializer_class = UserProfileSerializer
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        '''
+        # request 객체의 유저 속성들
+        request_user_info = {
+            "user": {
+                "id": request.user.id,
+                "username": request.user.username,
+                "email": request.user.email
+            } if request.user.is_authenticated else None
+        }
+        '''
+        
+        user_id = instance.id
+        try:
+            # 작성한 커뮤니티 게시글 갯수
+            user_community_post = Board.objects.filter(user_id=user_id).count()
+            # 작성한 스터디 게시글 갯수
+            user_study_post = Study.objects.filter(user_id=user_id).count()
+            # 작성한 중고거래 게시글 갯수
+            user_usedbook_post = Usedbooktrade.objects.filter(user_id=user_id).count()
+            # 작성한 커뮤니티 댓글 갯수
+            user_community_comment = Board_Comment.objects.filter(user_id=user_id).count()
+            # 작성한 스터디 댓글 갯수
+            user_study_comment = Study_Comment.objects.filter(user_id=user_id).count()
+            # 작성한 중고거래 댓글 갯수
+            user_usedbook_comment = Usedbooktrade_Comment.objects.filter(user_id=user_id).count()
+            # 작성한 커뮤니티 북마크 갯수
+            user_community_bookmark = Board_bookmark.objects.filter(user_id=user_id).count()
+        except User.DoesNotExist:
+            return Response({'error': '사용자를 찾을 수 없습니다.'}, status=status.HTTP_404_NOT_FOUND)
+        
+        # 작성한 총 게시글 갯수
+        user_post_count = user_community_post + user_study_post + user_usedbook_post
+
+        # 작성한 총 댓글 갯수
+        user_comment_count = user_community_comment + user_study_comment + user_usedbook_comment
+
+        # 작성한 총 북마크 갯수
+        user_bookmark_count = user_community_bookmark
+
+        response_data = serializer.data
+        response_data['user_post_count'] = user_post_count
+        response_data['user_comment_count'] = user_comment_count
+        response_data['user_bookmark_count'] = user_bookmark_count
+        
+        return Response(response_data, status=status.HTTP_200_OK)
+    
+
+
+'''
 class UserCreate(generics.CreateAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
@@ -128,7 +186,7 @@ class UserCreate(generics.CreateAPIView):
             headers = self.get_success_headers(serializer.data)
             return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
+'''
 class UserUpdate(generics.UpdateAPIView):
     queryset = User.objects.all()
     serializer_class = UserRegisterSerializer
@@ -614,6 +672,8 @@ class BoardCommentDetail(generics.RetrieveAPIView):
         return Response(response_data, status=status.HTTP_200_OK)
 
 class BoardCommentCreate(generics.CreateAPIView):
+    permission_classes = [IsAuthenticated]
+
     queryset = Board_Comment.objects.all()
     serializer_class = BoardCommentSerializer
     

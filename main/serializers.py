@@ -74,6 +74,11 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = '__all__'
 
+class UserProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'major_id', 'user_name', 'school_name', 'major_name', 'student_id', 'home_id', 'email', 'phonenumber', 'admission_date', 'registration_date', 'user_status']
+
 class UserRegisterSerializer(serializers.ModelSerializer):
     home_password = serializers.CharField(
         write_only=True, required=True, validators=[validate_password])
