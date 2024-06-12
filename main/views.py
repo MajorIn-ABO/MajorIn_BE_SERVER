@@ -11,7 +11,7 @@ from django.views import View
 from django.utils import timezone  # 필요한 경우 추가
 from django.http import JsonResponse
 from .models import Token, Major, User, Category, Board, Board_Comment, Board_Like, Board_bookmark, Study, Study_Comment, Study_Like, Usedbooktrade, UsedbooktradeData, Usedbooktrade_Comment
-from .serializers import MyTokenObtainPairSerializer, AuthUserRegisterSerializer, LoginSerializer,MajorSerializer, MajorCheckSerializer, UserSerializer, UserProfileSerializer, UserRegisterSerializer, CategorySerializer, BoardSerializer, BoardProfileSerializer, BoardCommentSerializer, BoardLikeSerializer, BoardBookmarkSerializer, StudySerializer, StudyCommentSerializer, StudyLikeSerializer, UsedbooktradeSerializer, UsedbooktradeDataSerializer, UsedbooktradeCommentSerializer
+from .serializers import MyTokenObtainPairSerializer, AuthUserRegisterSerializer, LoginSerializer,MajorSerializer, MajorCheckSerializer, UserSerializer, UserProfileSerializer, UserRegisterSerializer, CategorySerializer, BoardSerializer, BoardProfileSerializer, BoardCommentSerializer, BoardLikeSerializer, BoardBookmarkSerializer, StudySerializer, StudyProfileSerializer, StudyCommentSerializer, StudyLikeSerializer, UsedbooktradeSerializer, UsedbooktradeDataSerializer, UsedbooktradeCommentSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth.models import User as AuthUser
@@ -973,6 +973,36 @@ class StudyListByUserId(generics.ListAPIView):
     def get_queryset(self):
         user_id = self.kwargs['user_id']
         return Study.objects.filter(user_id=user_id)
+
+
+class StudyListProfileByUserId(generics.ListAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = StudySerializer
+
+    def get_queryset(self):
+        user_id = self.kwargs['user_id']
+        return Study.objects.filter(user_id=user_id)
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        response_data = serializer.data
+
+        # 사용자 정보를 응답 데이터에 추가
+        for data in response_data:
+            user_id = data['user_id']
+            try:
+                user = User.objects.get(id=user_id)
+            except User.DoesNotExist:
+                return Response({'error': '사용자를 찾을 수 없습니다.'}, status=status.HTTP_404_NOT_FOUND)
+            
+            user_data = UserSerializer(user).data
+            data['school_name'] = user_data['school_name']
+            data['major_name'] = user_data['major_name']
+            data['admission_date'] = user_data['admission_date']
+
+        return Response(response_data, status=status.HTTP_200_OK)
+
 
 class StudyDetail(generics.RetrieveAPIView):
     queryset = Study.objects.all()

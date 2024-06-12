@@ -24,6 +24,7 @@ urlpatterns = [
 
     path('api/profile/users/<int:pk>/', views.UserProfile.as_view(), name='user-profile'),
     path('api/profile/boards/<int:user_id>/', views.BoardListProfileByUserId.as_view(), name='board-list-profile-by-userid'),
+    path('api/profile/studys/<int:user_id>/', views.StudyListProfileByUserId.as_view(), name='study-list-profile-by-userid'),
 
     path('api/users/', views.UserList.as_view(), name='user-list'),
     path('api/users/<int:pk>/', views.UserDetail.as_view(), name='user-detail'),
