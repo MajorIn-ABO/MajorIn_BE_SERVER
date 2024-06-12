@@ -150,6 +150,11 @@ class StudySerializer(serializers.ModelSerializer):
         model = Study
         fields = ['id', 'user_id', 'title', 'contents', 'hashtags', 'is_recruited', 'post_date', 'comment', 'like']
 
+class StudyProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Study
+        fields = ['id', 'user_id', 'title', 'contents', 'hashtags', 'is_recruited', 'post_date', 'comment', 'like']
+
 class StudyCommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Study_Comment
