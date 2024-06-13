@@ -23,6 +23,7 @@ import json
 import requests
 from django.db import transaction
 from django.db.models import Q
+from django.db.models import F
 from django.db.models import Prefetch
 from urllib.parse import quote
 from dotenv import load_dotenv
@@ -316,8 +317,20 @@ class CategoryUpdate(generics.UpdateAPIView):
 # 게시글 관련 API 모음
 
 class BoardList(generics.ListAPIView):
-    queryset = Board.objects.all()
     serializer_class = BoardSerializer
+
+    def get_queryset(self):
+        queryset = Board.objects.all()
+        sort_by = self.request.query_params.get('sort_by', 'latest')
+
+        if sort_by == 'latest':
+            queryset = queryset.order_by('-post_date')
+        elif sort_by == 'comments':
+            queryset = queryset.order_by('-comment')
+        elif sort_by == 'likes':
+            queryset = queryset.order_by('-like')
+
+        return queryset
 
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
@@ -392,7 +405,7 @@ class BoardDetail(generics.RetrieveAPIView):
         # 조회수 증가
         instance.view_count += 1
         instance.save()
-        
+
         serializer = self.get_serializer(instance)
         '''
         # request 객체의 유저 속성들
