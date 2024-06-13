@@ -148,12 +148,12 @@ class BoardBookmarkSerializer(serializers.ModelSerializer):
 class StudySerializer(serializers.ModelSerializer):
     class Meta:
         model = Study
-        fields = ['id', 'user_id', 'title', 'contents', 'hashtags', 'is_recruited', 'post_date', 'comment', 'like']
+        fields = ['id', 'user_id', 'title', 'contents', 'hashtags', 'is_recruited', 'post_date', 'comment', 'like', 'view_count']
 
 class StudyProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Study
-        fields = ['id', 'user_id', 'title', 'contents', 'hashtags', 'is_recruited', 'post_date', 'comment', 'like']
+        fields = ['id', 'user_id', 'title', 'contents', 'hashtags', 'is_recruited', 'post_date', 'comment', 'like', 'view_count']
 
 class StudyCommentSerializer(serializers.ModelSerializer):
     class Meta:

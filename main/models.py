@@ -144,6 +144,7 @@ class Study(models.Model):
     delete_date = models.DateTimeField(null=True)
     comment = models.IntegerField(default=0)
     like = models.IntegerField(default=0)
+    view_count = models.PositiveIntegerField(default=0)
 
     def __str__(self) -> str:
         return str(self.id)
