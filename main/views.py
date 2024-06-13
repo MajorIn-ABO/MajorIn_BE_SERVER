@@ -22,8 +22,8 @@ from django.shortcuts import get_object_or_404
 import json
 import requests
 from django.db import transaction
-from django.db.models import Q
-from django.db.models import F
+from django.db.models import Q, F, ExpressionWrapper, IntegerField
+from django.utils.timezone import now, timedelta
 from django.db.models import Prefetch
 from urllib.parse import quote
 from dotenv import load_dotenv
@@ -329,6 +329,15 @@ class BoardList(generics.ListAPIView):
             queryset = queryset.order_by('-comment')
         elif sort_by == 'likes':
             queryset = queryset.order_by('-like')
+        elif sort_by == 'weekly_popular':
+            one_week_ago = now() - timedelta(days=7)
+            queryset = queryset.filter(post_date__gte=one_week_ago)
+            queryset = queryset.annotate(
+                popularity=ExpressionWrapper(
+                    F('view_count') + F('like') * 2 + F('bookmark') * 2 + F('comment'),
+                    output_field=IntegerField()
+                )
+            ).order_by('-popularity')[:5]
 
         return queryset
 
