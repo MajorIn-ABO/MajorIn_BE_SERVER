@@ -998,7 +998,9 @@ class StudyList(generics.ListAPIView):
         return queryset
 
     def list(self, request, *args, **kwargs):
+        sort_by = self.request.query_params.get('sort_by', 'latest')
         queryset = self.get_queryset()
+        queryset = queryset.select_related('user_id')  # 유저 정보 미리 가져오기
         serializer = self.get_serializer(queryset, many=True)
         response_data = serializer.data
 
@@ -1018,6 +1020,10 @@ class StudyList(generics.ListAPIView):
             data['school_name'] = user_data['school_name']
             data['major_name'] = user_data['major_name']
             data['admission_date'] = user_data['admission_date']
+
+            # weekly_popular일 경우에만 user_name 추가
+            if sort_by == 'weekly_popular':
+                data['user_name'] = user_data['user_name']  # 유저 이름 추가
 
         return Response(response_data, status=status.HTTP_200_OK)
 
