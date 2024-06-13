@@ -967,8 +967,29 @@ class BoardBookmarkCreate(generics.CreateAPIView):
 # 스터디 관련 API 모음
 
 class StudyList(generics.ListAPIView):
-    queryset = Study.objects.all()
     serializer_class = StudySerializer
+
+    def get_queryset(self):
+        queryset = Study.objects.all()
+        sort_by = self.request.query_params.get('sort_by', 'latest')
+
+        if sort_by == 'latest':
+            queryset = queryset.order_by('-post_date')
+        elif sort_by == 'comments':
+            queryset = queryset.order_by('-comment')
+        elif sort_by == 'likes':
+            queryset = queryset.order_by('-like')
+        elif sort_by == 'weekly_popular':
+            one_week_ago = now() - timedelta(days=7)
+            queryset = queryset.filter(post_date__gte=one_week_ago)
+            queryset = queryset.annotate(
+                popularity=ExpressionWrapper(
+                    F('view_count') + F('like') * 2 + F('comment'),
+                    output_field=IntegerField()
+                )
+            ).order_by('-popularity')[:5]
+
+        return queryset
 
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
