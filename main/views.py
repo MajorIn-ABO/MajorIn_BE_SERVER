@@ -382,12 +382,17 @@ class BoardListByCategory(generics.ListAPIView):
         return Board.objects.filter(category_id=category_id)
 
 class BoardDetail(generics.RetrieveAPIView):
+    permission_classes = [IsAuthenticated]
     queryset = Board.objects.all()
     serializer_class = BoardSerializer
-    permission_classes = [IsAuthenticated]
 
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
+
+        # 조회수 증가
+        instance.view_count += 1
+        instance.save()
+        
         serializer = self.get_serializer(instance)
         '''
         # request 객체의 유저 속성들
