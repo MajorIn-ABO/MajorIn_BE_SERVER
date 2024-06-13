@@ -85,6 +85,7 @@ class Board(models.Model):
     comment = models.IntegerField(default=0)
     like = models.IntegerField(default=0)
     bookmark = models.IntegerField(default=0)
+    view_count = models.PositiveIntegerField(default=0)
 
     @property
     def category_name(self):
