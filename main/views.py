@@ -1595,11 +1595,14 @@ class StudyLikeCreate(generics.CreateAPIView):
 # 중고거래 관련 API 모음
 
 class UsedbooktradeList(generics.ListAPIView):
-    queryset = Usedbooktrade.objects.all()
+    # queryset = Usedbooktrade.objects.all()
     serializer_class = UsedbooktradeSerializer
 
     def list(self, request, *args, **kwargs):
-        queryset = self.get_queryset()
+        major_id = self.kwargs['major_id'] # new
+
+        # queryset = self.get_queryset()
+        queryset = Usedbooktrade.objects.filter(user_id__major_id=major_id) # new
         serializer = self.get_serializer(queryset, many=True)
         response_data = serializer.data
 

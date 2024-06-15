@@ -101,6 +101,9 @@ urlpatterns = [
     path('api/usedbooktrades/book/create/', views.UsedbooktradeCreate.as_view(), name='usedbook-create-api'),
     path('api/usedbooktrades/book/<int:usedbooktrade_id>/sold/', views.UsedbooktradeSold.as_view(), name='usedbook-sold-api'),
 
+    # 학과 페이지별 스터디 전체글 조회
+    path('api/<int:major_id>/usedbooktrades/posts/', views.UsedbooktradeList.as_view(), name='major-usedbooktrade-list'),
+
     path('api/usedbooktrades/posts/', views.UsedbooktradeList.as_view(), name='usedbooktrade-list'),
     path('api/usedbooktrades/posts/<int:pk>/', views.UsedbooktradeDetail.as_view(), name='usedbooktrade-detail'),
     path('api/usedbooktrades/posts-by-userid/<int:user_id>/', views.UsedbooktradeListByUserId.as_view(), name='usedbooktrade-list-by-userid'),
