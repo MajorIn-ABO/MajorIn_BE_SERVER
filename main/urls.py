@@ -70,6 +70,9 @@ urlpatterns = [
     path('api/boards/posts/bookmarks-by-postid/<int:post_id>/', views.BoardBookmarkListByPostId.as_view(), name='board-bookmark-list-by-postid'),
     path('api/boards/posts/bookmarks/create/', views.BoardBookmarkCreate.as_view(), name='board-bookmark-create'),
 
+    # 학과 페이지별 스터디 전체글 조회
+    path('api/<int:major_id>/studys/posts/', views.StudyList.as_view(), name='major-study-list'),
+
     path('api/studys/posts/', views.StudyList.as_view(), name='study-list'),
     path('api/studys/posts/<int:pk>/', views.StudyDetail.as_view(), name='study-detail'),
     path('api/studys/posts-by-userid/<int:user_id>/', views.StudyListByUserId.as_view(), name='study-list-by-userid'),

@@ -342,7 +342,7 @@ class BoardList(generics.ListAPIView):
         if login_user_majorid.id != int(major_id):
             return Board.objects.none()
         '''
-        
+
         # queryset = Board.objects.all()
         queryset = Board.objects.filter(user_id__major_id=major_id)
         sort_by = self.request.query_params.get('sort_by', 'latest')
@@ -1000,7 +1000,10 @@ class StudyList(generics.ListAPIView):
     serializer_class = StudySerializer
 
     def get_queryset(self):
-        queryset = Study.objects.all()
+        major_id = self.kwargs['major_id'] # new
+
+        # queryset = Study.objects.all()
+        queryset = Study.objects.filter(user_id__major_id=major_id) # new
         sort_by = self.request.query_params.get('sort_by', 'latest')
 
         if sort_by == 'latest':
