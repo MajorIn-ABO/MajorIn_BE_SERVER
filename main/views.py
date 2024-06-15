@@ -78,9 +78,16 @@ class LoginView(generics.GenericAPIView):
             'admission_date': user.admission_date,
             'auth_id': token.auth_id.id,
             'refresh': token.refresh,
-            'access': token.access
+            'access': token.access,
+            'major_id': user.major_id.id
         }
 
+        '''
+        # 로그인 후 major_id 페이지로 리다이렉션
+        major_id = user.major_id.id
+        redirect_url = reverse('major-board-list', kwargs={'major_id': major_id})
+        response = HttpResponseRedirect(redirect_url)
+        '''
         return Response({"message": "로그인에 성공했습니다.", "token": token_data}, status=status.HTTP_200_OK)
 
 # 학과 관련 API 모음
@@ -320,7 +327,24 @@ class BoardList(generics.ListAPIView):
     serializer_class = BoardSerializer
 
     def get_queryset(self):
-        queryset = Board.objects.all()
+        '''
+        # user = self.request.user
+        auth_id = self.request.user.id
+        token = get_object_or_404(Token, auth_id=auth_id)
+        login_user_majorid = token.user_id.major_id
+        # login_user_id = token.user_id.major_id
+        '''
+
+        major_id = self.kwargs['major_id']
+
+        '''
+        # 로그인한 유저의 major_id와 요청한 major_id가 다를 경우 접근 금지
+        if login_user_majorid.id != int(major_id):
+            return Board.objects.none()
+        '''
+        
+        # queryset = Board.objects.all()
+        queryset = Board.objects.filter(user_id__major_id=major_id)
         sort_by = self.request.query_params.get('sort_by', 'latest')
 
         if sort_by == 'latest':

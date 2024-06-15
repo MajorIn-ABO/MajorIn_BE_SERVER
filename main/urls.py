@@ -39,6 +39,9 @@ urlpatterns = [
     path('api/category/create/', views.CategoryCreate.as_view(), name='category-create'),
     path('api/category/<int:pk>/', views.CategoryUpdate.as_view(), name='category-update'),
 
+    # 학과 페이지별 커뮤니티 전체글 조회
+    path('api/<int:major_id>/boards/posts/', views.BoardList.as_view(), name='major-board-list'),
+
     path('api/boards/posts/', views.BoardList.as_view(), name='board-list'),
     path('api/boards/posts/<int:pk>/', views.BoardDetail.as_view(), name='board-detail'),
     path('api/boards/posts-by-userid/<int:user_id>/', views.BoardListByUserId.as_view(), name='board-list-by-userid'),
