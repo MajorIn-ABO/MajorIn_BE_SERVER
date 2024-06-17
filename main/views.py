@@ -1720,11 +1720,14 @@ class UsedbooktradeList(generics.ListAPIView):
     # queryset = Usedbooktrade.objects.all()
     serializer_class = UsedbooktradeSerializer
 
-    def list(self, request, *args, **kwargs):
-        major_id = self.kwargs['major_id'] # new
+    def get_queryset(self):
+        major_id = self.kwargs['major_id']
+        queryset = Usedbooktrade.objects.filter(user_id__major_id=major_id)
 
-        # queryset = self.get_queryset()
-        queryset = Usedbooktrade.objects.filter(user_id__major_id=major_id) # new
+        return queryset
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
         serializer = self.get_serializer(queryset, many=True)
         response_data = serializer.data
 
@@ -1780,8 +1783,15 @@ class UsedbooktradeListProfileByUserId(generics.ListAPIView):
 
 
 class UsedbooktradeDetail(generics.RetrieveAPIView):
-    queryset = Usedbooktrade.objects.all()
+    # queryset = Usedbooktrade.objects.all()
     serializer_class = UsedbooktradeSerializer
+
+    def get_queryset(self):
+        major_id = self.kwargs['major_id']
+        # queryset = Usedbooktrade.objects.all()
+        queryset = Usedbooktrade.objects.filter(user_id__major_id=major_id)
+
+        return queryset
 
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -1987,11 +1997,13 @@ class UsedbooktradedataDelete(generics.DestroyAPIView):
 # api/usedbooktrades/posts/search/?keyword=example
 class UsedbooktradeSearchAPIView(generics.ListAPIView):
     serializer_class = UsedbooktradeSerializer
-    queryset = Usedbooktrade.objects.all()  # 모든 중고거래게시판을 기본 queryset으로 설정
+    # queryset = Usedbooktrade.objects.all()  # 모든 중고거래게시판을 기본 queryset으로 설정
 
     def get_queryset(self):
-        queryset = self.queryset
+        major_id = self.kwargs['major_id']
 
+        # queryset = self.queryset
+        queryset = Usedbooktrade.objects.filter(user_id__major_id=major_id)
         keyword = self.request.query_params.get('keyword')
 
         if keyword:
@@ -2002,7 +2014,7 @@ class UsedbooktradeSearchAPIView(generics.ListAPIView):
         return queryset
 
     def list(self, request, *args, **kwargs):
-        queryset = self.filter_queryset(self.get_queryset())
+        queryset = self.get_queryset()
         if not queryset.exists():
             return Response({"message": "해당하는 글이 없습니다."})
 

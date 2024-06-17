@@ -54,10 +54,6 @@ urlpatterns = [
     path('api/<int:major_id>/boards/posts/comments/<int:pk>/', views.BoardCommentDetail.as_view(), name='board-comment-detail'),
     path('api/<int:major_id>/boards/posts/comments-by-userid/<int:user_id>/', views.BoardCommentListByUserId.as_view(), name='board-comment-list-by-userid'),
     path('api/<int:major_id>/boards/posts/comments-by-postid/<int:post_id>/', views.BoardCommentListByPostId.as_view(), name='board-comment-list-by-postid'),
-    # path('api/boards/posts/comments/', views.BoardCommentList.as_view(), name='board-comment-list'),
-    # path('api/boards/posts/comments/<int:pk>/', views.BoardCommentDetail.as_view(), name='board-comment-detail'),
-    # path('api/boards/posts/comments-by-userid/<int:user_id>/', views.BoardCommentListByUserId.as_view(), name='board-comment-list-by-userid'),
-    # path('api/boards/posts/comments-by-postid/<int:post_id>/', views.BoardCommentListByPostId.as_view(), name='board-comment-list-by-postid'),
     # path('api/boards/posts/comments-by-parent/<int:parent_comment>/', views.BoardCommentListByParent.as_view(), name='board-comment-list-by-parent'),
     path('api/boards/posts/comments/create/', views.BoardCommentCreate.as_view(), name='board-comment-create'),
     path('api/boards/posts/comments/<int:pk>/update/', views.BoardCommentUpdate.as_view(), name='board-comment-update'),
@@ -103,16 +99,14 @@ urlpatterns = [
     path('api/usedbooktrades/book/create/', views.UsedbooktradeCreate.as_view(), name='usedbook-create-api'),
     path('api/usedbooktrades/book/<int:usedbooktrade_id>/sold/', views.UsedbooktradeSold.as_view(), name='usedbook-sold-api'),
 
-    # 학과 페이지별 스터디 전체글 조회
-    path('api/<int:major_id>/usedbooktrades/posts/', views.UsedbooktradeList.as_view(), name='major-usedbooktrade-list'),
-
-    path('api/usedbooktrades/posts/', views.UsedbooktradeList.as_view(), name='usedbooktrade-list'),
-    path('api/usedbooktrades/posts/<int:pk>/', views.UsedbooktradeDetail.as_view(), name='usedbooktrade-detail'),
-    path('api/usedbooktrades/posts-by-userid/<int:user_id>/', views.UsedbooktradeListByUserId.as_view(), name='usedbooktrade-list-by-userid'),
+    # 학과 페이지별 중고거래 전체글 조회
+    path('api/<int:major_id>/usedbooktrades/posts/', views.UsedbooktradeList.as_view(), name='usedbooktrade-list'),
+    path('api/<int:major_id>/usedbooktrades/posts/<int:pk>/', views.UsedbooktradeDetail.as_view(), name='usedbooktrade-detail'),
+    path('api/<int:major_id>/usedbooktrades/posts/search/', views.UsedbooktradeSearchAPIView.as_view(), name='usedbooktrade-search'),
+    # path('api/usedbooktrades/posts-by-userid/<int:user_id>/', views.UsedbooktradeListByUserId.as_view(), name='usedbooktrade-list-by-userid'),
     # path('api/usedbooktrades/posts/create/', views.UsedbooktradeCreate.as_view(), name='usedbooktrade-create'),
     path('api/usedbooktrades/posts/<int:pk>/update/', views.UsedbooktradeUpdate.as_view(), name='usedbooktrade-update'),
     path('api/usedbooktrades/posts/<int:pk>/delete/', views.UsedbooktradeDelete.as_view(), name='usedbooktrade-delete'),
-    path('api/usedbooktrades/posts/search/', views.UsedbooktradeSearchAPIView.as_view(), name='usedbooktrade-search'),
 
     path('api/usedbooktrades/data/', views.UsedbooktradedataList.as_view(), name='usedbooktradedata-list'),
     path('api/usedbooktrades/datas/<int:pk>/', views.UsedbooktradedataDetail.as_view(), name='usedbooktradedata-detail'),
