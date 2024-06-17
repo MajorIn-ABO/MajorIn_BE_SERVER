@@ -82,7 +82,7 @@ class LoginView(generics.GenericAPIView):
             'refresh': token.refresh,
             'access': token.access,
             'major_id': user.major_id.id,
-            'major_name': major.major_category_name
+            'major_category_name': major.major_category_name
         }
 
         '''
