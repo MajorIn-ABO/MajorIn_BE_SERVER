@@ -69,6 +69,8 @@ class LoginView(generics.GenericAPIView):
         
         # 사용자 객체 조회
         user = get_object_or_404(User, id=token.user_id.id)
+        # 학과 카테고리 객체 조회
+        major = get_object_or_404(Major, id=user.major_id.id)
 
         token_data = {
             'user_id': token.user_id.id,
@@ -78,9 +80,17 @@ class LoginView(generics.GenericAPIView):
             'admission_date': user.admission_date,
             'auth_id': token.auth_id.id,
             'refresh': token.refresh,
-            'access': token.access
+            'access': token.access,
+            'major_id': user.major_id.id,
+            'major_category_name': major.major_category_name
         }
 
+        '''
+        # 로그인 후 major_id 페이지로 리다이렉션
+        major_id = user.major_id.id
+        redirect_url = reverse('major-board-list', kwargs={'major_id': major_id})
+        response = HttpResponseRedirect(redirect_url)
+        '''
         return Response({"message": "로그인에 성공했습니다.", "token": token_data}, status=status.HTTP_200_OK)
 
 # 학과 관련 API 모음
@@ -320,7 +330,24 @@ class BoardList(generics.ListAPIView):
     serializer_class = BoardSerializer
 
     def get_queryset(self):
-        queryset = Board.objects.all()
+        '''
+        # user = self.request.user
+        auth_id = self.request.user.id
+        token = get_object_or_404(Token, auth_id=auth_id)
+        login_user_majorid = token.user_id.major_id
+        # login_user_id = token.user_id.major_id
+        '''
+
+        major_id = self.kwargs['major_id']
+
+        '''
+        # 로그인한 유저의 major_id와 요청한 major_id가 다를 경우 접근 금지
+        if login_user_majorid.id != int(major_id):
+            return Board.objects.none()
+        '''
+
+        # queryset = Board.objects.all()
+        queryset = Board.objects.filter(user_id__major_id=major_id)
         sort_by = self.request.query_params.get('sort_by', 'latest')
 
         if sort_by == 'latest':
@@ -411,8 +438,15 @@ class BoardListByCategory(generics.ListAPIView):
 
 class BoardDetail(generics.RetrieveAPIView):
     permission_classes = [IsAuthenticated]
-    queryset = Board.objects.all()
+    # queryset = Board.objects.all()
     serializer_class = BoardSerializer
+
+    def get_queryset(self):
+        major_id = self.kwargs['major_id']
+        # queryset = Board.objects.all()
+        queryset = Board.objects.filter(user_id__major_id=major_id)
+
+        return queryset
 
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -519,11 +553,13 @@ class BoardDelete(generics.DestroyAPIView):
 # api/boards/posts/search/?keyword=example
 class BoardSearchAPIView(generics.ListAPIView):
     serializer_class = BoardSerializer
-    queryset = Board.objects.all()  # 모든 커뮤니티게시판을 기본 queryset으로 설정
+    # queryset = Board.objects.all()  # 모든 커뮤니티게시판을 기본 queryset으로 설정
 
     def get_queryset(self):
-        queryset = self.queryset
+        major_id = self.kwargs['major_id']
 
+        # queryset = self.queryset
+        queryset = Board.objects.filter(user_id__major_id=major_id)
         keyword = self.request.query_params.get('keyword')
 
         if keyword:
@@ -534,12 +570,11 @@ class BoardSearchAPIView(generics.ListAPIView):
         return queryset
 
     def list(self, request, *args, **kwargs):
-        queryset = self.filter_queryset(self.get_queryset())
+        queryset = self.get_queryset()
         if not queryset.exists():
             return Response({"message": "해당하는 글이 없습니다."})
 
         serializer = self.get_serializer(queryset, many=True)
-
         response_data = serializer.data
 
         # 사용자 정보를 응답 데이터에 추가
@@ -560,35 +595,93 @@ class BoardSearchAPIView(generics.ListAPIView):
 # 게시글 댓글 관련 API 모음
 
 class BoardCommentList(generics.ListAPIView):
-    queryset = Board_Comment.objects.all()
+    # queryset = Board_Comment.objects.all()
     serializer_class = BoardCommentSerializer
+
+    def get_queryset(self):
+        major_id = self.kwargs['major_id']
+        queryset = Board_Comment.objects.filter(user_id__major_id=major_id)
+
+        return queryset
 
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
-        serializer = self.get_serializer(queryset, many=True)
+        comments_with_replies = queryset.prefetch_related(
+            Prefetch('replies', queryset=Board_Comment.objects.all())
+        )
+
+        serializer = self.get_serializer(comments_with_replies, many=True)
         response_data = serializer.data
 
-        # 사용자 정보를 응답 데이터에 추가
-        for data in response_data:
-            user_id = data['user_id']
-            try:
-                user = User.objects.get(id=user_id)
-            except User.DoesNotExist:
-                return Response({'error': '사용자를 찾을 수 없습니다.'}, status=status.HTTP_404_NOT_FOUND)
-            
-            user_data = UserSerializer(user).data
-            data['school_name'] = user_data['school_name']
-            data['major_name'] = user_data['major_name']
-            data['admission_date'] = user_data['admission_date']
+        # Cache for user info
+        user_info_cache = {}
 
-        return Response(response_data, status=status.HTTP_200_OK)
+        def get_user_info(user_id):
+            if user_id not in user_info_cache:
+                try:
+                    user = User.objects.get(id=user_id)
+                    user_data = UserSerializer(user).data
+                    user_info_cache[user_id] = {
+                        "school_name": user_data['school_name'],
+                        "major_name": user_data['major_name'],
+                        "admission_date": user_data['admission_date']
+                    }
+                except User.DoesNotExist:
+                    return None
+            return user_info_cache[user_id]
+
+        # Dictionary to hold parent comments and their replies
+        comments_dict = {}
+
+        for comment in response_data:
+            user_info = get_user_info(comment['user_id'])
+            if not user_info:
+                continue
+
+            comment_data = {
+                "id": comment['id'],
+                "user_id": comment['user_id'],
+                "post_id": comment['post_id'],
+                "parent_comment": comment['parent_comment'],
+                "contents": comment['contents'],
+                "comment_date": comment['comment_date'],
+                "school_name": user_info['school_name'],
+                "major_name": user_info['major_name'],
+                "admission_date": user_info['admission_date'],
+                "comments": []
+            }
+
+            if comment['parent_comment'] is None:
+                comments_dict[comment['id']] = comment_data
+            else:
+                parent_id = comment['parent_comment']
+                if parent_id in comments_dict:
+                    parent_comment = comments_dict[parent_id]
+                    parent_comment['comments'].append({
+                        "commentId": comment['id'],
+                        "user_id": comment['user_id'],
+                        "school_name": user_info['school_name'],
+                        "major_name": user_info['major_name'],
+                        "admission_date": user_info['admission_date'],
+                        "comment_date": comment['comment_date'],
+                        "contents": comment['contents']
+                    })
+
+        final_response_data = list(comments_dict.values())
+
+        return Response(final_response_data, status=status.HTTP_200_OK)
 
 class BoardCommentListByUserId(generics.ListAPIView):
     serializer_class = BoardCommentSerializer
 
     def get_queryset(self):
+        major_id = self.kwargs['major_id']
         user_id = self.kwargs['user_id']
-        return Board_Comment.objects.filter(user_id=user_id)
+
+        queryset = Board_Comment.objects.filter(user_id__major_id=major_id)
+        queryset = queryset.filter(user_id=user_id)
+
+        return queryset
 
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
@@ -614,10 +707,14 @@ class BoardCommentListByPostId(generics.ListAPIView):
     serializer_class = BoardCommentSerializer
 
     def get_queryset(self):
+        major_id = self.kwargs['major_id']
         post_id = self.kwargs['post_id']
-        return Board_Comment.objects.filter(post_id=post_id).prefetch_related(
-            Prefetch('replies', queryset=Board_Comment.objects.all())
+
+        queryset = Board_Comment.objects.filter(user_id__major_id=major_id)
+        queryset = queryset.filter(post_id=post_id).prefetch_related(
+            Prefetch('replies', queryset=queryset)
         )
+        return queryset
 
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
@@ -710,8 +807,15 @@ class BoardCommentListByParent(generics.ListAPIView):
         return Response(response_data, status=status.HTTP_200_OK)
 
 class BoardCommentDetail(generics.RetrieveAPIView):
-    queryset = Board_Comment.objects.all()
+    # queryset = Board_Comment.objects.all()
     serializer_class = BoardCommentSerializer
+
+    def get_queryset(self):
+        major_id = self.kwargs['major_id']
+        # queryset = Board_Comment.objects.all()
+        queryset = Board_Comment.objects.filter(user_id__major_id=major_id)
+
+        return queryset
 
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -976,7 +1080,10 @@ class StudyList(generics.ListAPIView):
     serializer_class = StudySerializer
 
     def get_queryset(self):
-        queryset = Study.objects.all()
+        major_id = self.kwargs['major_id'] # new
+
+        # queryset = Study.objects.all()
+        queryset = Study.objects.filter(user_id__major_id=major_id) # new
         sort_by = self.request.query_params.get('sort_by', 'latest')
 
         if sort_by == 'latest':
@@ -1069,12 +1176,24 @@ class StudyListProfileByUserId(generics.ListAPIView):
 
 
 class StudyDetail(generics.RetrieveAPIView):
-    queryset = Study.objects.all()
-    serializer_class = StudySerializer
     permission_classes = [IsAuthenticated]
+    # queryset = Study.objects.all()
+    serializer_class = StudySerializer
+
+    def get_queryset(self):
+        major_id = self.kwargs['major_id']
+        # queryset = Study.objects.all()
+        queryset = Study.objects.filter(user_id__major_id=major_id)
+
+        return queryset
 
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
+
+        # 조회수 증가
+        instance.view_count += 1
+        instance.save()
+
         serializer = self.get_serializer(instance)
         
         # 스터디 작성자의 정보를 가져와 응답 데이터에 추가
@@ -1100,6 +1219,7 @@ class StudyDetail(generics.RetrieveAPIView):
         auth_id = request.user.id
         token = get_object_or_404(Token, auth_id=auth_id)
         login_user_id = token.user_id.id
+
         has_liked = Study_Like.objects.filter(user_id=login_user_id, studypost_id=instance.id, delete_date__isnull=True).exists()
         response_data['has_liked'] = has_liked
 
@@ -1136,14 +1256,17 @@ class StudyDelete(generics.DestroyAPIView):
 # api/studys/posts/search/?hashtag=example1,example2&keyword=example
 class StudySearchAPIView(generics.ListAPIView):
     serializer_class = StudySerializer
-    queryset = Study.objects.all()  # 모든 스터디를 기본 queryset으로 설정
+    # queryset = Study.objects.all()  # 모든 스터디를 기본 queryset으로 설정
 
     def encode_hashtags(self, hashtags):
         encoded_hashtags = [quote(tag.strip()) for tag in hashtags]
         return encoded_hashtags
 
     def get_queryset(self):
-        queryset = self.queryset
+        major_id = self.kwargs['major_id']
+
+        # queryset = self.queryset
+        queryset = Study.objects.filter(user_id__major_id=major_id)
 
         hashtag = self.request.query_params.get('hashtag')
         keyword = self.request.query_params.get('keyword')
@@ -1167,7 +1290,7 @@ class StudySearchAPIView(generics.ListAPIView):
         return queryset
 
     def list(self, request, *args, **kwargs):
-        queryset = self.filter_queryset(self.get_queryset())
+        queryset = self.get_queryset()
         if not queryset.exists():
             return Response({"message": "해당하는 글이 없습니다."})
 
@@ -1196,11 +1319,18 @@ class StudySearchAPIView(generics.ListAPIView):
 # 스터디 댓글 관련 API 모음
 
 class StudyCommentList(generics.ListAPIView):
-    queryset = Study_Comment.objects.all()
+    # queryset = Study_Comment.objects.all()
     serializer_class = StudyCommentSerializer
 
+    def get_queryset(self):
+        major_id = self.kwargs['major_id']
+        queryset = Study_Comment.objects.filter(user_id__major_id=major_id)
+
+        return queryset
+
     def list(self, request, *args, **kwargs):
-        comments_with_replies = self.queryset.prefetch_related(
+        queryset = self.get_queryset()
+        comments_with_replies = queryset.prefetch_related(
             Prefetch('replies', queryset=Study_Comment.objects.all())
         )
 
@@ -1253,9 +1383,12 @@ class StudyCommentList(generics.ListAPIView):
                     parent_comment = comments_dict[parent_id]
                     parent_comment['comments'].append({
                         "commentId": comment['id'],
-                        "writer": f"{comment['user_id']} {user_info['school_name']} {user_info['major_name']} {user_info['admission_date']}학번",
-                        "date": comment['comment_date'],
-                        "content": comment['contents']
+                        "user_id": comment['user_id'],
+                        "school_name": user_info['school_name'],
+                        "major_name": user_info['major_name'],
+                        "admission_date": user_info['admission_date'],
+                        "comment_date": comment['comment_date'],
+                        "contents": comment['contents']
                     })
 
         final_response_data = list(comments_dict.values())
@@ -1266,8 +1399,13 @@ class StudyCommentListByUserId(generics.ListAPIView):
     serializer_class = StudyCommentSerializer
 
     def get_queryset(self):
+        major_id = self.kwargs['major_id']
         user_id = self.kwargs['user_id']
-        return Study_Comment.objects.filter(user_id=user_id)
+
+        queryset = Study_Comment.objects.filter(user_id__major_id=major_id)
+        queryset = queryset.filter(user_id=user_id)
+
+        return queryset
 
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
@@ -1293,10 +1431,14 @@ class StudyCommentListByPostId(generics.ListAPIView):
     serializer_class = StudyCommentSerializer
 
     def get_queryset(self):
+        major_id = self.kwargs['major_id']
         studypost_id = self.kwargs['studypost_id']
-        return Study_Comment.objects.filter(studypost_id=studypost_id).prefetch_related(
+
+        queryset = Study_Comment.objects.filter(user_id__major_id=major_id)
+        queryset = queryset.filter(studypost_id=studypost_id).prefetch_related(
             Prefetch('replies', queryset=Study_Comment.objects.all())
         )
+        return queryset
 
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
@@ -1389,8 +1531,15 @@ class StudyCommentListByParent(generics.ListAPIView):
         return Response(response_data, status=status.HTTP_200_OK)
 
 class StudyCommentDetail(generics.RetrieveAPIView):
-    queryset = Study_Comment.objects.all()
+    # queryset = Study_Comment.objects.all()
     serializer_class = StudyCommentSerializer
+
+    def get_queryset(self):
+        major_id = self.kwargs['major_id']
+        # queryset = Study_Comment.objects.all()
+        queryset = Study_Comment.objects.filter(user_id__major_id=major_id)
+
+        return queryset
 
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -1568,8 +1717,14 @@ class StudyLikeCreate(generics.CreateAPIView):
 # 중고거래 관련 API 모음
 
 class UsedbooktradeList(generics.ListAPIView):
-    queryset = Usedbooktrade.objects.all()
+    # queryset = Usedbooktrade.objects.all()
     serializer_class = UsedbooktradeSerializer
+
+    def get_queryset(self):
+        major_id = self.kwargs['major_id']
+        queryset = Usedbooktrade.objects.filter(user_id__major_id=major_id)
+
+        return queryset
 
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
@@ -1628,8 +1783,15 @@ class UsedbooktradeListProfileByUserId(generics.ListAPIView):
 
 
 class UsedbooktradeDetail(generics.RetrieveAPIView):
-    queryset = Usedbooktrade.objects.all()
+    # queryset = Usedbooktrade.objects.all()
     serializer_class = UsedbooktradeSerializer
+
+    def get_queryset(self):
+        major_id = self.kwargs['major_id']
+        # queryset = Usedbooktrade.objects.all()
+        queryset = Usedbooktrade.objects.filter(user_id__major_id=major_id)
+
+        return queryset
 
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -1835,11 +1997,13 @@ class UsedbooktradedataDelete(generics.DestroyAPIView):
 # api/usedbooktrades/posts/search/?keyword=example
 class UsedbooktradeSearchAPIView(generics.ListAPIView):
     serializer_class = UsedbooktradeSerializer
-    queryset = Usedbooktrade.objects.all()  # 모든 중고거래게시판을 기본 queryset으로 설정
+    # queryset = Usedbooktrade.objects.all()  # 모든 중고거래게시판을 기본 queryset으로 설정
 
     def get_queryset(self):
-        queryset = self.queryset
+        major_id = self.kwargs['major_id']
 
+        # queryset = self.queryset
+        queryset = Usedbooktrade.objects.filter(user_id__major_id=major_id)
         keyword = self.request.query_params.get('keyword')
 
         if keyword:
@@ -1850,7 +2014,7 @@ class UsedbooktradeSearchAPIView(generics.ListAPIView):
         return queryset
 
     def list(self, request, *args, **kwargs):
-        queryset = self.filter_queryset(self.get_queryset())
+        queryset = self.get_queryset()
         if not queryset.exists():
             return Response({"message": "해당하는 글이 없습니다."})
 
@@ -1877,35 +2041,93 @@ class UsedbooktradeSearchAPIView(generics.ListAPIView):
 # 중고거래 댓글 관련 API 모음
 
 class UsedbooktradeCommentList(generics.ListAPIView):
-    queryset = Usedbooktrade_Comment.objects.all()
+    # queryset = Usedbooktrade_Comment.objects.all()
     serializer_class = UsedbooktradeCommentSerializer
+
+    def get_queryset(self):
+        major_id = self.kwargs['major_id']
+        queryset = Usedbooktrade_Comment.objects.filter(user_id__major_id=major_id)
+
+        return queryset
 
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
-        serializer = self.get_serializer(queryset, many=True)
+        comments_with_replies = queryset.prefetch_related(
+            Prefetch('replies', queryset=Usedbooktrade_Comment.objects.all())
+        )
+
+        serializer = self.get_serializer(comments_with_replies, many=True)
         response_data = serializer.data
 
-        # 사용자 정보를 응답 데이터에 추가
-        for data in response_data:
-            user_id = data['user_id']
-            try:
-                user = User.objects.get(id=user_id)
-            except User.DoesNotExist:
-                return Response({'error': '사용자를 찾을 수 없습니다.'}, status=status.HTTP_404_NOT_FOUND)
-            
-            user_data = UserSerializer(user).data
-            data['school_name'] = user_data['school_name']
-            data['major_name'] = user_data['major_name']
-            data['admission_date'] = user_data['admission_date']
+        # Cache for user info
+        user_info_cache = {}
 
-        return Response(response_data, status=status.HTTP_200_OK)
+        def get_user_info(user_id):
+            if user_id not in user_info_cache:
+                try:
+                    user = User.objects.get(id=user_id)
+                    user_data = UserSerializer(user).data
+                    user_info_cache[user_id] = {
+                        "school_name": user_data['school_name'],
+                        "major_name": user_data['major_name'],
+                        "admission_date": user_data['admission_date']
+                    }
+                except User.DoesNotExist:
+                    return None
+            return user_info_cache[user_id]
+
+        # Dictionary to hold parent comments and their replies
+        comments_dict = {}
+
+        for comment in response_data:
+            user_info = get_user_info(comment['user_id'])
+            if not user_info:
+                continue
+
+            comment_data = {
+                "id": comment['id'],
+                "user_id": comment['user_id'],
+                "Usedbookpost_id": comment['Usedbookpost_id'],
+                "parent_comment": comment['parent_comment'],
+                "contents": comment['contents'],
+                "comment_date": comment['comment_date'],
+                "school_name": user_info['school_name'],
+                "major_name": user_info['major_name'],
+                "admission_date": user_info['admission_date'],
+                "comments": []
+            }
+
+            if comment['parent_comment'] is None:
+                comments_dict[comment['id']] = comment_data
+            else:
+                parent_id = comment['parent_comment']
+                if parent_id in comments_dict:
+                    parent_comment = comments_dict[parent_id]
+                    parent_comment['comments'].append({
+                        "commentId": comment['id'],
+                        "user_id": comment['user_id'],
+                        "school_name": user_info['school_name'],
+                        "major_name": user_info['major_name'],
+                        "admission_date": user_info['admission_date'],
+                        "comment_date": comment['comment_date'],
+                        "contents": comment['contents']
+                    })
+
+        final_response_data = list(comments_dict.values())
+
+        return Response(final_response_data, status=status.HTTP_200_OK)
 
 class UsedbooktradeCommentListByUserId(generics.ListAPIView):
     serializer_class = UsedbooktradeCommentSerializer
 
     def get_queryset(self):
+        major_id = self.kwargs['major_id']
         user_id = self.kwargs['user_id']
-        return Usedbooktrade_Comment.objects.filter(user_id=user_id)
+
+        queryset = Usedbooktrade_Comment.objects.filter(user_id__major_id=major_id)
+        queryset = queryset.filter(user_id=user_id)
+
+        return queryset
 
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
@@ -1931,10 +2153,14 @@ class UsedbooktradeCommentListByPostId(generics.ListAPIView):
     serializer_class = UsedbooktradeCommentSerializer
 
     def get_queryset(self):
+        major_id = self.kwargs['major_id']
         Usedbookpost_id = self.kwargs['Usedbookpost_id']
-        return Usedbooktrade_Comment.objects.filter(Usedbookpost_id=Usedbookpost_id).prefetch_related(
+
+        queryset = Usedbooktrade_Comment.objects.filter(user_id__major_id=major_id)
+        queryset = queryset.filter(Usedbookpost_id=Usedbookpost_id).prefetch_related(
             Prefetch('replies', queryset=Usedbooktrade_Comment.objects.all())
         )
+        return queryset
 
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
