@@ -69,6 +69,8 @@ class LoginView(generics.GenericAPIView):
         
         # 사용자 객체 조회
         user = get_object_or_404(User, id=token.user_id.id)
+        # 학과 카테고리 객체 조회
+        major = get_object_or_404(Major, id=user.major_id.id)
 
         token_data = {
             'user_id': token.user_id.id,
@@ -79,7 +81,8 @@ class LoginView(generics.GenericAPIView):
             'auth_id': token.auth_id.id,
             'refresh': token.refresh,
             'access': token.access,
-            'major_id': user.major_id.id
+            'major_id': user.major_id.id,
+            'major_name': major.major_category_name
         }
 
         '''
