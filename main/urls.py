@@ -39,8 +39,8 @@ urlpatterns = [
     path('api/category/create/', views.CategoryCreate.as_view(), name='category-create'),
     path('api/category/<int:pk>/', views.CategoryUpdate.as_view(), name='category-update'),
 
-    # 학과 페이지별 커뮤니티 글 조회 - 검색 - 생성 - 업데이트 - 삭제
-    path('api/<int:major_id>/boards/posts/', views.BoardList.as_view(), name='major-board-list'),
+    # 학과 페이지별 커뮤니티 글 API
+    path('api/<int:major_id>/boards/posts/', views.BoardList.as_view(), name='board-list'),
     path('api/<int:major_id>/boards/posts/<int:pk>/', views.BoardDetail.as_view(), name='board-detail'),
     path('api/<int:major_id>/boards/posts/search/', views.BoardSearchAPIView.as_view(), name='board-search'),
     # path('api/boards/posts-by-userid/<int:user_id>/', views.BoardListByUserId.as_view(), name='board-list-by-userid'),
@@ -49,12 +49,11 @@ urlpatterns = [
     path('api/boards/posts/<int:pk>/update/', views.BoardUpdate.as_view(), name='board-update'),
     path('api/boards/posts/<int:pk>/delete/', views.BoardDelete.as_view(), name='board-delete'),
 
-    # 학과 페이지별 커뮤니티 댓글 조회 - 검색
+    # 학과 페이지별 커뮤니티 댓글 API
     path('api/<int:major_id>/boards/posts/comments/', views.BoardCommentList.as_view(), name='board-comment-list'),
     path('api/<int:major_id>/boards/posts/comments/<int:pk>/', views.BoardCommentDetail.as_view(), name='board-comment-detail'),
     path('api/<int:major_id>/boards/posts/comments-by-userid/<int:user_id>/', views.BoardCommentListByUserId.as_view(), name='board-comment-list-by-userid'),
     path('api/<int:major_id>/boards/posts/comments-by-postid/<int:post_id>/', views.BoardCommentListByPostId.as_view(), name='board-comment-list-by-postid'),
-
     # path('api/boards/posts/comments/', views.BoardCommentList.as_view(), name='board-comment-list'),
     # path('api/boards/posts/comments/<int:pk>/', views.BoardCommentDetail.as_view(), name='board-comment-detail'),
     # path('api/boards/posts/comments-by-userid/<int:user_id>/', views.BoardCommentListByUserId.as_view(), name='board-comment-list-by-userid'),
@@ -74,16 +73,18 @@ urlpatterns = [
     path('api/boards/posts/bookmarks-by-postid/<int:post_id>/', views.BoardBookmarkListByPostId.as_view(), name='board-bookmark-list-by-postid'),
     path('api/boards/posts/bookmarks/create/', views.BoardBookmarkCreate.as_view(), name='board-bookmark-create'),
 
-    # 학과 페이지별 스터디 전체글 조회
-    path('api/<int:major_id>/studys/posts/', views.StudyList.as_view(), name='major-study-list'),
+    # 학과 페이지별 스터디 글 API
+    path('api/<int:major_id>/studys/posts/', views.StudyList.as_view(), name='study-list'),
+    path('api/<int:major_id>/studys/posts/<int:pk>/', views.StudyDetail.as_view(), name='study-detail'),
+    path('api/<int:major_id>/studys/posts/search/', views.StudySearchAPIView.as_view(), name='study-search'),
 
-    path('api/studys/posts/', views.StudyList.as_view(), name='study-list'),
-    path('api/studys/posts/<int:pk>/', views.StudyDetail.as_view(), name='study-detail'),
-    path('api/studys/posts-by-userid/<int:user_id>/', views.StudyListByUserId.as_view(), name='study-list-by-userid'),
+    # path('api/studys/posts/', views.StudyList.as_view(), name='study-list'),
+    # path('api/studys/posts/<int:pk>/', views.StudyDetail.as_view(), name='study-detail'),
+    # path('api/studys/posts-by-userid/<int:user_id>/', views.StudyListByUserId.as_view(), name='study-list-by-userid'),
     path('api/studys/posts/create/', views.StudyCreate.as_view(), name='study-create'),
     path('api/studys/posts/<int:pk>/update/', views.StudyUpdate.as_view(), name='study-update'),
     path('api/studys/posts/<int:pk>/delete/', views.StudyDelete.as_view(), name='study-delete'),
-    path('api/studys/posts/search/', views.StudySearchAPIView.as_view(), name='study-search'),
+    # path('api/studys/posts/search/', views.StudySearchAPIView.as_view(), name='study-search'),
 
     path('api/studys/posts/comments/', views.StudyCommentList.as_view(), name='study-comment-list'),
     path('api/studys/posts/comments/<int:pk>/', views.StudyCommentDetail.as_view(), name='study-comment-detail'),

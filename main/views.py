@@ -449,7 +449,6 @@ class BoardDetail(generics.RetrieveAPIView):
         return queryset
 
     def retrieve(self, request, *args, **kwargs):
-        
         instance = self.get_object()
 
         # 조회수 증가
@@ -576,7 +575,6 @@ class BoardSearchAPIView(generics.ListAPIView):
             return Response({"message": "해당하는 글이 없습니다."})
 
         serializer = self.get_serializer(queryset, many=True)
-
         response_data = serializer.data
 
         # 사용자 정보를 응답 데이터에 추가
@@ -1131,12 +1129,24 @@ class StudyListProfileByUserId(generics.ListAPIView):
 
 
 class StudyDetail(generics.RetrieveAPIView):
-    queryset = Study.objects.all()
-    serializer_class = StudySerializer
     permission_classes = [IsAuthenticated]
+    # queryset = Study.objects.all()
+    serializer_class = StudySerializer
+
+    def get_queryset(self):
+        major_id = self.kwargs['major_id']
+        # queryset = Study.objects.all()
+        queryset = Study.objects.filter(user_id__major_id=major_id)
+
+        return queryset
 
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
+
+        # 조회수 증가
+        instance.view_count += 1
+        instance.save()
+
         serializer = self.get_serializer(instance)
         
         # 스터디 작성자의 정보를 가져와 응답 데이터에 추가
@@ -1162,6 +1172,7 @@ class StudyDetail(generics.RetrieveAPIView):
         auth_id = request.user.id
         token = get_object_or_404(Token, auth_id=auth_id)
         login_user_id = token.user_id.id
+
         has_liked = Study_Like.objects.filter(user_id=login_user_id, studypost_id=instance.id, delete_date__isnull=True).exists()
         response_data['has_liked'] = has_liked
 
@@ -1198,14 +1209,17 @@ class StudyDelete(generics.DestroyAPIView):
 # api/studys/posts/search/?hashtag=example1,example2&keyword=example
 class StudySearchAPIView(generics.ListAPIView):
     serializer_class = StudySerializer
-    queryset = Study.objects.all()  # 모든 스터디를 기본 queryset으로 설정
+    # queryset = Study.objects.all()  # 모든 스터디를 기본 queryset으로 설정
 
     def encode_hashtags(self, hashtags):
         encoded_hashtags = [quote(tag.strip()) for tag in hashtags]
         return encoded_hashtags
 
     def get_queryset(self):
-        queryset = self.queryset
+        major_id = self.kwargs['major_id']
+
+        # queryset = self.queryset
+        queryset = Study.objects.filter(user_id__major_id=major_id)
 
         hashtag = self.request.query_params.get('hashtag')
         keyword = self.request.query_params.get('keyword')
@@ -1229,7 +1243,7 @@ class StudySearchAPIView(generics.ListAPIView):
         return queryset
 
     def list(self, request, *args, **kwargs):
-        queryset = self.filter_queryset(self.get_queryset())
+        queryset = self.get_queryset()
         if not queryset.exists():
             return Response({"message": "해당하는 글이 없습니다."})
 
