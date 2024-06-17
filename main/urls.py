@@ -20,6 +20,7 @@ urlpatterns = [
     # 홈화면 학과 카테고리 관련 API
     path('api/majors/', views.MajorList.as_view(), name='major-list'),
     path('api/majors/<int:pk>/', views.MajorDetail.as_view(), name='major-detail'),
+    path('api/majors/search/', views.MajorSearchAPIView.as_view(), name='major-search'),
     path('api/majors/create/', views.MajorCreate.as_view(), name='major-create'),
     path('api/majors/<int:pk>/update/', views.MajorUpdate.as_view(), name='major-update'),
 

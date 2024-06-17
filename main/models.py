@@ -8,7 +8,7 @@ from django.utils import timezone
 
 class Major(models.Model):
     id = models.BigAutoField(primary_key=True)
-    major = models.CharField(max_length=15, null=True)
+    major = models.CharField(max_length=100, null=True)
     major_category_name = models.CharField(max_length=10, null=True)
 
     def __str__(self) -> str:
