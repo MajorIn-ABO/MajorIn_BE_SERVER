@@ -597,8 +597,14 @@ class BoardSearchAPIView(generics.ListAPIView):
 # 게시글 댓글 관련 API 모음
 
 class BoardCommentList(generics.ListAPIView):
-    queryset = Board_Comment.objects.all()
+    # queryset = Board_Comment.objects.all()
     serializer_class = BoardCommentSerializer
+
+    def get_queryset(self):
+        major_id = self.kwargs['major_id']
+        queryset = Board_Comment.objects.filter(user_id__major_id=major_id)
+
+        return queryset
 
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
@@ -624,8 +630,13 @@ class BoardCommentListByUserId(generics.ListAPIView):
     serializer_class = BoardCommentSerializer
 
     def get_queryset(self):
+        major_id = self.kwargs['major_id']
         user_id = self.kwargs['user_id']
-        return Board_Comment.objects.filter(user_id=user_id)
+
+        queryset = Board_Comment.objects.filter(user_id__major_id=major_id)
+        queryset = queryset.filter(user_id=user_id)
+
+        return queryset
 
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
@@ -651,10 +662,14 @@ class BoardCommentListByPostId(generics.ListAPIView):
     serializer_class = BoardCommentSerializer
 
     def get_queryset(self):
+        major_id = self.kwargs['major_id']
         post_id = self.kwargs['post_id']
-        return Board_Comment.objects.filter(post_id=post_id).prefetch_related(
-            Prefetch('replies', queryset=Board_Comment.objects.all())
+
+        queryset = Board_Comment.objects.filter(user_id__major_id=major_id)
+        queryset = queryset.filter(post_id=post_id).prefetch_related(
+            Prefetch('replies', queryset=queryset)
         )
+        return queryset
 
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
@@ -747,8 +762,15 @@ class BoardCommentListByParent(generics.ListAPIView):
         return Response(response_data, status=status.HTTP_200_OK)
 
 class BoardCommentDetail(generics.RetrieveAPIView):
-    queryset = Board_Comment.objects.all()
+    # queryset = Board_Comment.objects.all()
     serializer_class = BoardCommentSerializer
+
+    def get_queryset(self):
+        major_id = self.kwargs['major_id']
+        # queryset = Board.objects.all()
+        queryset = Board_Comment.objects.filter(user_id__major_id=major_id)
+
+        return queryset
 
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()

@@ -39,25 +39,27 @@ urlpatterns = [
     path('api/category/create/', views.CategoryCreate.as_view(), name='category-create'),
     path('api/category/<int:pk>/', views.CategoryUpdate.as_view(), name='category-update'),
 
-    # 학과 페이지별 커뮤니티 전체글 조회
+    # 학과 페이지별 커뮤니티 글 조회 - 검색 - 생성 - 업데이트 - 삭제
     path('api/<int:major_id>/boards/posts/', views.BoardList.as_view(), name='major-board-list'),
     path('api/<int:major_id>/boards/posts/<int:pk>/', views.BoardDetail.as_view(), name='board-detail'),
     path('api/<int:major_id>/boards/posts/search/', views.BoardSearchAPIView.as_view(), name='board-search'),
-
-    path('api/boards/posts/', views.BoardList.as_view(), name='board-list'),
-    path('api/boards/posts/<int:pk>/', views.BoardDetail.as_view(), name='board-detail'),
-    path('api/boards/posts-by-userid/<int:user_id>/', views.BoardListByUserId.as_view(), name='board-list-by-userid'),
-    path('api/boards/posts-by-category/<str:category_id>/', views.BoardListByCategory.as_view(), name='board-list-by-category'),
+    # path('api/boards/posts-by-userid/<int:user_id>/', views.BoardListByUserId.as_view(), name='board-list-by-userid'),
+    # path('api/boards/posts-by-category/<str:category_id>/', views.BoardListByCategory.as_view(), name='board-list-by-category'),
     path('api/boards/posts/create/', views.BoardCreate.as_view(), name='board-create'),
     path('api/boards/posts/<int:pk>/update/', views.BoardUpdate.as_view(), name='board-update'),
     path('api/boards/posts/<int:pk>/delete/', views.BoardDelete.as_view(), name='board-delete'),
-    path('api/boards/posts/search/', views.BoardSearchAPIView.as_view(), name='board-search'),
 
-    path('api/boards/posts/comments/', views.BoardCommentList.as_view(), name='board-comment-list'),
-    path('api/boards/posts/comments/<int:pk>/', views.BoardCommentDetail.as_view(), name='board-comment-detail'),
-    path('api/boards/posts/comments-by-userid/<int:user_id>/', views.BoardCommentListByUserId.as_view(), name='board-comment-list-by-userid'),
-    path('api/boards/posts/comments-by-postid/<int:post_id>/', views.BoardCommentListByPostId.as_view(), name='board-comment-list-by-postid'),
-    path('api/boards/posts/comments-by-parent/<int:parent_comment>/', views.BoardCommentListByParent.as_view(), name='board-comment-list-by-parent'),
+    # 학과 페이지별 커뮤니티 댓글 조회 - 검색
+    path('api/<int:major_id>/boards/posts/comments/', views.BoardCommentList.as_view(), name='board-comment-list'),
+    path('api/<int:major_id>/boards/posts/comments/<int:pk>/', views.BoardCommentDetail.as_view(), name='board-comment-detail'),
+    path('api/<int:major_id>/boards/posts/comments-by-userid/<int:user_id>/', views.BoardCommentListByUserId.as_view(), name='board-comment-list-by-userid'),
+    path('api/<int:major_id>/boards/posts/comments-by-postid/<int:post_id>/', views.BoardCommentListByPostId.as_view(), name='board-comment-list-by-postid'),
+
+    # path('api/boards/posts/comments/', views.BoardCommentList.as_view(), name='board-comment-list'),
+    # path('api/boards/posts/comments/<int:pk>/', views.BoardCommentDetail.as_view(), name='board-comment-detail'),
+    # path('api/boards/posts/comments-by-userid/<int:user_id>/', views.BoardCommentListByUserId.as_view(), name='board-comment-list-by-userid'),
+    # path('api/boards/posts/comments-by-postid/<int:post_id>/', views.BoardCommentListByPostId.as_view(), name='board-comment-list-by-postid'),
+    # path('api/boards/posts/comments-by-parent/<int:parent_comment>/', views.BoardCommentListByParent.as_view(), name='board-comment-list-by-parent'),
     path('api/boards/posts/comments/create/', views.BoardCommentCreate.as_view(), name='board-comment-create'),
     path('api/boards/posts/comments/<int:pk>/update/', views.BoardCommentUpdate.as_view(), name='board-comment-update'),
     path('api/boards/posts/comments/<int:pk>/delete/', views.BoardCommentDelete.as_view(), name='board-comment-delete'),
