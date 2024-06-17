@@ -2041,35 +2041,93 @@ class UsedbooktradeSearchAPIView(generics.ListAPIView):
 # 중고거래 댓글 관련 API 모음
 
 class UsedbooktradeCommentList(generics.ListAPIView):
-    queryset = Usedbooktrade_Comment.objects.all()
+    # queryset = Usedbooktrade_Comment.objects.all()
     serializer_class = UsedbooktradeCommentSerializer
+
+    def get_queryset(self):
+        major_id = self.kwargs['major_id']
+        queryset = Usedbooktrade_Comment.objects.filter(user_id__major_id=major_id)
+
+        return queryset
 
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
-        serializer = self.get_serializer(queryset, many=True)
+        comments_with_replies = queryset.prefetch_related(
+            Prefetch('replies', queryset=Usedbooktrade_Comment.objects.all())
+        )
+
+        serializer = self.get_serializer(comments_with_replies, many=True)
         response_data = serializer.data
 
-        # 사용자 정보를 응답 데이터에 추가
-        for data in response_data:
-            user_id = data['user_id']
-            try:
-                user = User.objects.get(id=user_id)
-            except User.DoesNotExist:
-                return Response({'error': '사용자를 찾을 수 없습니다.'}, status=status.HTTP_404_NOT_FOUND)
-            
-            user_data = UserSerializer(user).data
-            data['school_name'] = user_data['school_name']
-            data['major_name'] = user_data['major_name']
-            data['admission_date'] = user_data['admission_date']
+        # Cache for user info
+        user_info_cache = {}
 
-        return Response(response_data, status=status.HTTP_200_OK)
+        def get_user_info(user_id):
+            if user_id not in user_info_cache:
+                try:
+                    user = User.objects.get(id=user_id)
+                    user_data = UserSerializer(user).data
+                    user_info_cache[user_id] = {
+                        "school_name": user_data['school_name'],
+                        "major_name": user_data['major_name'],
+                        "admission_date": user_data['admission_date']
+                    }
+                except User.DoesNotExist:
+                    return None
+            return user_info_cache[user_id]
+
+        # Dictionary to hold parent comments and their replies
+        comments_dict = {}
+
+        for comment in response_data:
+            user_info = get_user_info(comment['user_id'])
+            if not user_info:
+                continue
+
+            comment_data = {
+                "id": comment['id'],
+                "user_id": comment['user_id'],
+                "Usedbookpost_id": comment['Usedbookpost_id'],
+                "parent_comment": comment['parent_comment'],
+                "contents": comment['contents'],
+                "comment_date": comment['comment_date'],
+                "school_name": user_info['school_name'],
+                "major_name": user_info['major_name'],
+                "admission_date": user_info['admission_date'],
+                "comments": []
+            }
+
+            if comment['parent_comment'] is None:
+                comments_dict[comment['id']] = comment_data
+            else:
+                parent_id = comment['parent_comment']
+                if parent_id in comments_dict:
+                    parent_comment = comments_dict[parent_id]
+                    parent_comment['comments'].append({
+                        "commentId": comment['id'],
+                        "user_id": comment['user_id'],
+                        "school_name": user_info['school_name'],
+                        "major_name": user_info['major_name'],
+                        "admission_date": user_info['admission_date'],
+                        "comment_date": comment['comment_date'],
+                        "contents": comment['contents']
+                    })
+
+        final_response_data = list(comments_dict.values())
+
+        return Response(final_response_data, status=status.HTTP_200_OK)
 
 class UsedbooktradeCommentListByUserId(generics.ListAPIView):
     serializer_class = UsedbooktradeCommentSerializer
 
     def get_queryset(self):
+        major_id = self.kwargs['major_id']
         user_id = self.kwargs['user_id']
-        return Usedbooktrade_Comment.objects.filter(user_id=user_id)
+
+        queryset = Usedbooktrade_Comment.objects.filter(user_id__major_id=major_id)
+        queryset = queryset.filter(user_id=user_id)
+
+        return queryset
 
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
@@ -2095,10 +2153,14 @@ class UsedbooktradeCommentListByPostId(generics.ListAPIView):
     serializer_class = UsedbooktradeCommentSerializer
 
     def get_queryset(self):
+        major_id = self.kwargs['major_id']
         Usedbookpost_id = self.kwargs['Usedbookpost_id']
-        return Usedbooktrade_Comment.objects.filter(Usedbookpost_id=Usedbookpost_id).prefetch_related(
+
+        queryset = Usedbooktrade_Comment.objects.filter(user_id__major_id=major_id)
+        queryset = queryset.filter(Usedbookpost_id=Usedbookpost_id).prefetch_related(
             Prefetch('replies', queryset=Usedbooktrade_Comment.objects.all())
         )
+        return queryset
 
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()

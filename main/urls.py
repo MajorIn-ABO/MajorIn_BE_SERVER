@@ -99,7 +99,7 @@ urlpatterns = [
     path('api/usedbooktrades/book/create/', views.UsedbooktradeCreate.as_view(), name='usedbook-create-api'),
     path('api/usedbooktrades/book/<int:usedbooktrade_id>/sold/', views.UsedbooktradeSold.as_view(), name='usedbook-sold-api'),
 
-    # 학과 페이지별 중고거래 전체글 조회
+    # 학과 페이지별 중고거래 글 API
     path('api/<int:major_id>/usedbooktrades/posts/', views.UsedbooktradeList.as_view(), name='usedbooktrade-list'),
     path('api/<int:major_id>/usedbooktrades/posts/<int:pk>/', views.UsedbooktradeDetail.as_view(), name='usedbooktrade-detail'),
     path('api/<int:major_id>/usedbooktrades/posts/search/', views.UsedbooktradeSearchAPIView.as_view(), name='usedbooktrade-search'),
@@ -116,11 +116,12 @@ urlpatterns = [
     path('api/usedbooktrades/datas/<int:pk>/update/', views.UsedbooktradedataUpdate.as_view(), name='usedbooktradedata-update'),
     path('api/usedbooktrades/datas/<int:pk>/delete/', views.UsedbooktradedataDelete.as_view(), name='usedbooktradedata-delete'),
 
-    path('api/usedbooktrades/posts/comments/', views.UsedbooktradeCommentList.as_view(), name='usedbooktrade-comment-list'),
-    path('api/usedbooktrades/posts/comments/<int:pk>/', views.UsedbooktradeCommentDetail.as_view(), name='usedbooktrade-comment-detail'),
-    path('api/usedbooktrades/posts/comments-by-userid/<int:user_id>/', views.UsedbooktradeCommentListByUserId.as_view(), name='usedbooktrade-comment-list-by-userid'),
-    path('api/usedbooktrades/posts/comments-by-postid/<int:Usedbookpost_id>/', views.UsedbooktradeCommentListByPostId.as_view(), name='usedbooktrade-comment-list-by-postid'),
-    path('api/usedbooktrades/posts/comments-by-parent/<int:parent_comment>/', views.UsedbooktradeCommentListByParent.as_view(), name='usedbooktrade-comment-list-by-parent'),
+    # 학과 페이지별 중고거래 댓글 API
+    path('api/<int:major_id>/usedbooktrades/posts/comments/', views.UsedbooktradeCommentList.as_view(), name='usedbooktrade-comment-list'),
+    path('api/<int:major_id>/usedbooktrades/posts/comments/<int:pk>/', views.UsedbooktradeCommentDetail.as_view(), name='usedbooktrade-comment-detail'),
+    path('api/<int:major_id>/usedbooktrades/posts/comments-by-userid/<int:user_id>/', views.UsedbooktradeCommentListByUserId.as_view(), name='usedbooktrade-comment-list-by-userid'),
+    path('api/<int:major_id>/usedbooktrades/posts/comments-by-postid/<int:Usedbookpost_id>/', views.UsedbooktradeCommentListByPostId.as_view(), name='usedbooktrade-comment-list-by-postid'),
+    # path('api/usedbooktrades/posts/comments-by-parent/<int:parent_comment>/', views.UsedbooktradeCommentListByParent.as_view(), name='usedbooktrade-comment-list-by-parent'),
     path('api/usedbooktrades/posts/comments/create/', views.UsedbooktradeCommentCreate.as_view(), name='usedbooktrade-comment-create'),
     path('api/usedbooktrades/posts/comments/<int:pk>/update/', views.UsedbooktradeCommentUpdate.as_view(), name='usedbooktrade-comment-update'),
     path('api/usedbooktrades/posts/comments/<int:pk>/delete/', views.UsedbooktradeCommentDelete.as_view(), name='usedbooktrade-comment-delete'),
