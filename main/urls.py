@@ -41,6 +41,8 @@ urlpatterns = [
 
     # 학과 페이지별 커뮤니티 전체글 조회
     path('api/<int:major_id>/boards/posts/', views.BoardList.as_view(), name='major-board-list'),
+    path('api/<int:major_id>/boards/posts/<int:pk>/', views.BoardDetail.as_view(), name='board-detail'),
+    path('api/<int:major_id>/boards/posts/search/', views.BoardSearchAPIView.as_view(), name='board-search'),
 
     path('api/boards/posts/', views.BoardList.as_view(), name='board-list'),
     path('api/boards/posts/<int:pk>/', views.BoardDetail.as_view(), name='board-detail'),

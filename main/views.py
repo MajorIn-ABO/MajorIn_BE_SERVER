@@ -438,10 +438,18 @@ class BoardListByCategory(generics.ListAPIView):
 
 class BoardDetail(generics.RetrieveAPIView):
     permission_classes = [IsAuthenticated]
-    queryset = Board.objects.all()
+    # queryset = Board.objects.all()
     serializer_class = BoardSerializer
 
+    def get_queryset(self):
+        major_id = self.kwargs['major_id']
+        # queryset = Board.objects.all()
+        queryset = Board.objects.filter(user_id__major_id=major_id)
+
+        return queryset
+
     def retrieve(self, request, *args, **kwargs):
+        
         instance = self.get_object()
 
         # 조회수 증가
@@ -546,11 +554,13 @@ class BoardDelete(generics.DestroyAPIView):
 # api/boards/posts/search/?keyword=example
 class BoardSearchAPIView(generics.ListAPIView):
     serializer_class = BoardSerializer
-    queryset = Board.objects.all()  # 모든 커뮤니티게시판을 기본 queryset으로 설정
+    # queryset = Board.objects.all()  # 모든 커뮤니티게시판을 기본 queryset으로 설정
 
     def get_queryset(self):
-        queryset = self.queryset
+        major_id = self.kwargs['major_id']
 
+        # queryset = self.queryset
+        queryset = Board.objects.filter(user_id__major_id=major_id)
         keyword = self.request.query_params.get('keyword')
 
         if keyword:
@@ -561,7 +571,7 @@ class BoardSearchAPIView(generics.ListAPIView):
         return queryset
 
     def list(self, request, *args, **kwargs):
-        queryset = self.filter_queryset(self.get_queryset())
+        queryset = self.get_queryset()
         if not queryset.exists():
             return Response({"message": "해당하는 글이 없습니다."})
 
