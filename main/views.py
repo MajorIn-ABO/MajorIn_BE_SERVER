@@ -1264,13 +1264,33 @@ class StudySearchAPIView(generics.ListAPIView):
 
     def get_queryset(self):
         major_id = self.kwargs['major_id']
-
-        # queryset = self.queryset
         queryset = Study.objects.filter(user_id__major_id=major_id)
 
         hashtag = self.request.query_params.get('hashtag')
         keyword = self.request.query_params.get('keyword')
 
+        hashtag_query = Q()
+        keyword_query = Q()
+
+        if hashtag:
+            hashtags = hashtag.strip('#').split(',')
+            encoded_hashtags = self.encode_hashtags(hashtags)
+
+            for tag in hashtags:
+                hashtag_query |= Q(hashtags__contains=tag.strip())
+
+        if keyword:
+            keyword_query = Q(title__icontains=keyword) | Q(contents__icontains=keyword)
+
+        # Combine the two queries using OR
+        combined_query = hashtag_query | keyword_query
+
+        if hashtag or keyword:
+            queryset = queryset.filter(combined_query)
+        else:
+            queryset = Study.objects.none()  # Return an empty queryset if no filters are provided
+
+        '''
         if hashtag:
             # '#' 기호를 제거하고 쉼표(,)를 기준으로 문자열을 분리하여 리스트로 변환
             hashtags = hashtag.strip('#').split(',')
@@ -1286,7 +1306,7 @@ class StudySearchAPIView(generics.ListAPIView):
             queryset = queryset.filter(
                 Q(title__icontains=keyword) | Q(contents__icontains=keyword)
             )
-
+        '''
         return queryset
 
     def list(self, request, *args, **kwargs):

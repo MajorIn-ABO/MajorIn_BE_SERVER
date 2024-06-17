@@ -17,10 +17,11 @@ urlpatterns = [
     path('api/list/', views.getRoutes),
     path('api/login/', views.LoginView.as_view(), name='major-login'),
 
+    # 홈화면 학과 카테고리 관련 API
     path('api/majors/', views.MajorList.as_view(), name='major-list'),
     path('api/majors/<int:pk>/', views.MajorDetail.as_view(), name='major-detail'),
     path('api/majors/create/', views.MajorCreate.as_view(), name='major-create'),
-    path('api/majors/<int:pk>/', views.MajorUpdate.as_view(), name='major-update'),
+    path('api/majors/<int:pk>/update/', views.MajorUpdate.as_view(), name='major-update'),
 
     path('api/profile/users/<int:pk>/', views.UserProfile.as_view(), name='user-profile'),
     path('api/profile/boards/<int:user_id>/', views.BoardListProfileByUserId.as_view(), name='board-list-profile-by-userid'),
