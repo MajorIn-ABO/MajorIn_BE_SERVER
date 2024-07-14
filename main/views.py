@@ -118,6 +118,32 @@ class MajorUpdate(generics.UpdateAPIView):
     queryset = Major.objects.all()
     serializer_class = MajorSerializer
 
+# api/majors/search/?keyword=example
+class MajorSearchAPIView(generics.ListAPIView):
+    serializer_class = MajorSerializer
+    queryset = Major.objects.all()
+
+    def get_queryset(self):
+        queryset = self.queryset
+        keyword = self.request.query_params.get('keyword')
+
+        if keyword:
+            queryset = queryset.filter(
+                Q(major__icontains=keyword) | Q(major_category_name__icontains=keyword)
+            )
+
+        return queryset
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        if not queryset.exists():
+            return Response({"message": "해당하는 학과가 없습니다."})
+
+        serializer = self.get_serializer(queryset, many=True)
+        response_data = serializer.data
+
+        return Response(response_data, status=status.HTTP_200_OK)
+
 
 # 유저 관련 API 모음
 class UserList(generics.ListAPIView):
