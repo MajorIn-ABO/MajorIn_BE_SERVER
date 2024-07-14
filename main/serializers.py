@@ -199,3 +199,8 @@ class MentoringDataSerializer(serializers.ModelSerializer):
     class Meta:
         model = MentoringData
         fields = ['id', 'mentoring_id', 'mentee_id', 'start_date', 'end_date', 'status']
+
+class MentoringReviewSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MentoringReview
+        fields = ['id', 'mentoringdata_id', 'rating', 'review_text', 'recommend', 'post_date']
