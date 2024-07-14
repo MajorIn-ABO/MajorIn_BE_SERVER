@@ -192,5 +192,10 @@ class MentorRegistrationsSerializer(serializers.ModelSerializer):
 
 class MenteeApplicationsSerializer(serializers.ModelSerializer):
     class Meta:
-        model = MentorRegistrations
+        model = MenteeApplications
         fields = ['id', 'mentoring_id', 'user_id', 'reason', 'add_text', 'day', 'post_date', 'mentor_approval']
+
+class MentoringDataSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MentoringData
+        fields = ['id', 'mentoring_id', 'mentee_id', 'start_date', 'end_date', 'status']
