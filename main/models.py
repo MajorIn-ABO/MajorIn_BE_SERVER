@@ -224,3 +224,74 @@ class Usedbooktrade_Comment(models.Model):
 
     def __str__(self) -> str:
         return str(self.id)
+
+
+class MentorRegistrations(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    title = models.CharField(max_length=100, blank=False, null=False, verbose_name='멘토링 제목')
+    user_id = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='멘토 이름', db_column="user_id")
+    mentoring_category_choices = [
+        ('학습', '학습'),
+        ('취업', '취업'),
+        ('인간관계', '인간관계'),
+    ]
+    mentoring_category = models.CharField(max_length=20, choices=mentoring_category_choices, default='학습', verbose_name='멘토링 주제')
+    description = models.TextField(verbose_name='멘토링 설명')
+    place_type_choices = [
+        ('온라인', '온라인'),
+        ('오프라인', '오프라인'),
+    ]
+    place_type = models.CharField(max_length=10, choices=place_type_choices, default='온라인', verbose_name='진행 방식')
+    period = models.TextField(verbose_name='멘토링 기간')
+    day = models.TextField(verbose_name='가능 요일')
+    mentee_num = models.IntegerField(blank=False, null=False, verbose_name='모집 인원')
+    mentoring_keyword = models.TextField(verbose_name='멘토링 키워드')
+    mood_type = models.TextField(verbose_name='멘토링 분위기')
+    post_date = models.DateTimeField(auto_now_add=True, verbose_name='등록일')
+    update_date = models.DateTimeField(auto_now=True, verbose_name='수정일')
+    delete_date = models.DateTimeField(null=True, verbose_name='삭제일')
+    admin_approval = models.BooleanField(default=False, null=False, verbose_name='관리자 승인 여부')
+    status = models.CharField(max_length=10, blank=False, null=False, verbose_name='진행 상태')
+    applicants_num = models.IntegerField(default=0, verbose_name='신청 인원')
+    approval_num = models.IntegerField(default=0, verbose_name='승인 인원')
+
+    def __str__(self) -> str:
+        return str(self.id)
+
+
+class MenteeApplications(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    mentoring_id = models.ForeignKey(MentorRegistrations, on_delete=models.CASCADE, db_column="mentoring_id")
+    user_id = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='멘티 이름', db_column="user_id")
+    reason = models.TextField(verbose_name='지원 동기')
+    add_text = models.TextField(verbose_name='멘토에게 하고 싶은 말')
+    day = models.TextField(verbose_name='가능 요일')
+    post_date = models.DateTimeField(auto_now_add=True, verbose_name='등록일')
+    mentor_approval = models.BooleanField(default=False, null=False, verbose_name='멘토 승인 여부')
+
+    def __str__(self) -> str:
+        return str(self.id)
+
+
+class MentoringData(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    mentoring_id = models.ForeignKey(MentorRegistrations, on_delete=models.CASCADE, db_column="mentoring_id")
+    mentee_id = models.ForeignKey(User, on_delete=models.CASCADE, db_column="mentee_id")
+    start_date = models.DateTimeField(auto_now_add=True, verbose_name='시작일')
+    end_date = models.DateTimeField(auto_now=True, verbose_name='종료일')
+    status = models.CharField(max_length=10, blank=False, null=False, verbose_name='진행 상태')
+
+    def __str__(self) -> str:
+        return str(self.id)
+
+
+class MentoringReview(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    mentoringdata_id = models.ForeignKey(MentoringData, on_delete=models.CASCADE, db_column="mentoringdata_id")
+    rating = models.IntegerField(verbose_name='평점')
+    review_text = models.TextField(verbose_name='리뷰 내용')
+    recommend = models.BooleanField(default=False, null=False, verbose_name='추천 여부')
+    post_date = models.DateTimeField(auto_now_add=True, verbose_name='리뷰 날짜')
+
+    def __str__(self) -> str:
+        return str(self.id)
