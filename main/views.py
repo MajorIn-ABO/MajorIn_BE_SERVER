@@ -10,8 +10,8 @@ from django.utils.decorators import method_decorator
 from django.views import View
 from django.utils import timezone  # 필요한 경우 추가
 from django.http import JsonResponse
-from .models import Token, Major, User, Category, Board, Board_Comment, Board_Like, Board_bookmark, Study, Study_Comment, Study_Like, Usedbooktrade, UsedbooktradeData, Usedbooktrade_Comment
-from .serializers import MyTokenObtainPairSerializer, AuthUserRegisterSerializer, LoginSerializer,MajorSerializer, MajorCheckSerializer, UserSerializer, UserProfileSerializer, UserRegisterSerializer, CategorySerializer, BoardSerializer, BoardProfileSerializer, BoardCommentSerializer, BoardLikeSerializer, BoardBookmarkSerializer, StudySerializer, StudyProfileSerializer, StudyCommentSerializer, StudyLikeSerializer, UsedbooktradeSerializer, UsedbooktradeProfileSerializer, UsedbooktradeDataSerializer, UsedbooktradeCommentSerializer
+from .models import Token, Major, User, Category, Board, Board_Comment, Board_Like, Board_bookmark, Study, Study_Comment, Study_Like, Usedbooktrade, UsedbooktradeData, Usedbooktrade_Comment, MentorRegistrations, MenteeApplications, MentoringData, MentoringReview
+from .serializers import MyTokenObtainPairSerializer, AuthUserRegisterSerializer, LoginSerializer,MajorSerializer, MajorCheckSerializer, UserSerializer, UserProfileSerializer, UserRegisterSerializer, CategorySerializer, BoardSerializer, BoardProfileSerializer, BoardCommentSerializer, BoardLikeSerializer, BoardBookmarkSerializer, StudySerializer, StudyProfileSerializer, StudyCommentSerializer, StudyLikeSerializer, UsedbooktradeSerializer, UsedbooktradeProfileSerializer, UsedbooktradeDataSerializer, UsedbooktradeCommentSerializer, MentorRegistrationsSerializer, MenteeApplicationsSerializer, MentoringDataSerializer, MentoringReviewSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth.models import User as AuthUser
@@ -1252,6 +1252,8 @@ class StudyDetail(generics.RetrieveAPIView):
         return Response(response_data, status=status.HTTP_200_OK)
 
 class StudyCreate(generics.CreateAPIView):
+    permission_classes = [IsAuthenticated]
+
     queryset = Study.objects.all()
     serializer_class = StudySerializer
 
@@ -2401,6 +2403,62 @@ class UsedbooktradeCommentDelete(generics.DestroyAPIView):
         usedbook_post.save(update_fields=['comment'])
 
         return Response({"message": "Comment deleted successfully.", "comments": usedbook_post.comment}, status=status.HTTP_204_NO_CONTENT)
+
+
+# 멘토링 멘토 관련 API 모음
+
+class MentoringCreate(generics.CreateAPIView):
+    # permission_classes = [IsAuthenticated]
+
+    queryset = MentorRegistrations.objects.all()
+    serializer_class = MentorRegistrationsSerializer
+
+    def create(self, request, *args, **kwargs):
+        # day 데이터를 문자열로 변환
+        if 'day' in request.data:
+            day = request.data['day']
+            if isinstance(day, list):
+                request.data['day'] = str(day)
+
+        # mentoring_keyword 데이터를 문자열로 변환
+        if 'mentoring_keyword' in request.data:
+            mentoring_keyword = request.data['mentoring_keyword']
+            if isinstance(mentoring_keyword, list):
+                request.data['mentoring_keyword'] = str(mentoring_keyword)
+
+        # mood_type 데이터를 문자열로 변환
+        if 'mood_type' in request.data:
+            mood_type = request.data['mood_type']
+            if isinstance(mood_type, list):
+                request.data['mood_type'] = str(mood_type)
+
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            self.perform_create(serializer)
+            response_data = serializer.data
+            
+            # 사용자 정보 가져오기
+            user_id = response_data['user_id']
+            try:
+                user = User.objects.get(id=user_id)
+            except User.DoesNotExist:
+                return Response({'error': '사용자를 찾을 수 없습니다.'}, status=status.HTTP_404_NOT_FOUND)
+            
+            # 사용자 정보를 응답 데이터에 추가
+            user_data = UserSerializer(user).data
+            response_data['user_name'] = user_data['user_name']
+
+            headers = self.get_success_headers(serializer.data)
+            return Response(response_data, status=status.HTTP_201_CREATED, headers=headers)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+# 멘토링 멘티 관련 API 모음
+
+# 멘토링 내역 관련 API 모음
+
+# 멘토링 리뷰 관련 API 모음
+
+
 
 
 # 유저 request data 받아오는 api
