@@ -129,7 +129,8 @@ urlpatterns = [
     path('api/usedbooktrades/posts/comments/<int:pk>/delete/', views.UsedbooktradeCommentDelete.as_view(), name='usedbooktrade-comment-delete'),
 
     # 학과 페이지별 멘토링 API
-    path('api/mentorings/posts/create/', views.MentoringCreate.as_view(), name='mentorings-create'),
+    path('api/<int:major_id>/mentorings/posts/', views.MentoringList.as_view(), name='mentoring-list'),
+    path('api/mentorings/posts/create/', views.MentoringCreate.as_view(), name='mentoring-create'),
 
 
 ]
