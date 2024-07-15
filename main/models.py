@@ -251,7 +251,11 @@ class MentorRegistrations(models.Model):
     update_date = models.DateTimeField(auto_now=True, verbose_name='수정일')
     delete_date = models.DateTimeField(null=True, verbose_name='삭제일')
     admin_approval = models.BooleanField(default=False, null=False, verbose_name='관리자 승인 여부')
-    status = models.CharField(max_length=10, blank=False, null=False, verbose_name='진행 상태')
+    status_choices = [
+        ('모집중', '모집중'),
+        ('모집완료', '모집완료'),
+    ]
+    status = models.CharField(max_length=10, choices=status_choices, default='모집중', verbose_name='진행 상태')
     applicants_num = models.IntegerField(default=0, verbose_name='신청 인원')
     approval_num = models.IntegerField(default=0, verbose_name='승인 인원')
 
