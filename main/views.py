@@ -2536,6 +2536,7 @@ class MentoringCreate(generics.CreateAPIView):
             return Response(response_data, status=status.HTTP_201_CREATED, headers=headers)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
 # 멘토링 멘티 관련 API 모음
 
 # 멘토링 내역 관련 API 모음

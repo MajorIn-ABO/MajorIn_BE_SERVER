@@ -128,9 +128,16 @@ urlpatterns = [
     path('api/usedbooktrades/posts/comments/<int:pk>/update/', views.UsedbooktradeCommentUpdate.as_view(), name='usedbooktrade-comment-update'),
     path('api/usedbooktrades/posts/comments/<int:pk>/delete/', views.UsedbooktradeCommentDelete.as_view(), name='usedbooktrade-comment-delete'),
 
-    # 학과 페이지별 멘토링 API
+    # 멘토링 멘토 관련 API
     path('api/<int:major_id>/mentorings/mentor/posts/', views.MentoringList.as_view(), name='mentoring-list'),
     path('api/profile/mentorings/<int:user_id>/', views.MentoringListByUserId.as_view(), name='mentoring-list-profile-by-userid'),
     path('api/mentorings/mentor/posts/create/', views.MentoringCreate.as_view(), name='mentoring-create'),
 
+    # 멘토링 멘티 관련 API
+
+    # 멘토링 내역 관련 API
+
+    # 멘토링 리뷰 관련 API
+
+    
 ]
