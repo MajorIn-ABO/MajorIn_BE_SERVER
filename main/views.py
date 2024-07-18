@@ -2537,6 +2537,96 @@ class MentoringCreate(generics.CreateAPIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+# 멘토가 "승인" 버튼을 누르면, 해당 멘티 데이터의 'mentor_approval' 이 true 로 바뀐다
+# -> 이때 멘토 테이블의 'approval_num' 이 1 늘어난다
+# 멘토가 "승인" 버튼을 다시 누르면, 해당 멘티 데이터의 'mentor_approval'이 false로 바뀐다
+# -> 이때 멘토 테이블의 'approval_num' 이 1 줄어든다
+
+class MenteeApprovalCreate(generics.CreateAPIView):
+    queryset = MenteeApplications.objects.all()
+    serializer_class = MenteeApplicationsSerializer
+    # permission_classes = [IsAuthenticated]
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+
+        if serializer.is_valid():
+            try:
+                mentoring_post = serializer.validated_data['mentoring_id']
+                user = serializer.validated_data['user_id']
+                
+                with transaction.atomic():
+                    application = MenteeApplications.objects.get(user_id=user, mentoring_id=mentoring_post)
+
+                    if application.mentor_approval:
+                        # 승인 취소
+                        application.mentor_approval = False
+                        mentoring_post.approval_num = max(0, mentoring_post.approval_num - 1)
+                    else:
+                        # 모집 인원을 초과했는지 확인
+                        if mentoring_post.approval_num >= mentoring_post.mentee_num:
+                            return Response({"detail": "모집 인원을 초과하였습니다."}, status=status.HTTP_200_OK)
+                        # 승인 추가
+                        application.mentor_approval = True
+                        mentoring_post.approval_num += 1
+
+                    application.save(update_fields=['mentor_approval'])
+                    mentoring_post.save(update_fields=['approval_num'])
+
+                    return Response({"detail": "승인 상태가 변경되었습니다.", "mentor_approval": application.mentor_approval, "approval_num": mentoring_post.approval_num}, status=status.HTTP_200_OK)
+
+            except MenteeApplications.DoesNotExist:
+                return Response({"error": "Application not found."}, status=status.HTTP_404_NOT_FOUND)
+            
+            except MentorRegistrations.DoesNotExist:
+                return Response({"error": "MentorRegistrations post not found."}, status=status.HTTP_404_NOT_FOUND)
+            
+            except User.DoesNotExist:
+                return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class MenteeConfirmView(APIView):
+    def post(self, request, mentoring_id):
+        try:
+            # 멘토링 모집 정보를 가져옵니다.
+            mentoring = MentorRegistrations.objects.get(id=mentoring_id)
+        except MentorRegistrations.DoesNotExist:
+            return Response({"error": "Mentoring not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        # 멘토링 신청 목록 중 승인된 멘티를 가져옵니다.
+        approved_mentees = MenteeApplications.objects.filter(mentoring_id=mentoring_id, mentor_approval=True)
+
+        # 모집 인원수와 현재 승인된 멘티 수를 비교합니다.
+        if approved_mentees.count() < mentoring.mentee_num:
+            return Response({"message": "모집 인원수를 다 채우지 않은 상태입니다."}, status=status.HTTP_200_OK)
+
+        new_mentoring_data = []
+        for mentee_application in approved_mentees:
+            # 이미 멘토링 데이터에 존재하는지 확인
+            if MentoringData.objects.filter(mentoring_id=mentoring_id, mentee_id=mentee_application.user_id).exists():
+                continue
+
+            # MentoringData 생성
+            MentoringData.objects.create(
+                mentoring_id=mentoring,
+                mentee_id=mentee_application.user_id
+            )
+
+            new_mentoring_data.append(mentoring_data)
+
+        # 모집 인원수가 채워졌으므로, MentorRegistrations 의 status 를 '모집완료'로 수정
+        mentoring.status = '모집완료'
+        mentoring.save()
+
+        # 새로 생성된 MentoringData 시리얼라이즈
+        serializer = MentoringDataSerializer(new_mentoring_data, many=True)
+
+        return Response({"message": "멘티 확정이 완료되었습니다.", "data": serializer.data}, status=status.HTTP_201_CREATED)
+
+
+
 # 멘토링 멘티 관련 API 모음
 
 class MenteeList(generics.ListAPIView):
