@@ -2726,6 +2726,16 @@ class MenteeCreate(generics.CreateAPIView):
             user_data = UserSerializer(user).data
             response_data['user_name'] = user_data['user_name']
 
+            # MentorRegistrations 테이블의 applicants_num 값을 1 증가
+            mentoring_id = response_data.get('mentoring_id')
+            if mentoring_id:
+                try:
+                    mentor_registration = MentorRegistrations.objects.get(id=mentoring_id)
+                    mentor_registration.applicants_num += 1
+                    mentor_registration.save()
+                except MentorRegistrations.DoesNotExist:
+                    return Response({'error': '멘토 등록 정보를 찾을 수 없습니다.'}, status=status.HTTP_404_NOT_FOUND)
+
             headers = self.get_success_headers(serializer.data)
             return Response(response_data, status=status.HTTP_201_CREATED, headers=headers)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
