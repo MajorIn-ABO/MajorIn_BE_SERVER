@@ -2587,7 +2587,7 @@ class MenteeApprovalCreate(generics.CreateAPIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class ConfirmMenteeView(APIView):
+class MenteeConfirmView(APIView):
     def post(self, request, mentoring_id):
         try:
             # 멘토링 모집 정보를 가져옵니다.
@@ -2612,6 +2612,10 @@ class ConfirmMenteeView(APIView):
                 mentoring_id=mentoring,
                 mentee_id=mentee_application.user_id
             )
+
+        # 모집 인원수가 채워졌으므로, MentorRegistrations 의 status 를 '모집완료'로 수정
+        mentoring.status = '모집완료'
+        mentoring.save()
 
         return Response({"message": "멘티 확정이 완료되었습니다."}, status=status.HTTP_201_CREATED)
 
