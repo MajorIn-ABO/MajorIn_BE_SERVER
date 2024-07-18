@@ -133,7 +133,7 @@ urlpatterns = [
     path('api/profile/mentorings/<int:user_id>/', views.MentoringListByUserId.as_view(), name='mentoring-list-profile-by-userid'),
     path('api/mentorings/mentor/posts/create/', views.MentoringCreate.as_view(), name='mentoring-create'),
 
-    path('api/mentorings/mentee/approvals/create/', views.BoardLikeCreate.as_view(), name='board-like-create'),
+    path('api/mentorings/mentee/approvals/create/', views.MenteeApprovalCreate.as_view(), name='mentee-aapproval-create'),
 
     # 멘토링 멘티 관련 API
     path('api/<int:major_id>/mentorings/mentee/posts/', views.MenteeList.as_view(), name='mentee-list'),
