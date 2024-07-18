@@ -131,6 +131,8 @@ urlpatterns = [
     # 멘토링 멘토 관련 API
     path('api/<int:major_id>/mentorings/mentor/posts/', views.MentoringList.as_view(), name='mentoring-list'),
     path('api/profile/mentorings/<int:user_id>/', views.MentoringListByUserId.as_view(), name='mentoring-list-profile-by-userid'),
+    path('api/<int:major_id>/mentorings/mentor/posts/<int:pk>/', views.MentoringDetail.as_view(), name='mentoring-mentor-detail'),
+
     path('api/mentorings/mentor/posts/create/', views.MentoringCreate.as_view(), name='mentoring-create'),
 
     path('api/mentorings/mentee/approvals/create/', views.MenteeApprovalCreate.as_view(), name='mentee-approval-create'),
