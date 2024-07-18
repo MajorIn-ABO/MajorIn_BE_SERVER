@@ -2491,6 +2491,46 @@ class MentoringListByUserId(generics.ListAPIView):
         return Response(response_data, status=status.HTTP_200_OK)
 
 
+class MentoringDetail(generics.RetrieveAPIView):
+    # permission_classes = [IsAuthenticated]
+    serializer_class = MentorRegistrationsSerializer
+
+    def get_queryset(self):
+        major_id = self.kwargs['major_id']
+        queryset = MentorRegistrations.objects.filter(user_id__major_id=major_id)
+
+        return queryset
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        
+        # 멘토링 작성자의 정보를 가져와 응답 데이터에 추가
+        user_id = instance.user_id.id
+        try:
+            user_data = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            return Response({'error': '사용자를 찾을 수 없습니다.'}, status=status.HTTP_404_NOT_FOUND)
+        
+        response_data = serializer.data
+
+        # day 데이터를 문자열에서 리스트로 변환하여 추가합니다.
+        day_str = response_data['day']
+        response_data['day'] = eval(day_str)
+
+        # mentoring_keyword 데이터를 문자열에서 리스트로 변환하여 추가합니다.
+        mentoring_keyword_str = response_data['mentoring_keyword']
+        response_data['mentoring_keyword'] = eval(mentoring_keyword_str)
+
+        # mood_type 데이터를 문자열에서 리스트로 변환하여 추가합니다.
+        mood_type_str = response_data['mood_type']
+        response_data['mood_type'] = eval(mood_type_str)
+
+        response_data['user_name'] = user_data.user_name
+
+        return Response(response_data, status=status.HTTP_200_OK)
+
+
 class MentoringCreate(generics.CreateAPIView):
     # permission_classes = [IsAuthenticated]
 
