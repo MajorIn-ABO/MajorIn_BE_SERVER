@@ -2587,6 +2587,36 @@ class MenteeApprovalCreate(generics.CreateAPIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+class ConfirmMenteeView(APIView):
+    def post(self, request, mentoring_id):
+        try:
+            # 멘토링 모집 정보를 가져옵니다.
+            mentoring = MentorRegistrations.objects.get(id=mentoring_id)
+        except MentorRegistrations.DoesNotExist:
+            return Response({"error": "Mentoring not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        # 멘토링 신청 목록 중 승인된 멘티를 가져옵니다.
+        approved_mentees = MenteeApplications.objects.filter(mentoring_id=mentoring_id, mentor_approval=True)
+
+        # 모집 인원수와 현재 승인된 멘티 수를 비교합니다.
+        if approved_mentees.count() < mentoring.mentee_num:
+            return Response({"message": "모집 인원수를 다 채우지 않은 상태입니다."}, status=status.HTTP_200_OK)
+
+        for mentee_application in approved_mentees:
+            # 이미 멘토링 데이터에 존재하는지 확인
+            if MentoringData.objects.filter(mentoring_id=mentoring_id, mentee_id=mentee_application.user_id).exists():
+                continue
+
+            # MentoringData 생성
+            MentoringData.objects.create(
+                mentoring_id=mentoring,
+                mentee_id=mentee_application.user_id
+            )
+
+        return Response({"message": "멘티 확정이 완료되었습니다."}, status=status.HTTP_201_CREATED)
+
+
+
 # 멘토링 멘티 관련 API 모음
 
 class MenteeList(generics.ListAPIView):
