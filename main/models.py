@@ -283,7 +283,11 @@ class MentoringData(models.Model):
     mentee_id = models.ForeignKey(User, on_delete=models.CASCADE, db_column="mentee_id")
     start_date = models.DateTimeField(auto_now_add=True, verbose_name='시작일')
     end_date = models.DateTimeField(auto_now=True, verbose_name='종료일')
-    status = models.CharField(max_length=10, blank=False, null=False, verbose_name='진행 상태')
+    status_choices = [
+        ('진행중', '진행중'),
+        ('진행완료', '진행완료'),
+    ]
+    status = models.CharField(max_length=10, choices=status_choices, default='진행중', verbose_name='진행 상태')
 
     def __str__(self) -> str:
         return str(self.id)
