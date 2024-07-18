@@ -2563,6 +2563,9 @@ class MenteeApprovalCreate(generics.CreateAPIView):
                         application.mentor_approval = False
                         mentoring_post.approval_num = max(0, mentoring_post.approval_num - 1)
                     else:
+                        # 모집 인원을 초과했는지 확인
+                        if mentoring_post.approval_num >= mentoring_post.mentee_num:
+                            return Response({"detail": "모집 인원을 초과하였습니다."}, status=status.HTTP_200_OK)
                         # 승인 추가
                         application.mentor_approval = True
                         mentoring_post.approval_num += 1
