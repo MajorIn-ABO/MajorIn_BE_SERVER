@@ -2602,6 +2602,7 @@ class MenteeConfirmView(APIView):
         if approved_mentees.count() < mentoring.mentee_num:
             return Response({"message": "모집 인원수를 다 채우지 않은 상태입니다."}, status=status.HTTP_200_OK)
 
+        new_mentoring_data = []
         for mentee_application in approved_mentees:
             # 이미 멘토링 데이터에 존재하는지 확인
             if MentoringData.objects.filter(mentoring_id=mentoring_id, mentee_id=mentee_application.user_id).exists():
@@ -2613,11 +2614,16 @@ class MenteeConfirmView(APIView):
                 mentee_id=mentee_application.user_id
             )
 
+            new_mentoring_data.append(mentoring_data)
+
         # 모집 인원수가 채워졌으므로, MentorRegistrations 의 status 를 '모집완료'로 수정
         mentoring.status = '모집완료'
         mentoring.save()
 
-        return Response({"message": "멘티 확정이 완료되었습니다."}, status=status.HTTP_201_CREATED)
+        # 새로 생성된 MentoringData 시리얼라이즈
+        serializer = MentoringDataSerializer(new_mentoring_data, many=True)
+
+        return Response({"message": "멘티 확정이 완료되었습니다.", "data": serializer.data}, status=status.HTTP_201_CREATED)
 
 
 
