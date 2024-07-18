@@ -141,6 +141,7 @@ urlpatterns = [
     # 멘토링 멘티 관련 API
     path('api/<int:major_id>/mentorings/mentee/posts/', views.MenteeList.as_view(), name='mentee-list'),
     path('api/profile/mentee/<int:user_id>/', views.MenteeListByUserId.as_view(), name='mentee-list-profile-by-userid'),
+    path('api/<int:major_id>/mentorings/mentee/posts-by-mentoring_id/<int:mentoring_id>/', views.MenteeListByPostId.as_view(), name='mentee-list-by-postid'),
     path('api/<int:major_id>/mentorings/mentee/posts/<int:pk>/', views.MenteeDetail.as_view(), name='mentoring-mentee-detail'),
 
     path('api/mentorings/mentee/posts/create/', views.MenteeCreate.as_view(), name='mentee-create'),

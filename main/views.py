@@ -2737,6 +2737,41 @@ class MenteeListByUserId(generics.ListAPIView):
         return Response(response_data, status=status.HTTP_200_OK)
 
 
+class MenteeListByPostId(generics.ListAPIView):
+    # permission_classes = [IsAuthenticated]
+    serializer_class = MenteeApplicationsSerializer
+
+    def get_queryset(self):
+        major_id = self.kwargs['major_id']
+        mentoring_id = self.kwargs['mentoring_id']
+
+        queryset = MenteeApplications.objects.filter(user_id__major_id=major_id)
+        queryset = queryset.filter(mentoring_id=mentoring_id)
+        return queryset
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        response_data = serializer.data
+
+        # 사용자 정보를 응답 데이터에 추가
+        for data in response_data:
+           # day 데이터를 문자열에서 리스트로 변환하여 추가합니다.
+            day_str = data['day']
+            data['day'] = eval(day_str)
+
+            user_id = data['user_id']
+            try:
+                user = User.objects.get(id=user_id)
+            except User.DoesNotExist:
+                return Response({'error': '사용자를 찾을 수 없습니다.'}, status=status.HTTP_404_NOT_FOUND)
+            
+            user_data = UserSerializer(user).data
+            data['user_name'] = user_data['user_name']
+
+        return Response(response_data, status=status.HTTP_200_OK)
+
+
 class MenteeDetail(generics.RetrieveAPIView):
     # permission_classes = [IsAuthenticated]
     serializer_class = MenteeApplicationsSerializer
