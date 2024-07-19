@@ -2850,7 +2850,49 @@ class MenteeCreate(generics.CreateAPIView):
 
 # 멘토링 내역 관련 API 모음
 
+
+
 # 멘토링 리뷰 관련 API 모음
+
+class MentoringReviewCreate(generics.CreateAPIView):
+    # permission_classes = [IsAuthenticated]
+
+    queryset = MentoringReview.objects.all()
+    serializer_class = MentoringReviewSerializer
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+
+        if serializer.is_valid():
+            mentoringdata_id = serializer.validated_data['mentoringdata_id']
+            
+            # Check the status of the MentoringData object
+            try:
+                mentoring_data = MentoringData.objects.get(id=mentoringdata_id.id)
+            except MentoringData.DoesNotExist:
+                return Response({'error': '멘토링 데이터를 찾을 수 없습니다.'}, status=status.HTTP_404_NOT_FOUND)
+
+            if mentoring_data.status != '진행완료':
+                return Response({'error': '리뷰는 "진행완료" 상태인 멘토링에 대해서만 작성할 수 있습니다.'}, status=status.HTTP_200_OK)
+                
+            self.perform_create(serializer)
+            response_data = serializer.data
+            
+            # 사용자 정보 가져오기
+            user_id = mentoring_data.mentee_id
+            try:
+                user = User.objects.get(id=user_id)
+            except User.DoesNotExist:
+                return Response({'error': '사용자를 찾을 수 없습니다.'}, status=status.HTTP_404_NOT_FOUND)
+            
+            # 사용자 정보를 응답 데이터에 추가
+            user_data = UserSerializer(user).data
+            response_data['user_id'] = user_data['id']
+            response_data['user_name'] = user_data['user_name']
+
+            headers = self.get_success_headers(serializer.data)
+            return Response(response_data, status=status.HTTP_201_CREATED, headers=headers)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 
