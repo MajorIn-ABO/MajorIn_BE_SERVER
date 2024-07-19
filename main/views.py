@@ -2862,8 +2862,19 @@ class MentoringReviewCreate(generics.CreateAPIView):
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
-        
+
         if serializer.is_valid():
+            mentoringdata_id = serializer.validated_data['mentoringdata_id']
+            
+            # Check the status of the MentoringData object
+            try:
+                mentoring_data = MentoringData.objects.get(id=mentoringdata_id.id)
+            except MentoringData.DoesNotExist:
+                return Response({'error': '멘토링 데이터를 찾을 수 없습니다.'}, status=status.HTTP_404_NOT_FOUND)
+
+            if mentoring_data.status != '진행완료':
+                return Response({'error': '리뷰는 "진행완료" 상태인 멘토링에 대해서만 작성할 수 있습니다.'}, status=status.HTTP_200_OK)
+                
             self.perform_create(serializer)
             response_data = serializer.data
             
