@@ -149,6 +149,8 @@ urlpatterns = [
     # 멘토링 내역 관련 API
 
     # 멘토링 리뷰 관련 API
+    path('api/<int:major_id>/mentorings/mentee/review-posts/', views.MentoringReviewList.as_view(), name='mentoring-review-list'),
+
     path('api/mentorings/mentee/review-posts/create/', views.MentoringReviewCreate.as_view(), name='mentoring-review-create'),
 
     

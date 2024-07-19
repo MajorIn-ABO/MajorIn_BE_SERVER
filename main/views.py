@@ -2854,6 +2854,41 @@ class MenteeCreate(generics.CreateAPIView):
 
 # 멘토링 리뷰 관련 API 모음
 
+class MentoringReviewList(generics.ListAPIView):
+    # permission_classes = [IsAuthenticated]
+
+    serializer_class = MentoringReviewSerializer
+
+    def get_queryset(self):
+        major_id = self.kwargs['major_id'] # new
+
+        # queryset = MentoringReview.objects.all()
+        # queryset = MentoringReview.objects.filter(user_id__major_id=major_id) # new
+        queryset = MentoringReview.objects.select_related('mentoringdata_id__mentee_id').filter(mentoringdata_id__mentee_id__major_id=major_id)
+        
+        return queryset
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        response_data = serializer.data
+
+        # 사용자 정보를 응답 데이터에 추가
+        for data in response_data:
+            mentoringdata_id = data['mentoringdata_id']
+            user_id = mentoringdata_id.mentee_id
+            try:
+                user = User.objects.get(id=user_id)
+            except User.DoesNotExist:
+                return Response({'error': '사용자를 찾을 수 없습니다.'}, status=status.HTTP_404_NOT_FOUND)
+            
+            user_data = UserSerializer(user).data
+            data['user_id'] = user_data['id']
+            data['user_name'] = user_data['user_name']
+
+        return Response(response_data, status=status.HTTP_200_OK)
+
+
 class MentoringReviewCreate(generics.CreateAPIView):
     # permission_classes = [IsAuthenticated]
 
