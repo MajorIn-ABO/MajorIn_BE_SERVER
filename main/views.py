@@ -2879,7 +2879,7 @@ class MentoringReviewCreate(generics.CreateAPIView):
             response_data = serializer.data
             
             # 사용자 정보 가져오기
-            user_id = response_data['user_id']
+            user_id = mentoring_data.mentee_id
             try:
                 user = User.objects.get(id=user_id)
             except User.DoesNotExist:
@@ -2887,6 +2887,7 @@ class MentoringReviewCreate(generics.CreateAPIView):
             
             # 사용자 정보를 응답 데이터에 추가
             user_data = UserSerializer(user).data
+            response_data['user_id'] = user_data['id']
             response_data['user_name'] = user_data['user_name']
 
             headers = self.get_success_headers(serializer.data)
