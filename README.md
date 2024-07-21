@@ -2,7 +2,7 @@
 
 ## Backend 아키텍쳐
 
-<img width="408" alt="BACKEND-architecture" src="https://github.com/user-attachments/assets/ccb94fc4-5f64-4422-ab38-acc594060fb4">
+<img width="816" alt="BACKEND-architecture" src="https://github.com/user-attachments/assets/ccb94fc4-5f64-4422-ab38-acc594060fb4">
 
 ## ERD 설계
 
