@@ -1,4 +1,5 @@
-# MajorIn_BE_SERVER
+# Major:In >> BE_SERVER
+#### 사회적 교류 지원을 위한 멘토링 제공 학과 중심 커뮤니티 플랫폼
 
 ## Backend 아키텍쳐
 
