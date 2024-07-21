@@ -2,7 +2,11 @@
 
 ## Backend 아키텍쳐
 
-<img width="408" alt="backend-아키텍쳐" src="https://github.com/user-attachments/assets/0f809fa1-9331-45ed-bf9d-97a0bfc99b5a">
+<img width="408" alt="BACKEND-architecture" src="https://github.com/user-attachments/assets/ccb94fc4-5f64-4422-ab38-acc594060fb4">
+
+## ERD 설계
+
+![ERD](https://github.com/user-attachments/assets/fed349dd-2530-4c4d-8d61-d3ba94020695)
 
 ## 시작 가이드
 ```
