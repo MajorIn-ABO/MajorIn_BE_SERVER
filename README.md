@@ -1,5 +1,9 @@
 # MajorIn_BE_SERVER
 
+## Backend 아키텍쳐
+
+<img width="408" alt="backend-아키텍쳐" src="https://github.com/user-attachments/assets/0f809fa1-9331-45ed-bf9d-97a0bfc99b5a">
+
 ## 시작 가이드
 ```
 cd Desktop
