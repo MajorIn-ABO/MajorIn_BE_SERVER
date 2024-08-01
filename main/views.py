@@ -8,6 +8,7 @@ from django.shortcuts import render, get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.views import View
+from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone  # 필요한 경우 추가
 from django.http import JsonResponse
 from .models import Token, Major, User, Category, Board, Board_Comment, Board_Like, Board_bookmark, Study, Study_Comment, Study_Like, Usedbooktrade, UsedbooktradeData, Usedbooktrade_Comment, MentorRegistrations, MenteeApplications, MentoringData, MentoringReview
@@ -29,7 +30,6 @@ from urllib.parse import quote
 from dotenv import load_dotenv
 import os 
 from openai import OpenAI
-import openai
 from .gpt_api import GptAPI
 from django.core.files.storage import default_storage
 from django.conf import settings
@@ -41,8 +41,8 @@ NAVER_Client_ID = os.environ.get('Client_ID')
 NAVER_Client_Secret = os.environ.get('Client_Secret')
 
 
-openai.api_key = os.environ.get('OPENAI_API_KEY')
-# client = OpenAI(api_key=os.environ.get('OPENAI_API_KEY'))
+# openai.api_key = os.environ.get('OPENAI_API_KEY')
+client = OpenAI(api_key=os.environ.get('OPENAI_API_KEY'))
 
 # 로그인 관련 API 모음
 
@@ -2984,6 +2984,7 @@ def chat_with_gpt(request):
 
     return render(request, "mentoring_app/chatbot.html")
 '''
+@csrf_exempt
 def chat_with_gpt(request):
     if request.method == "POST":
         user_message = request.POST.get("message")
