@@ -2,49 +2,87 @@
 <html>
 <head>
     <title>멘토링 상담 챗봇</title>
+    <style>
+        #chat-box {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            border: 1px solid #ddd;
+            padding: 10px;
+            height: 400px;
+            overflow-y: scroll;
+            background: #f9f9f9;
+        }
+        .chat-message {
+            margin-bottom: 10px;
+            padding: 5px;
+            border-radius: 5px;
+            max-width: 80%;
+            word-break: break-word;
+        }
+        .user-message {
+            text-align: right;
+            background-color: #d1e7dd;
+            border: 1px solid #badbcc;
+            margin-left: auto;
+        }
+        .assistant-message {
+            text-align: left;
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
 </head>
 <body>
     <h1>멘토링 상담 챗봇</h1>
+    <div id="chat-box"></div>
     <form id="chat-form" method="post">
         {% csrf_token %}
         <label for="message">메시지:</label>
-        <input type="text" id="message" name="message">
+        <input type="text" id="message" name="message" required>
         <button type="submit">전송</button>
     </form>
-    <div id="chat-response"></div>
-    <div id="recommendations"></div>
 
     <script>
         document.getElementById("chat-form").onsubmit = async function(event) {
             event.preventDefault();
             let formData = new FormData(this);
-            
-            let response = await fetch("{% url 'chat_with_gpt' %}", {
-                method: "POST",
-                body: formData,
-            });
-            
-            let data = await response.json();
-            document.getElementById("chat-response").innerText = data.chat_response;
-            
-            let recommendationsDiv = document.getElementById("recommendations");
-            recommendationsDiv.innerHTML = "";
-            data.recommendations.forEach(function(recommendation) {
-                let div = document.createElement("div");
-                div.innerHTML = `
-                    <h2>${recommendation.title}</h2>
-                    <p>${recommendation.description}</p>
-                    <p>카테고리: ${recommendation.mentoring_category}</p>
-                    <p>진행 방식: ${recommendation.place_type}</p>
-                    <p>기간: ${recommendation.period}</p>
-                    <p>가능 요일: ${recommendation.day}</p>
-                    <p>모집 인원: ${recommendation.mentee_num}</p>
-                    <p>키워드: ${recommendation.mentoring_keyword}</p>
-                    <p>분위기: ${recommendation.mood_type}</p>
-                    <p>상태: ${recommendation.status}</p>
-                `;
-                recommendationsDiv.appendChild(div);
-            });
+            let messageInput = document.getElementById("message");
+            let chatBox = document.getElementById("chat-box");
+
+            // Append user message to chat box
+            let userMessageDiv = document.createElement("div");
+            userMessageDiv.classList.add("chat-message", "user-message");
+            userMessageDiv.innerText = messageInput.value;
+            chatBox.appendChild(userMessageDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            try {
+                let response = await fetch("{% url 'chat_with_gpt' %}", {
+                    method: "POST",
+                    body: formData,
+                });
+
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+
+                let data = await response.json();
+                messageInput.value = "";
+
+                if (data.error) {
+                    console.error("Error:", data.error);
+                } else {
+                    // Append assistant message to chat box
+                    let assistantMessageDiv = document.createElement("div");
+                    assistantMessageDiv.classList.add("chat-message", "assistant-message");
+                    assistantMessageDiv.innerText = data.chat_response;
+                    chatBox.appendChild(assistantMessageDiv);
+                    chatBox.scrollTop = chatBox.scrollHeight;
+                }
+            } catch (error) {
+                console.error("Fetch error:", error);
+            }
         };
     </script>
 </body>

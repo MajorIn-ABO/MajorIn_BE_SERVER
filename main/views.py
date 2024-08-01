@@ -30,6 +30,7 @@ from dotenv import load_dotenv
 import os 
 from openai import OpenAI
 import openai
+from .gpt_api import GptAPI
 from django.core.files.storage import default_storage
 from django.conf import settings
 
@@ -2944,22 +2945,17 @@ def mentoring_page(request):
 
 
 # 임시 챗봇 대화 코드 
+'''
 def chat_with_gpt(request):
     if request.method == "POST":
         user_message = request.POST.get("message")
-        
-        # OpenAI API 호출
-        response = openai.Completion.create(
-            engine="text-davinci-003",
-            prompt=user_message,
-            max_tokens=150,
-            n=1,
-            stop=None,
-            temperature=0.7,
-        )
-        
-        chat_response = response.choices[0].text.strip()
-        
+
+        # GptAPI 사용
+        model = "gpt-3.5-turbo"
+        api_key = os.getenv("OPENAI_API_KEY")
+        gpt = GptAPI(model, api_key)
+        chat_response = gpt.get_message(user_message)
+
         # 상담 결과를 바탕으로 멘토링 리스트 추천
         recommended_mentoring = MentorRegistrations.objects.filter(
             mentoring_category__icontains=chat_response
@@ -2986,8 +2982,25 @@ def chat_with_gpt(request):
             "recommendations": recommendations,
         })
 
-    return render(request, "main/chatbot.html")
+    return render(request, "mentoring_app/chatbot.html")
+'''
+def chat_with_gpt(request):
+    if request.method == "POST":
+        user_message = request.POST.get("message")
 
+        # GptAPI 사용
+        model = "gpt-3.5-turbo"
+        api_key = os.environ.get("OPENAI_API_KEY")
+        gpt = GptAPI(model, api_key)
+        chat_response, messages = gpt.get_message(user_message)
+
+        return JsonResponse({
+            "user_message": user_message,
+            "chat_response": chat_response,
+            "messages": messages,
+        })
+
+    return render(request, "main/chatbot.html")
 
 
 
