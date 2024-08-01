@@ -28,6 +28,7 @@ from django.db.models import Prefetch
 from urllib.parse import quote
 from dotenv import load_dotenv
 import os 
+import openai
 from django.core.files.storage import default_storage
 from django.conf import settings
 
@@ -36,6 +37,8 @@ load_dotenv()
 
 NAVER_Client_ID = os.environ.get('Client_ID')
 NAVER_Client_Secret = os.environ.get('Client_Secret')
+
+openai.api_key = os.getenv('OPENAI_API_KEY')
 
 
 # 로그인 관련 API 모음
