@@ -154,6 +154,6 @@ urlpatterns = [
     path('api/mentorings/mentee/review-posts/create/', views.MentoringReviewCreate.as_view(), name='mentoring-review-create'),
 
     # 챗봇 관련 API
-    path('api/mentorings/chat/', views.chat_with_gpt, name='chat_with_gpt'),
-    
+    path('chat/', views.chat_with_gpt, name='chat_with_gpt'),
+    path('mentoring/', views.mentoring_page, name='mentoring_page'),
 ]

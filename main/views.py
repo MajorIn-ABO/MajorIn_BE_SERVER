@@ -28,6 +28,7 @@ from django.db.models import Prefetch
 from urllib.parse import quote
 from dotenv import load_dotenv
 import os 
+from openai import OpenAI
 import openai
 from django.core.files.storage import default_storage
 from django.conf import settings
@@ -38,8 +39,9 @@ load_dotenv()
 NAVER_Client_ID = os.environ.get('Client_ID')
 NAVER_Client_Secret = os.environ.get('Client_Secret')
 
-openai.api_key = os.getenv('OPENAI_API_KEY')
 
+openai.api_key = os.environ.get('OPENAI_API_KEY')
+# client = OpenAI(api_key=os.environ.get('OPENAI_API_KEY'))
 
 # 로그인 관련 API 모음
 
@@ -2935,6 +2937,13 @@ class MentoringReviewCreate(generics.CreateAPIView):
 
 # 챗봇 관련 api
 
+# 임시 멘토링 페이지 렌더링 코드 
+def mentoring_page(request):
+    mentorings = MentorRegistrations.objects.all()
+    return render(request, 'main/mentoring_page.html', {'mentorings': mentorings})
+
+
+# 임시 챗봇 대화 코드 
 def chat_with_gpt(request):
     if request.method == "POST":
         user_message = request.POST.get("message")
@@ -2977,7 +2986,8 @@ def chat_with_gpt(request):
             "recommendations": recommendations,
         })
 
-    return render(request, "mentoring_app/chat.html")
+    return render(request, "main/chatbot.html")
+
 
 
 
