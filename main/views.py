@@ -2933,6 +2933,52 @@ class MentoringReviewCreate(generics.CreateAPIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+# 챗봇 관련 api
+
+def chat_with_gpt(request):
+    if request.method == "POST":
+        user_message = request.POST.get("message")
+        
+        # OpenAI API 호출
+        response = openai.Completion.create(
+            engine="text-davinci-003",
+            prompt=user_message,
+            max_tokens=150,
+            n=1,
+            stop=None,
+            temperature=0.7,
+        )
+        
+        chat_response = response.choices[0].text.strip()
+        
+        # 상담 결과를 바탕으로 멘토링 리스트 추천
+        recommended_mentoring = MentorRegistrations.objects.filter(
+            mentoring_category__icontains=chat_response
+        )
+        
+        recommendations = [
+            {
+                "title": mentoring.title,
+                "description": mentoring.description,
+                "mentoring_category": mentoring.mentoring_category,
+                "place_type": mentoring.place_type,
+                "period": mentoring.period,
+                "day": mentoring.day,
+                "mentee_num": mentoring.mentee_num,
+                "mentoring_keyword": mentoring.mentoring_keyword,
+                "mood_type": mentoring.mood_type,
+                "status": mentoring.status,
+            }
+            for mentoring in recommended_mentoring
+        ]
+        
+        return JsonResponse({
+            "chat_response": chat_response,
+            "recommendations": recommendations,
+        })
+
+    return render(request, "mentoring_app/chat.html")
+
 
 
 # 유저 request data 받아오는 api
