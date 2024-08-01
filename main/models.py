@@ -310,6 +310,7 @@ class ChatHistory(models.Model):
     user_id = models.ForeignKey(User, on_delete=models.CASCADE, db_column="user_id")
     is_bot = models.BooleanField(default=False)
     message = models.TextField()
+    question_index = models.IntegerField(null=True, blank=True)  # 현재 질문 인덱스
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self) -> str:

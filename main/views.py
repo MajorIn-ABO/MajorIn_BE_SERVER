@@ -2984,6 +2984,55 @@ def chat_with_gpt(request):
 
     return render(request, "mentoring_app/chatbot.html")
 '''
+
+questions = [
+    "님에 대해서 알고싶어요! 님은 어떤 분이신가요?",
+    "요즘 어떤 고민이 있으신가요?",
+    "온라인이 좋으세요 오프라인이 좋으세요?",
+    "멘토링 기간은 어느 정도가 좋으세요?",
+    "어느 요일이 가능하세요?",
+    "소수인 멘토링이 좋으세요? 아니면 많은 인원의 멘토링이 좋으세요?",
+    "어떤 분위기의 멘토링을 원하세요?",
+    "선호하는 멘토링이 있다면 자유롭게 말씀해주세요! 제가 님을 위해 추천해드릴게요!"
+]
+
+def get_next_question(user):
+    user_responses = ChatHistory.objects.filter(user_id=user, is_bot=False).count()
+    if user_responses < len(questions):
+        user_name = user.username  # 사용자의 이름 또는 사용자 객체에서 가져올 수 있는 다른 필드
+        question = questions[user_responses]
+        return question.replace("님", user_name)  # 사용자 이름을 질문에 삽입
+    else:
+        return None
+
+def get_user_responses(user):
+    responses = ChatHistory.objects.filter(user_id=user, is_bot=False).order_by('created_at')
+    return [response.message for response in responses]
+
+def recommend_mentoring(user):
+    responses = get_user_responses(user)
+    if len(responses) < len(questions):
+        return None
+
+    mentoring_category = responses[1]  # Example: "학습", "취업", "인간관계"
+    place_type = responses[2]  # Example: "온라인", "오프라인"
+    period = responses[3]
+    day = responses[4]
+    mentee_num = responses[5]  # Example: "소수", "많은 인원"
+    mood_type = responses[6]
+
+    recommendations = MentorRegistrations.objects.filter(
+        mentoring_category=mentoring_category,
+        place_type=place_type,
+        period__icontains=period,
+        day__icontains=day,
+        mood_type__icontains=mood_type,
+        status='모집중',
+    )
+
+    return recommendations
+
+    
 @csrf_exempt
 def chat_with_gpt(request):
     if request.method == "POST":
