@@ -3,83 +3,45 @@
 <head>
     <title>멘토링 상담 챗봇</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f0f0f0;
-            margin: 0;
-            padding: 0;
-        }
-        #chat-container {
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
+        #chat-box {
+            width: 100%;
             max-width: 600px;
             margin: 0 auto;
             border: 1px solid #ddd;
-            border-radius: 8px;
-            background: #fff;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
-        #chat-box {
-            flex: 1;
             padding: 10px;
-            overflow-y: auto;
-            border-bottom: 1px solid #ddd;
-            background: #fafafa;
+            height: 400px;
+            overflow-y: scroll;
+            background: #f9f9f9;
         }
         .chat-message {
             margin-bottom: 10px;
-            padding: 10px;
+            padding: 5px;
             border-radius: 5px;
             max-width: 80%;
             word-break: break-word;
         }
         .user-message {
-            background-color: #1B1C3A;
-            color: white;
-            margin-left: auto;
             text-align: right;
+            background-color: #d1e7dd;
+            border: 1px solid #badbcc;
+            margin-left: auto;
         }
         .assistant-message {
-            background-color: #D9D9D9;
-            color: black;
             text-align: left;
-        }
-        #chat-form {
-            display: flex;
-            padding: 10px;
-            border-top: 1px solid #ddd;
-            background: #fff;
-        }
-        #message {
-            flex: 1;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            margin-right: 10px;
-        }
-        #send-button {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 4px;
-            background-color: #007bff;
-            color: white;
-            cursor: pointer;
-        }
-        #send-button:hover {
-            background-color: #1B1C3A;
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
         }
     </style>
 </head>
 <body>
-    <div id="chat-container">
-        <div id="chat-box"></div>
-        <form id="chat-form">
-            {% csrf_token %}
-            <input type="text" id="message" name="message" required placeholder="메시지를 입력하세요...">
-            <button type="submit" id="send-button">전송</button>
-        </form>
-    </div>
+    <h1>멘토링 상담 챗봇</h1>
+    <div id="chat-box"></div>
+    <form id="chat-form" method="post">
+        {% csrf_token %}
+        <label for="message">메시지:</label>
+        <input type="text" id="message" name="message" required>
+        <button type="submit">전송</button>
+    </form>
 
     <script>
         document.getElementById("chat-form").onsubmit = async function(event) {
@@ -87,9 +49,6 @@
             let formData = new FormData(this);
             let messageInput = document.getElementById("message");
             let chatBox = document.getElementById("chat-box");
-
-            // Fetch CSRF token
-            let csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
 
             // Append user message to chat box
             let userMessageDiv = document.createElement("div");
@@ -101,9 +60,6 @@
             try {
                 let response = await fetch("{% url 'chat_with_gpt' %}", {
                     method: "POST",
-                    headers: {
-                        'X-CSRFToken': csrftoken,
-                    },
                     body: formData,
                 });
 

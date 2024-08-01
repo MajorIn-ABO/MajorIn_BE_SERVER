@@ -2991,14 +2991,13 @@ def chat_with_gpt(request):
 
         # GptAPI 사용
         model = "gpt-3.5-turbo"
-        api_key = os.environ.get("OPENAI_API_KEY")
-        gpt = GptAPI(model, api_key)
-        chat_response, messages = gpt.get_message(user_message)
+        gpt = GptAPI(model, client)
+        chat_response = gpt.get_message(user_message)
 
         return JsonResponse({
             "user_message": user_message,
             "chat_response": chat_response,
-            "messages": messages,
+            # "messages": messages,
         })
 
     return render(request, "main/chatbot.html")
