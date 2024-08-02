@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>챗봇</title>
+    <title>멘토링 상담 챗봇</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -96,27 +96,37 @@
             userMessageDiv.classList.add("chat-message", "user-message");
             userMessageDiv.innerText = messageInput.value;
             chatBox.appendChild(userMessageDiv);
-            messageInput.value = "";
-
-            // Send message to the server
-            let response = await fetch("{% url 'chat_with_gpt' %}", {
-                method: "POST",
-                headers: {
-                    "X-CSRFToken": csrftoken,
-                    "Content-Type": "application/x-www-form-urlencoded"
-                },
-                body: new URLSearchParams(formData)
-            });
-            let data = await response.json();
-
-            // Append chatbot response to chat box
-            let botMessageDiv = document.createElement("div");
-            botMessageDiv.classList.add("chat-message", "assistant-message");
-            botMessageDiv.innerText = data.chat_response;
-            chatBox.appendChild(botMessageDiv);
-
-            // Scroll to the bottom of the chat box
             chatBox.scrollTop = chatBox.scrollHeight;
+
+            try {
+                let response = await fetch("{% url 'chat_with_gpt' %}", {
+                    method: "POST",
+                    headers: {
+                        'X-CSRFToken': csrftoken,
+                    },
+                    body: formData,
+                });
+
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+
+                let data = await response.json();
+                messageInput.value = "";
+
+                if (data.error) {
+                    console.error("Error:", data.error);
+                } else {
+                    // Append assistant message to chat box
+                    let assistantMessageDiv = document.createElement("div");
+                    assistantMessageDiv.classList.add("chat-message", "assistant-message");
+                    assistantMessageDiv.innerText = data.chat_response;
+                    chatBox.appendChild(assistantMessageDiv);
+                    chatBox.scrollTop = chatBox.scrollHeight;
+                }
+            } catch (error) {
+                console.error("Fetch error:", error);
+            }
         };
     </script>
 </body>

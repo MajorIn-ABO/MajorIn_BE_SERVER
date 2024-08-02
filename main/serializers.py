@@ -9,7 +9,7 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 
-from .models import Token, Major, User, Category, Board, Board_Comment, Board_Like, Board_bookmark, Study, Study_Comment, Study_Like, Usedbooktrade, UsedbooktradeData, Usedbooktrade_Comment, MentorRegistrations, MenteeApplications, MentoringData, MentoringReview
+from .models import Token, Major, User, Category, Board, Board_Comment, Board_Like, Board_bookmark, Study, Study_Comment, Study_Like, Usedbooktrade, UsedbooktradeData, Usedbooktrade_Comment, MentorRegistrations, MenteeApplications, MentoringData, MentoringReview, ChatHistory
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod
@@ -188,7 +188,7 @@ class UsedbooktradeCommentSerializer(serializers.ModelSerializer):
 class MentorRegistrationsSerializer(serializers.ModelSerializer):
     class Meta:
         model = MentorRegistrations
-        fields = ['id', 'title', 'user_id', 'mentoring_category', 'description', 'place_type', 'period', 'day', 'mentee_num', 'mentoring_keyword', 'mood_type', 'post_date', 'admin_approval', 'status', 'applicants_num', 'approval_num']
+        fields = ['id', 'title', 'user_id', 'mentoring_category', 'description', 'place_type', 'period', 'day', 'mentee_num', 'post_date', 'admin_approval', 'status', 'applicants_num', 'approval_num']
 
 class MenteeApplicationsSerializer(serializers.ModelSerializer):
     class Meta:
@@ -204,3 +204,8 @@ class MentoringReviewSerializer(serializers.ModelSerializer):
     class Meta:
         model = MentoringReview
         fields = ['id', 'mentoringdata_id', 'rating', 'review_text', 'recommend', 'post_date']
+
+class ChatHistorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ChatHistory
+        fields = ['id', 'user_id', 'is_bot', 'message', 'question_index', 'created_at']

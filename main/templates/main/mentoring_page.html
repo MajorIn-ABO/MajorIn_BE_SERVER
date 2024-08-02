@@ -19,7 +19,7 @@
             <p>키워드: {{ mentoring.mentoring_keyword }}</p>
             <p>분위기: {{ mentoring.mood_type }}</p>
             <p>상태: {{ mentoring.status }}</p>
-            <form action="{% url 'chat_with_gpt' %}" method="get">
+            <form action="{% url 'chatbot_view' %}" method="get">
                 <button type="submit">멘티 신청</button>
             </form>
         </li>

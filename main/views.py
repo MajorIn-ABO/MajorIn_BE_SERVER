@@ -11,8 +11,8 @@ from django.views import View
 from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone  # 필요한 경우 추가
 from django.http import JsonResponse
-from .models import Token, Major, User, Category, Board, Board_Comment, Board_Like, Board_bookmark, Study, Study_Comment, Study_Like, Usedbooktrade, UsedbooktradeData, Usedbooktrade_Comment, MentorRegistrations, MenteeApplications, MentoringData, MentoringReview
-from .serializers import MyTokenObtainPairSerializer, AuthUserRegisterSerializer, LoginSerializer,MajorSerializer, MajorCheckSerializer, UserSerializer, UserProfileSerializer, UserRegisterSerializer, CategorySerializer, BoardSerializer, BoardProfileSerializer, BoardCommentSerializer, BoardLikeSerializer, BoardBookmarkSerializer, StudySerializer, StudyProfileSerializer, StudyCommentSerializer, StudyLikeSerializer, UsedbooktradeSerializer, UsedbooktradeProfileSerializer, UsedbooktradeDataSerializer, UsedbooktradeCommentSerializer, MentorRegistrationsSerializer, MenteeApplicationsSerializer, MentoringDataSerializer, MentoringReviewSerializer
+from .models import Token, Major, User, Category, Board, Board_Comment, Board_Like, Board_bookmark, Study, Study_Comment, Study_Like, Usedbooktrade, UsedbooktradeData, Usedbooktrade_Comment, MentorRegistrations, MenteeApplications, MentoringData, MentoringReview, ChatHistory
+from .serializers import MyTokenObtainPairSerializer, AuthUserRegisterSerializer, LoginSerializer,MajorSerializer, MajorCheckSerializer, UserSerializer, UserProfileSerializer, UserRegisterSerializer, CategorySerializer, BoardSerializer, BoardProfileSerializer, BoardCommentSerializer, BoardLikeSerializer, BoardBookmarkSerializer, StudySerializer, StudyProfileSerializer, StudyCommentSerializer, StudyLikeSerializer, UsedbooktradeSerializer, UsedbooktradeProfileSerializer, UsedbooktradeDataSerializer, UsedbooktradeCommentSerializer, MentorRegistrationsSerializer, MenteeApplicationsSerializer, MentoringDataSerializer, MentoringReviewSerializer, ChatHistorySerializer
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth.models import User as AuthUser
@@ -20,6 +20,7 @@ from rest_framework.authtoken.models import Token as AuthToken
 from django.contrib.auth import authenticate
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.shortcuts import get_object_or_404
+from django.shortcuts import get_list_or_404
 import json
 import requests
 from django.db import transaction
@@ -29,10 +30,13 @@ from django.db.models import Prefetch
 from urllib.parse import quote
 from dotenv import load_dotenv
 import os 
+import random
 from openai import OpenAI
-from .gpt_api import GptAPI
+# from .gpt_api import GptAPI
 from django.core.files.storage import default_storage
 from django.conf import settings
+import uuid
+
 
 # load .env
 load_dotenv()
@@ -513,7 +517,7 @@ class BoardDetail(generics.RetrieveAPIView):
 
         # 로그인된 사용자가 해당 게시글에 좋아요, 북마크를 눌렀는지 확인
         # auth_user = request.user
-        
+        # 이거중요
         auth_id = request.user.id
         token = get_object_or_404(Token, auth_id=auth_id)
         login_user_id = token.user_id.id
@@ -2439,12 +2443,12 @@ class MentoringList(generics.ListAPIView):
             data['day'] = eval(day_str)
 
             # mentoring_keyword 데이터를 문자열에서 리스트로 변환하여 추가합니다.
-            mentoring_keyword_str = data['mentoring_keyword']
-            data['mentoring_keyword'] = eval(mentoring_keyword_str)
+            # mentoring_keyword_str = data['mentoring_keyword']
+            # data['mentoring_keyword'] = eval(mentoring_keyword_str)
 
             # mood_type 데이터를 문자열에서 리스트로 변환하여 추가합니다.
-            mood_type_str = data['mood_type']
-            data['mood_type'] = eval(mood_type_str)
+            # mood_type_str = data['mood_type']
+            # data['mood_type'] = eval(mood_type_str)
 
             user_id = data['user_id']
             try:
@@ -2478,12 +2482,12 @@ class MentoringListByUserId(generics.ListAPIView):
             data['day'] = eval(day_str)
 
             # mentoring_keyword 데이터를 문자열에서 리스트로 변환하여 추가합니다.
-            mentoring_keyword_str = data['mentoring_keyword']
-            data['mentoring_keyword'] = eval(mentoring_keyword_str)
+            # mentoring_keyword_str = data['mentoring_keyword']
+            # data['mentoring_keyword'] = eval(mentoring_keyword_str)
 
             # mood_type 데이터를 문자열에서 리스트로 변환하여 추가합니다.
-            mood_type_str = data['mood_type']
-            data['mood_type'] = eval(mood_type_str)
+            # mood_type_str = data['mood_type']
+            # data['mood_type'] = eval(mood_type_str)
 
             user_id = data['user_id']
             try:
@@ -2525,12 +2529,12 @@ class MentoringDetail(generics.RetrieveAPIView):
         response_data['day'] = eval(day_str)
 
         # mentoring_keyword 데이터를 문자열에서 리스트로 변환하여 추가합니다.
-        mentoring_keyword_str = response_data['mentoring_keyword']
-        response_data['mentoring_keyword'] = eval(mentoring_keyword_str)
+        # mentoring_keyword_str = response_data['mentoring_keyword']
+        # response_data['mentoring_keyword'] = eval(mentoring_keyword_str)
 
         # mood_type 데이터를 문자열에서 리스트로 변환하여 추가합니다.
-        mood_type_str = response_data['mood_type']
-        response_data['mood_type'] = eval(mood_type_str)
+        # mood_type_str = response_data['mood_type']
+        # response_data['mood_type'] = eval(mood_type_str)
 
         response_data['user_name'] = user_data.user_name
 
@@ -2549,7 +2553,7 @@ class MentoringCreate(generics.CreateAPIView):
             day = request.data['day']
             if isinstance(day, list):
                 request.data['day'] = str(day)
-
+        '''
         # mentoring_keyword 데이터를 문자열로 변환
         if 'mentoring_keyword' in request.data:
             mentoring_keyword = request.data['mentoring_keyword']
@@ -2561,7 +2565,7 @@ class MentoringCreate(generics.CreateAPIView):
             mood_type = request.data['mood_type']
             if isinstance(mood_type, list):
                 request.data['mood_type'] = str(mood_type)
-
+        '''
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
             self.perform_create(serializer)
@@ -2937,12 +2941,12 @@ class MentoringReviewCreate(generics.CreateAPIView):
 
 
 # 챗봇 관련 api
-
+'''
 # 임시 멘토링 페이지 렌더링 코드 
 def mentoring_page(request):
     mentorings = MentorRegistrations.objects.all()
     return render(request, 'main/mentoring_page.html', {'mentorings': mentorings})
-
+'''
 
 # 임시 챗봇 대화 코드 
 '''
@@ -2984,16 +2988,16 @@ def chat_with_gpt(request):
 
     return render(request, "mentoring_app/chatbot.html")
 '''
-
-questions = [
-    "님에 대해서 알고싶어요! 님은 어떤 분이신가요?",
-    "요즘 어떤 고민이 있으신가요?",
-    "온라인이 좋으세요 오프라인이 좋으세요?",
+'''
+QUESTIONS = [
+    "00님에 대해서 알고싶어요! 00님은 어떤 분이신가요?",
+    "요즘 어떤 고민이 있으신가요? (멘토링 카테고리 필터링)",
+    "온라인이 좋으세요, 오프라인이 좋으세요? (진행 방식 필터링)",
     "멘토링 기간은 어느 정도가 좋으세요?",
     "어느 요일이 가능하세요?",
-    "소수인 멘토링이 좋으세요? 아니면 많은 인원의 멘토링이 좋으세요?",
+    "소수인 멘토링이 좋으세요, 아니면 많은 인원의 멘토링이 좋으세요?",
     "어떤 분위기의 멘토링을 원하세요?",
-    "선호하는 멘토링이 있다면 자유롭게 말씀해주세요! 제가 님을 위해 추천해드릴게요!"
+    "선호하는 멘토링이 있다면 자유롭게 말씀해주세요! 제가 00님을 위해 추천해드릴게요!"
 ]
 
 def get_next_question(user):
@@ -3004,13 +3008,15 @@ def get_next_question(user):
         return question.replace("님", user_name)  # 사용자 이름을 질문에 삽입
     else:
         return None
-
+'''
+'''
 def get_user_responses(user):
     responses = ChatHistory.objects.filter(user_id=user, is_bot=False).order_by('created_at')
     return [response.message for response in responses]
 
 def recommend_mentoring(user):
     responses = get_user_responses(user)
+    
     if len(responses) < len(questions):
         return None
 
@@ -3019,24 +3025,26 @@ def recommend_mentoring(user):
     period = responses[3]
     day = responses[4]
     mentee_num = responses[5]  # Example: "소수", "많은 인원"
-    mood_type = responses[6]
+   # mood_type = responses[6]
 
     recommendations = MentorRegistrations.objects.filter(
         mentoring_category=mentoring_category,
         place_type=place_type,
         period__icontains=period,
         day__icontains=day,
-        mood_type__icontains=mood_type,
+        # mood_type__icontains=mood_type,
         status='모집중',
     )
 
     return recommendations
 
-    
-@csrf_exempt
+'''
+
+'''
 def chat_with_gpt(request):
     if request.method == "POST":
         user_message = request.POST.get("message")
+        user = request.user
 
         # GptAPI 사용
         model = "gpt-3.5-turbo"
@@ -3050,7 +3058,320 @@ def chat_with_gpt(request):
         })
 
     return render(request, "main/chatbot.html")
+'''
+'''
+# 챗봇 메시지 보내기 
+def chat_with_gpt(request):
+    if request.method == "POST":
+        user_message = request.POST.get("message")
+        user = request.user
 
+        # GptAPI 사용
+        model = "gpt-3.5-turbo"
+        gpt = GptAPI(model, client)
+
+        # 마지막 대화 기록을 가져와서 현재 질문 인덱스를 결정합니다.
+        last_chat = ChatHistory.objects.filter(user_id=user).order_by('-created_at').first()
+        if last_chat and last_chat.is_bot:
+            current_question_index = (last_chat.question_index + 1) if last_chat.question_index is not None else 0
+        else:
+            current_question_index = 0
+
+        # 챗봇의 응답을 생성합니다.
+        try:
+            if current_question_index < len(QUESTIONS):
+                # 사용자 메시지를 챗봇에 전달하고 응답을 받습니다.
+                chat_response = gpt.get_message(user_message)
+
+                # 다음 질문을 준비합니다.
+                next_question = QUESTIONS[current_question_index]
+
+                # 대화 기록에 저장합니다.
+                ChatHistory.objects.create(user_id=user, is_bot=False, message=user_message, question_index=current_question_index)
+                ChatHistory.objects.create(user_id=user, is_bot=True, message=chat_response, question_index=current_question_index)
+                ChatHistory.objects.create(user_id=user, is_bot=True, message=next_question, question_index=current_question_index)
+
+                return JsonResponse({
+                    "chat_response": next_question
+                })
+
+            # 모든 질문을 다했을 경우, 멘토링 추천 로직을 실행합니다.
+            recommendations = recommend_mentoring(user)  # 멘토링 추천 함수 호출
+            if recommendations:
+                user_name = user.username
+                response_text = f"{user_name}님에게 추천드리는 멘토링 목록입니다!\n\n"
+                for mentoring in recommendations:
+                    response_text += f"{mentoring.title}: {mentoring.description}\n"
+                ChatHistory.objects.create(user_id=user, is_bot=True, message=response_text)
+                return JsonResponse({
+                    "chat_response": response_text
+                })
+            else:
+                response_text = "적절한 멘토링을 찾을 수 없습니다. 다시 시도해 주세요."
+                ChatHistory.objects.create(user_id=user, is_bot=True, message=response_text)
+                return JsonResponse({
+                    "chat_response": response_text
+                })
+
+        except Exception as e:
+            # 오류 발생 시, 오류 메시지를 반환합니다.
+            print(f"Error occurred: {e}")
+            response_text = "챗봇에서 오류가 발생했습니다. 다시 시도해 주세요."
+            ChatHistory.objects.create(user_id=user, is_bot=True, message=response_text)
+            return JsonResponse({
+                "chat_response": response_text
+            })
+
+    return JsonResponse({'error': 'Invalid request method.'}, status=400)
+
+def chatbot_view(request):
+    return render(request, "main/chatbot.html")
+'''
+'''
+class GptAPI():
+    def __init__(self, model, client):
+        self.messages = []
+        self.model = model
+        self.client = client
+
+    def get_message(self, prompt):
+
+        self.messages.append({"role": "user", "content": prompt})
+
+        response = Response({
+            "chat_response": "kimsesac님에 대해서 알고싶어요! kimsesac님은 어떤 분이신가요?"
+        })
+
+        result = response.data.get('chat_response', None)
+        
+        stream = self.client.chat_completions.create(
+            model=self.model,
+            messages=self.messages,
+            stream=True,
+        )
+
+        result = ''
+        for chunk in stream:
+            if chunk.choices[0].delta.content is not None:
+                string = chunk.choices[0].delta.content
+                result = ''.join([result, string])
+        
+        
+        self.messages.append({"role": "system", "content": result})
+
+        
+        return result
+
+def get_user_info(user):
+    return {
+        "username": user.username,
+        "email": user.email,
+        "id": user.id
+    }
+'''
+class GptAPI():
+    def __init__(self, model, client):
+        self.messages = []
+        self.model = model
+        self.client = client
+
+    def get_message(self, prompt):
+        self.messages.append({"role": "user", "content": prompt})
+
+        stream = self.client.chat.completions.create(
+            model=self.model,
+            messages=self.messages,
+            stream=True,
+        )
+
+        result = ''
+        for chunk in stream:
+            if chunk.choices[0].delta.content is not None:
+                string = chunk.choices[0].delta.content
+                print(string, end="")
+                result = ''.join([result, string])
+        
+        self.messages.append({"role": "system", "content": result})
+
+        return self.messages
+        '''
+        # Simulating a response from ChatGPT
+        response = Response({
+            "chat_response": "이 유저에게 적합한 멘토링 옵션을 추천해 주세요."
+        })
+
+        result = response.data.get('chat_response', None)
+        self.messages.append({"role": "system", "content": result})
+
+        return result
+        '''
+
+class ChatWithGptView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        user_message = request.data.get("message")
+        user = request.user
+
+        model = "gpt-3.5-turbo"
+        client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))  # OpenAI 클라이언트 초기화
+        gpt = GptAPI(model, client)
+
+        QUESTIONS = [
+            f"{user.username}님에 대해서 알고싶어요! {user.username}님은 어떤 분이신가요?",
+            "요즘 어떤 고민이 있으신가요? (멘토링 카테고리 필터링)",
+            "온라인이 좋으세요, 오프라인이 좋으세요? (진행 방식 필터링)",
+            "멘토링 기간은 어느 정도가 좋으세요?",
+            "어느 요일이 가능하세요?",
+            "소수인 멘토링이 좋으세요, 아니면 많은 인원의 멘토링이 좋으세요?",
+            "어떤 분위기의 멘토링을 원하세요?",
+            f"선호하는 멘토링이 있다면 자유롭게 말씀해주세요! 제가 {user.username}님을 위해 추천해드릴게요!"
+        ]
+        
+        auth_id = request.user.id
+        token = get_object_or_404(Token, auth_id=auth_id)
+        login_user_id = token.user_id.id
+
+        # 사용자 정보 가져오기
+        # user_id = login_user_id
+        try:
+            user = User.objects.get(id=login_user_id)
+        except User.DoesNotExist:
+            return Response({'error': '사용자를 찾을 수 없습니다.'}, status=status.HTTP_404_NOT_FOUND)
+
+        # 마지막 대화 기록을 가져와서 현재 질문 인덱스를 결정합니다.
+        last_chat = ChatHistory.objects.filter(user_id=user).order_by('-created_at').first()
+
+        if last_chat and last_chat.is_bot:
+            current_question_index = (last_chat.question_index + 1) if last_chat.question_index is not None else 0
+        else:
+            current_question_index = 0
+
+        # 챗봇의 응답을 생성합니다.
+        try:
+            if current_question_index < len(QUESTIONS):
+                chat_response = gpt.get_message(user_message)
+
+                next_question = QUESTIONS[current_question_index]
+
+                ChatHistory.objects.create(user_id=user, is_bot=False, message=user_message, question_index=current_question_index)
+                ChatHistory.objects.create(user_id=user, is_bot=True, message=chat_response, question_index=current_question_index)
+                ChatHistory.objects.create(user_id=user, is_bot=True, message=next_question, question_index=current_question_index)
+
+                return Response({"chat_response": next_question})
+
+            responses = ChatHistory.objects.filter(user_id=user, is_bot=False).order_by('created_at')
+            if len(responses) < len(QUESTIONS) - 1:
+                response_text = "모든 질문에 답변을 완료해야 멘토링을 추천할 수 있습니다."
+                ChatHistory.objects.create(user_id=user, is_bot=True, message=response_text)
+                return Response({"chat_response": response_text})
+
+            combined_responses = " ".join([response.message for response in responses])
+            if not combined_responses.strip():  # 빈 문자열인지 확인
+                raise ValueError("Combined responses is empty")
+
+            prompt = f"다음 정보에 기반하여 가장 적합한 멘토링을 추천해 주세요: {combined_responses}"
+            gpt_response = gpt.get_message(prompt)
+            recommendations = gpt_response.split("\n")
+
+            recommended_mentoring = MentorRegistrations.objects.filter(
+                title__in=recommendations,
+                status='모집중'
+            )
+
+            serializer = MentorRegistrationSerializer(recommended_mentoring, many=True)
+            return Response(serializer.data)
+
+        except Exception as e:
+            error_message = str(e)  # 예외를 문자열로 변환
+            print(f"Error occurred: {error_message}")
+            response_text = f"챗봇에서 오류가 발생했습니다: {error_message}. 다시 시도해 주세요."
+            ChatHistory.objects.create(user_id=user, is_bot=True, message=response_text)
+            return Response({"chat_response": response_text, "error_details": error_message}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+        # return Response({'error': 'Invalid request method.'}, status=400)
+
+
+class ChatGptBotView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        user_message = request.data.get("message")
+        user = request.user
+
+        # OpenAI 클라이언트 초기화
+        model = "gpt-3.5-turbo"
+        client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+        gpt = GptAPI(model, client)
+
+        prompt = user_message
+
+        if "이제 멘토링을 추천해줘" in user_message:
+            # MentorRegistrations 테이블에서 멘토링 데이터 가져오기
+            mentor_data_list = get_list_or_404(MentorRegistrations)
+            
+            # 멘토링 데이터가 없는 경우
+            if not mentor_data_list:
+                return Response({"message": "현재 등록된 멘토링 데이터가 없습니다."})
+
+            # 멘토링 데이터 포맷팅
+            mentor_list = [
+                {
+                    "mentoring_category": mentor_data.mentoring_category,
+                    "day": mentor_data.day,
+                    "period": mentor_data.period,
+                    "mentee_num": mentor_data.mentee_num,
+                    "place_type": mentor_data.place_type,
+                }
+                for mentor_data in mentor_data_list
+            ]
+            
+            # GPT에게 멘토링 추천 요청
+            prompt = (
+                f"사용자의 상담 요청을 기반으로 아래의 멘토링 옵션을 추천해 주세요:\n"
+                f"{mentor_list}\n"
+                f"사용자의 요청: {user_message}"
+            )
+            gpt_response = gpt.get_message(prompt)
+
+            for item in gpt_response:
+                if item.get("role") == "system":
+                    gptbot_response = item.get("content")
+            
+            response_data = {
+                "gpt_response": gptbot_response
+            }
+        else:
+            gpt_response = gpt.get_message(prompt)
+
+            # 멘토링 관련 질문 목록
+            questions = [
+                "멘토링 주제로 어떤 분야를 고려하고 계신가요?",
+                "멘토링을 진행할 수 있는 요일은 어떤 요일이 있으신가요?",
+                "멘토링을 원하는 날짜가 있으신가요? 특정 날짜가 필요하신가요?",
+                "멘토링 시 어떤 분위기를 선호하시나요? (예: 격식 있는, 자유로운 등)",
+                "멘토링에 참여할 인원 수는 몇 명을 예상하시나요?",
+                "멘토링은 온라인으로 진행하시겠어요, 아니면 오프라인으로 진행하시겠어요?",
+                "멘토링이 왜 필요하신가요?",
+                "멘토링에 대해서 더 궁금하신것이 있나요?"
+            ]
+            
+            # 랜덤으로 질문 선택
+            question_to_ask = random.choice(questions)
+
+            for item in gpt_response:
+                if item.get("role") == "system":
+                    gptbot_response = item.get("content")
+            
+            # 응답 생성
+            response_data = {
+                "user_message" : user_message,
+                "gpt_response": gptbot_response,
+                "question": question_to_ask
+            }
+
+        return Response(response_data)
 
 
 # 유저 request data 받아오는 api
