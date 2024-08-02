@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>멘토링/상담 페이지</title>
+</head>
+<body>
+    <h1>멘토링/상담 페이지</h1>
+    <ul>
+        {% for mentoring in mentorings %}
+        <li>
+            <h2>{{ mentoring.title }}</h2>
+            <p>{{ mentoring.description }}</p>
+            <p>카테고리: {{ mentoring.mentoring_category }}</p>
+            <p>진행 방식: {{ mentoring.place_type }}</p>
+            <p>기간: {{ mentoring.period }}</p>
+            <p>가능 요일: {{ mentoring.day }}</p>
+            <p>모집 인원: {{ mentoring.mentee_num }}</p>
+            <p>키워드: {{ mentoring.mentoring_keyword }}</p>
+            <p>분위기: {{ mentoring.mood_type }}</p>
+            <p>상태: {{ mentoring.status }}</p>
+            <form action="{% url 'chatbot_view' %}" method="get">
+                <button type="submit">멘티 신청</button>
+            </form>
+        </li>
+        {% endfor %}
+    </ul>
+</body>
+</html>

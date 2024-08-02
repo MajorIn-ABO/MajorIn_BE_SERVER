@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>챗봇</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 0;
+        }
+        #chat-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            max-width: 600px;
+            margin: 0 auto;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        #chat-box {
+            flex: 1;
+            padding: 10px;
+            overflow-y: auto;
+            border-bottom: 1px solid #ddd;
+            background: #fafafa;
+        }
+        .chat-message {
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            max-width: 80%;
+            word-break: break-word;
+        }
+        .user-message {
+            background-color: #1B1C3A;
+            color: white;
+            margin-left: auto;
+            text-align: right;
+        }
+        .assistant-message {
+            background-color: #D9D9D9;
+            color: black;
+            text-align: left;
+        }
+        #chat-form {
+            display: flex;
+            padding: 10px;
+            border-top: 1px solid #ddd;
+            background: #fff;
+        }
+        #message {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-right: 10px;
+        }
+        #send-button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+        }
+        #send-button:hover {
+            background-color: #1B1C3A;
+        }
+    </style>
+</head>
+<body>
+    <div id="chat-container">
+        <div id="chat-box"></div>
+        <form id="chat-form">
+            {% csrf_token %}
+            <input type="text" id="message" name="message" required placeholder="메시지를 입력하세요...">
+            <button type="submit" id="send-button">전송</button>
+        </form>
+    </div>
+
+    <script>
+        document.getElementById("chat-form").onsubmit = async function(event) {
+            event.preventDefault();
+            let formData = new FormData(this);
+            let messageInput = document.getElementById("message");
+            let chatBox = document.getElementById("chat-box");
+
+            // Fetch CSRF token
+            let csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+            // Append user message to chat box
+            let userMessageDiv = document.createElement("div");
+            userMessageDiv.classList.add("chat-message", "user-message");
+            userMessageDiv.innerText = messageInput.value;
+            chatBox.appendChild(userMessageDiv);
+            messageInput.value = "";
+
+            // Send message to the server
+            let response = await fetch("{% url 'chat_with_gpt' %}", {
+                method: "POST",
+                headers: {
+                    "X-CSRFToken": csrftoken,
+                    "Content-Type": "application/x-www-form-urlencoded"
+                },
+                body: new URLSearchParams(formData)
+            });
+            let data = await response.json();
+
+            // Append chatbot response to chat box
+            let botMessageDiv = document.createElement("div");
+            botMessageDiv.classList.add("chat-message", "assistant-message");
+            botMessageDiv.innerText = data.chat_response;
+            chatBox.appendChild(botMessageDiv);
+
+            // Scroll to the bottom of the chat box
+            chatBox.scrollTop = chatBox.scrollHeight;
+        };
+    </script>
+</body>
+</html>

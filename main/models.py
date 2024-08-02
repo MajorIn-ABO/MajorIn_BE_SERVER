@@ -245,8 +245,8 @@ class MentorRegistrations(models.Model):
     period = models.TextField(verbose_name='멘토링 기간')
     day = models.TextField(verbose_name='가능 요일')
     mentee_num = models.IntegerField(blank=False, null=False, verbose_name='모집 인원')
-    mentoring_keyword = models.TextField(verbose_name='멘토링 키워드')
-    mood_type = models.TextField(verbose_name='멘토링 분위기')
+    # mentoring_keyword = models.TextField(verbose_name='멘토링 키워드')
+    # mood_type = models.TextField(verbose_name='멘토링 분위기')
     post_date = models.DateTimeField(auto_now_add=True, verbose_name='등록일')
     update_date = models.DateTimeField(auto_now=True, verbose_name='수정일')
     delete_date = models.DateTimeField(null=True, verbose_name='삭제일')
@@ -300,6 +300,18 @@ class MentoringReview(models.Model):
     review_text = models.TextField(verbose_name='리뷰 내용')
     recommend = models.BooleanField(default=False, null=False, verbose_name='추천 여부')
     post_date = models.DateTimeField(auto_now_add=True, verbose_name='리뷰 날짜')
+
+    def __str__(self) -> str:
+        return str(self.id)
+
+
+class ChatHistory(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    user_id = models.ForeignKey(User, on_delete=models.CASCADE, db_column="user_id")
+    is_bot = models.BooleanField(default=False)
+    message = models.TextField()
+    question_index = models.IntegerField(null=True, blank=True)  # 현재 질문 인덱스
+    created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self) -> str:
         return str(self.id)

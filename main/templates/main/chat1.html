@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>멘토링 상담 챗봇</title>
+    <style>
+        #chat-box {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            border: 1px solid #ddd;
+            padding: 10px;
+            height: 400px;
+            overflow-y: scroll;
+            background: #f9f9f9;
+        }
+        .chat-message {
+            margin-bottom: 10px;
+            padding: 5px;
+            border-radius: 5px;
+            max-width: 80%;
+            word-break: break-word;
+        }
+        .user-message {
+            text-align: right;
+            background-color: #d1e7dd;
+            border: 1px solid #badbcc;
+            margin-left: auto;
+        }
+        .assistant-message {
+            text-align: left;
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <h1>멘토링 상담 챗봇</h1>
+    <div id="chat-box"></div>
+    <form id="chat-form" method="post">
+        {% csrf_token %}
+        <label for="message">메시지:</label>
+        <input type="text" id="message" name="message" required>
+        <button type="submit">전송</button>
+    </form>
+
+    <script>
+        document.getElementById("chat-form").onsubmit = async function(event) {
+            event.preventDefault();
+            let formData = new FormData(this);
+            let messageInput = document.getElementById("message");
+            let chatBox = document.getElementById("chat-box");
+
+            // Append user message to chat box
+            let userMessageDiv = document.createElement("div");
+            userMessageDiv.classList.add("chat-message", "user-message");
+            userMessageDiv.innerText = messageInput.value;
+            chatBox.appendChild(userMessageDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            try {
+                let response = await fetch("{% url 'chat_with_gpt' %}", {
+                    method: "POST",
+                    body: formData,
+                });
+
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+
+                let data = await response.json();
+                messageInput.value = "";
+
+                if (data.error) {
+                    console.error("Error:", data.error);
+                } else {
+                    // Append assistant message to chat box
+                    let assistantMessageDiv = document.createElement("div");
+                    assistantMessageDiv.classList.add("chat-message", "assistant-message");
+                    assistantMessageDiv.innerText = data.chat_response;
+                    chatBox.appendChild(assistantMessageDiv);
+                    chatBox.scrollTop = chatBox.scrollHeight;
+                }
+            } catch (error) {
+                console.error("Fetch error:", error);
+            }
+        };
+    </script>
+</body>
+</html>
